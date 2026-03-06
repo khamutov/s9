@@ -6,7 +6,7 @@ Status legend: `[ ]` pending | `[~]` in progress | `[x]` completed
 
 ### Design Documents
 
-- [ ] **0.1** DD: Database Schema & Storage Engine → `docs/dd/database.md`
+- [x] **0.1** DD: Database Schema & Storage Engine → `docs/dd/database.md`
 - [ ] **0.2** DD: Full-Text Search → `docs/dd/search.md` [blocked by: 0.1]
 - [ ] **0.3** DD: Authentication & Sessions → `docs/dd/auth.md`
 - [ ] **0.4** DD: Endpoint Schema → `docs/dd/api-endpoints.md` [blocked by: 0.1, 0.3]
