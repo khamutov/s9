@@ -10,7 +10,7 @@ Status legend: `[ ]` pending | `[~]` in progress | `[x]` completed
 - [x] **0.2** DD: Full-Text Search → `docs/dd/search.md` [blocked by: 0.1]
 - [x] **0.3** DD: Authentication & Sessions → `docs/dd/auth.md`
 - [x] **0.4** DD: Endpoint Schema → `docs/dd/api-endpoints.md` [blocked by: 0.1, 0.3]
-- [ ] **0.5** DD: Attachment Storage → `docs/dd/attachments.md`
+- [x] **0.5** DD: Attachment Storage → `docs/dd/attachments.md`
 - [ ] **0.6** DD: Email Notifications → `docs/dd/notifications.md`
 - [x] **0.7** DD: Frontend Architecture → `docs/dd/frontend.md`
 - [ ] **0.8** DD: Build Pipeline & Embedding → `docs/dd/build-pipeline.md` [blocked by: 0.7]
