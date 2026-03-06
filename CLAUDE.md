@@ -22,3 +22,15 @@ docs/dd - Design documents (DD)
 - write doc-comments for each public api (everything exported from module, pub structs, methods, and etc) and non-obvious internal (so everything except self-explanatory small functions)
 - write good designed tests, prefer tesing contracts, avoid testing internals/implementation-specifics except when it has a reason for that (e.g., to cover bug in implementation)
 - check code with linters
+
+# Task tracking
+
+Active tasks are tracked in `TASKS.md` at the repository root.
+
+Workflow:
+1. Check TASKS.md for the next available task (unchecked `[ ]`, all blockers resolved `[x]`).
+2. Mark it in-progress: `[ ]` → `[~]`.
+3. Do the work. Deliverable path is noted in the task.
+4. Mark it completed: `[~]` → `[x]`.
+
+Status legend: `[ ]` pending, `[~]` in progress, `[x]` completed.
