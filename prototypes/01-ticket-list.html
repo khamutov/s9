@@ -458,9 +458,6 @@
     }
 
     .table th {
-      position: sticky;
-      top: 0;
-      z-index: 5;
       height: 36px;
       font-family: var(--font-mono);
       font-weight: 600;
@@ -468,7 +465,7 @@
       text-transform: uppercase;
       letter-spacing: 0.1em;
       color: var(--text-ghost);
-      background: transparent;
+      background: var(--bg-surface);
       border-bottom: 1px solid var(--border-primary);
       user-select: none;
     }
@@ -738,7 +735,104 @@
       z-index: 1;
     }
 
-    /* §16 Table container */
+    /* §16 Sticky Header */
+    .sticky-header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      height: 0;
+      margin-left: calc(-1 * var(--space-10));
+      margin-right: calc(-1 * var(--space-10));
+      padding: 0 var(--space-10);
+      background: var(--bg-root);
+      border-bottom: 1px solid transparent;
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(-4px);
+      transition:
+        height 300ms var(--ease-out),
+        opacity 250ms var(--ease-out),
+        transform 250ms var(--ease-out),
+        border-color 300ms var(--ease-out),
+        padding 300ms var(--ease-out);
+      pointer-events: none;
+    }
+
+    .main.is-scrolled .sticky-header {
+      height: 48px;
+      opacity: 1;
+      transform: translateY(0);
+      border-bottom-color: var(--border-primary);
+      pointer-events: auto;
+    }
+
+    .sticky-header-title {
+      font-family: var(--font-display);
+      font-size: var(--text-lg);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: var(--text-primary);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .sticky-header-title .page-count {
+      font-size: 10px;
+      vertical-align: baseline;
+    }
+
+    .sticky-header-filter {
+      flex: 1;
+      position: relative;
+    }
+
+    .sticky-header-filter .filter-bar-icon {
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 13px;
+      height: 13px;
+    }
+
+    .sticky-header-filter .filter-input {
+      width: 100%;
+      height: 32px;
+      padding-left: 30px;
+      font-size: var(--text-xs);
+      border-radius: var(--radius-sm);
+    }
+
+    .sticky-header-filter .filter-kbd {
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 18px;
+      min-width: 18px;
+      font-size: 9px;
+    }
+
+    .sticky-header .btn {
+      height: 30px;
+      font-size: var(--text-xs);
+      padding: 0 var(--space-3);
+      flex-shrink: 0;
+    }
+
+    .sticky-header .btn svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    /* Spacer to offset sticky header height when visible */
+    .sticky-spacer {
+      height: 0;
+      transition: height 300ms var(--ease-out);
+    }
+
+    /* §16.5 Table container */
     .table-wrap {
       background: var(--bg-surface);
       border: 1px solid var(--border-primary);
@@ -832,8 +926,23 @@
     </aside>
 
     <!-- Main content -->
-    <div class="main">
-      <div class="page-header">
+    <div class="main" id="main">
+      <!-- Sticky condensed header (revealed on scroll) -->
+      <div class="sticky-header">
+        <span class="sticky-header-title">Tickets <span class="page-count">12</span></span>
+        <div class="sticky-header-filter">
+          <svg class="filter-bar-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="6.5" cy="6.5" r="4.5"/><path d="M10 10l4 4"/></svg>
+          <input class="filter-input" type="text" placeholder="Filter…">
+          <span class="filter-kbd">/</span>
+        </div>
+        <button class="btn btn-primary">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
+          Create
+        </button>
+      </div>
+
+      <!-- Full page header -->
+      <div class="page-header" id="page-header">
         <div>
           <div class="page-header-breadcrumb">All tickets</div>
           <h1>Tickets <span class="page-count">12</span></h1>
@@ -844,7 +953,7 @@
         </button>
       </div>
 
-      <div class="filter-bar">
+      <div class="filter-bar" id="filter-bar">
         <svg class="filter-bar-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="6.5" cy="6.5" r="4.5"/><path d="M10 10l4 4"/></svg>
         <input class="filter-input" type="text" placeholder="Filter tickets…">
         <span class="filter-kbd">/</span>
@@ -984,5 +1093,20 @@
     </div>
 
   </div>
+
+  <script>
+    // Sticky header: show condensed bar when page-header scrolls off
+    const main = document.getElementById('main');
+    const pageHeader = document.getElementById('page-header');
+
+    const onScroll = () => {
+      const gone = pageHeader.getBoundingClientRect().bottom < 8;
+      if (gone !== main.classList.contains('is-scrolled')) {
+        main.classList.toggle('is-scrolled', gone);
+      }
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+  </script>
 </body>
 </html>
