@@ -455,5 +455,5 @@ The first migration (`001_initial_schema.sql`) contains all CREATE TABLE and CRE
 ## 11. Open Questions
 
 1. **FTS5 sync strategy.** Should the FTS index be updated via SQLite triggers or application-level inserts? Triggers are simpler but less flexible. Deferred to DD 0.2.
-2. **Session storage alternative.** Should sessions use signed cookies (stateless) instead of a database table? Deferred to DD 0.3.
+2. ~~**Session storage alternative.**~~ Resolved in DD 0.3 (Auth & Sessions): database-backed sessions selected. Server-side revocation is required for logout and user deactivation; SQLite point-lookups are sub-millisecond. The `sessions` table (§7.2) is used as-is. DD 0.3 also adds a `password_resets` table for the password reset flow.
 3. **Attachment deduplication.** Should `attachments.sha256` have a UNIQUE constraint to deduplicate identical files? Deferred to DD 0.5.
