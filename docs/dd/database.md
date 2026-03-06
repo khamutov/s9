@@ -340,20 +340,22 @@ CREATE INDEX idx_pending_notifications_send_after ON pending_notifications(send_
 CREATE INDEX idx_pending_notifications_user_ticket ON pending_notifications(user_id, ticket_id);
 ```
 
-### 7.14 FTS5 Virtual Table (placeholder)
+### 7.14 FTS5 Virtual Table
 
-Full-text search over ticket titles and comment bodies. The detailed indexing strategy, query syntax mapping, and ranking configuration are defined in DD 0.2.
+Full-text search over ticket titles and comment bodies. One row per ticket: `title` is the ticket title, `body` is all comment bodies concatenated. The full design (sync strategy, query translation, ranking) is specified in DD 0.2 (Full-Text Search).
 
 ```sql
 CREATE VIRTUAL TABLE tickets_fts USING fts5(
     title,
     body,
-    content='',        -- contentless: we manage content manually
-    tokenize='unicode61'
+    content='',
+    contentless_delete=1,
+    tokenize='porter unicode61 remove_diacritics 2',
+    prefix='2,3'
 );
 ```
 
-The search DD will specify trigger-based sync, the column mapping, and query translation from the PRD filter micro-syntax.
+The FTS index is managed at the application level (not triggers) because `body` is an aggregate across all comments for a ticket. See DD 0.2 §8 for sync operations.
 
 ## 8. Indexing Strategy
 
