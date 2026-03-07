@@ -1,0 +1,20 @@
+# Rust
+/target/
+
+# SQLite
+*.db
+*.db-wal
+*.db-shm
+
+# Application data
+data/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo

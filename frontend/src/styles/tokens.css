@@ -1,0 +1,64 @@
+:root {
+  /* Backgrounds — warm dark theme */
+  --bg-root: #0e0d0b;
+  --bg-surface: #171613;
+  --bg-raised: #1e1d19;
+  --bg-hover: #242320;
+
+  /* Accent — golden */
+  --accent: #e8b43a;
+  --accent-hover: #d4a230;
+
+  /* Text hierarchy */
+  --text-primary: #ede9dd;
+  --text-label: #a89d90;
+  --text-secondary: #8c8579;
+  --text-tertiary: #5c564d;
+  --text-ghost: #3d3830;
+
+  /* Borders */
+  --border-primary: rgba(255, 245, 220, 0.08);
+  --border-subtle: rgba(255, 245, 220, 0.04);
+
+  /* Status colors */
+  --status-new: #8c8579;
+  --status-progress: #7cb8f7;
+  --status-verify: #e8b43a;
+  --status-done: #5eca7e;
+
+  /* Priority colors */
+  --priority-p0: #f87171;
+  --priority-p1: #fb923c;
+  --priority-p2: #e8b43a;
+  --priority-p3: #7cb8f7;
+  --priority-p4: #5c564d;
+  --priority-p5: #3d3830;
+
+  /* Typography — font families */
+  --font-display: 'Bricolage Grotesque', sans-serif;
+  --font-body: 'Instrument Sans', sans-serif;
+  --font-mono: 'Martian Mono', monospace;
+
+  /* Typography — sizes */
+  --text-xs: 0.6875rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.9375rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 2rem;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* Layout */
+  --sidebar-width: 240px;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-fast: 150ms ease-out;
+}

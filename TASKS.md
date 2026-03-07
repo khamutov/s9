@@ -27,12 +27,12 @@ Status legend: `[ ]` pending | `[~]` in progress | `[x]` completed
 
 ## Phase 1: Project Scaffolding
 
-- [ ] **1.1** Initialize Cargo workspace with backend crate [blocked by: 0.8]
-- [ ] **1.2** Initialize React+TS project with Vite [blocked by: 0.7, 0.8]
-- [ ] **1.3** Rust linting/formatting setup (rustfmt, clippy) [blocked by: 1.1]
-- [ ] **1.4** Frontend linting (ESLint, Prettier) [blocked by: 1.2]
-- [ ] **1.5** Build pipeline: frontend build + rust-embed [blocked by: 1.1, 1.2]
-- [ ] **1.6** Dev workflow: Vite proxy to backend [blocked by: 1.1, 1.2]
+- [x] **1.1** Initialize Cargo workspace with backend crate [blocked by: 0.8]
+- [x] **1.2** Initialize React+TS project with Vite [blocked by: 0.7, 0.8]
+- [x] **1.3** Rust linting/formatting setup (rustfmt, clippy) [blocked by: 1.1]
+- [x] **1.4** Frontend linting (ESLint, Prettier) [blocked by: 1.2]
+- [x] **1.5** Build pipeline: frontend build + rust-embed [blocked by: 1.1, 1.2]
+- [x] **1.6** Dev workflow: Vite proxy to backend [blocked by: 1.1, 1.2]
 
 ## Phase 2: Backend Core
 

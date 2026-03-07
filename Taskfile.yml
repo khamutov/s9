@@ -1,0 +1,93 @@
+version: "3"
+
+vars:
+  FRONTEND_DIR: frontend
+
+tasks:
+  frontend:install:
+    desc: Install frontend dependencies
+    dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - npm ci
+    sources:
+      - package-lock.json
+    generates:
+      - node_modules/.package-lock.json
+
+  frontend:build:
+    desc: Build frontend for production
+    dir: "{{.FRONTEND_DIR}}"
+    deps: [frontend:install]
+    cmds:
+      - npm run build
+
+  frontend:lint:
+    desc: Lint and typecheck frontend
+    dir: "{{.FRONTEND_DIR}}"
+    deps: [frontend:install]
+    cmds:
+      - npm run lint
+      - npm run typecheck
+      - npm run format:check
+
+  frontend:test:
+    desc: Run frontend tests
+    dir: "{{.FRONTEND_DIR}}"
+    deps: [frontend:install]
+    cmds:
+      - npm run test
+
+  backend:build:
+    desc: Build backend (debug)
+    cmds:
+      - cargo build
+
+  backend:release:
+    desc: Build backend (release, with embedded frontend)
+    deps: [frontend:build]
+    cmds:
+      - cargo build --release
+
+  backend:lint:
+    desc: Lint backend (fmt + clippy)
+    cmds:
+      - cargo fmt --check
+      - cargo clippy -- -D warnings
+
+  backend:test:
+    desc: Run backend tests
+    cmds:
+      - cargo test
+
+  build:
+    desc: Full release build
+    deps: [backend:release]
+
+  lint:
+    desc: Run all linters
+    deps: [backend:lint, frontend:lint]
+
+  test:
+    desc: Run all tests
+    deps: [backend:test, frontend:test]
+
+  dev:
+    desc: Start dev servers (backend + frontend)
+    deps: [dev:backend, dev:frontend]
+
+  dev:backend:
+    desc: Start backend with auto-reload
+    cmds:
+      - cargo watch -x 'run -- --listen 127.0.0.1:3000 serve'
+
+  dev:frontend:
+    desc: Start Vite dev server
+    dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - npm run dev
+
+  clean:
+    desc: Clean all build artifacts
+    cmds:
+      - cargo clean
+      - rm -rf {{.FRONTEND_DIR}}/dist {{.FRONTEND_DIR}}/node_modules
