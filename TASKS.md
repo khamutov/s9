@@ -21,9 +21,9 @@ Status legend: `[ ]` pending | `[~]` in progress | `[x]` completed
 - [x] **0.10** Ticket list → `prototypes/01-ticket-list.html` [blocked by: 0.9]
 - [x] **0.11** Ticket detail → `prototypes/02-ticket-detail.html` [blocked by: 0.9]
 - [x] **0.12** Component tree → `prototypes/03-component-tree.html` [blocked by: 0.9]
-- [ ] **0.13** Create ticket form → `prototypes/04-create-ticket.html` [blocked by: 0.9]
-- [ ] **0.14** Layout shell → `prototypes/05-layout.html` [blocked by: 0.9]
-- [ ] **0.15** Milestone view → `prototypes/06-milestone-view.html` [blocked by: 0.9]
+- [x] **0.13** Create ticket form → `prototypes/04-create-ticket.html` [blocked by: 0.9]
+- [x] **0.14** Layout shell → `prototypes/05-layout.html` [blocked by: 0.9]
+- [x] **0.15** Milestone view → `prototypes/06-milestone-view.html` [blocked by: 0.9]
 
 ## Phase 1: Project Scaffolding
 

@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>S9 — Layout Shell</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600;700&family=Martian+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    /* ==========================================================================
+       S9 — Layout Shell Prototype
+       "Warm Midnight" — dark, textured, golden accents
+       Fonts: Bricolage Grotesque · Instrument Sans · Martian Mono
+       ========================================================================== */
+
+    /* §1 Reset */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    input, button, textarea, select { font: inherit; color: inherit; }
+    button { cursor: pointer; border: none; background: none; }
+    ul, ol { list-style: none; }
+    a { color: inherit; text-decoration: none; }
+    table { border-collapse: separate; border-spacing: 0; }
+
+    /* §2 Design Tokens */
+    :root {
+      --bg-root: #0e0d0b;
+      --bg-surface: #171613;
+      --bg-raised: #1e1d19;
+      --bg-hover: #242320;
+      --bg-selected: rgba(232, 180, 58, 0.06);
+
+      --border-primary: rgba(255, 245, 220, 0.08);
+      --border-subtle: rgba(255, 245, 220, 0.04);
+
+      --text-primary: #ede9dd;
+      --text-secondary: #8c8579;
+      --text-tertiary: #5c564d;
+      --text-ghost: #3d3830;
+
+      --accent: #e8b43a;
+      --accent-hover: #d4a230;
+      --accent-subtle: rgba(232, 180, 58, 0.10);
+      --accent-glow: rgba(232, 180, 58, 0.04);
+
+      --status-new-bg: rgba(255, 255, 255, 0.05);
+      --status-new-text: #8c8579;
+      --status-progress-bg: rgba(96, 165, 250, 0.12);
+      --status-progress-text: #7cb8f7;
+      --status-verify-bg: rgba(232, 180, 58, 0.12);
+      --status-verify-text: #e8b43a;
+      --status-done-bg: rgba(74, 222, 128, 0.10);
+      --status-done-text: #5eca7e;
+
+      --priority-p0: #f87171;
+      --priority-p1: #fb923c;
+      --priority-p2: #e8b43a;
+      --priority-p3: #7cb8f7;
+      --priority-p4: #5c564d;
+      --priority-p5: #3d3830;
+
+      --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
+      --font-body: 'Instrument Sans', system-ui, sans-serif;
+      --font-mono: 'Martian Mono', ui-monospace, monospace;
+
+      --text-xs: 0.6875rem;
+      --text-sm: 0.8125rem;
+      --text-base: 0.9375rem;
+      --text-lg: 1.125rem;
+      --text-xl: 1.5rem;
+      --text-2xl: 2rem;
+
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-5: 20px;
+      --space-6: 24px;
+      --space-8: 32px;
+      --space-10: 40px;
+
+      --sidebar-width: 224px;
+      --radius: 8px;
+      --radius-sm: 5px;
+      --radius-full: 9999px;
+
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --transition-fast: 150ms var(--ease-out);
+      --transition-med: 250ms var(--ease-out);
+
+      --shadow-glow: 0 0 20px rgba(232, 180, 58, 0.05);
+      --shadow-elevated: 0 4px 24px rgba(0, 0, 0, 0.4), 0 1px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    /* §3 Global */
+    body {
+      font-family: var(--font-body);
+      font-size: var(--text-sm);
+      line-height: 1.5;
+      color: var(--text-primary);
+      background: var(--bg-root);
+    }
+
+    /* Dot-grid background texture */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(circle, var(--text-ghost) 0.5px, transparent 0.5px);
+      background-size: 24px 24px;
+      opacity: 0.3;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* §4 Layout Shell */
+    .app {
+      display: flex;
+      min-height: 100vh;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* §5 Sidebar */
+    .sidebar {
+      width: var(--sidebar-width);
+      min-width: var(--sidebar-width);
+      height: 100vh;
+      position: sticky;
+      top: 0;
+      background: linear-gradient(180deg, #131210 0%, #0a0908 100%);
+      border-right: 1px solid var(--border-primary);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      z-index: 10;
+    }
+
+    .sidebar-header {
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 var(--space-5);
+      border-bottom: 1px solid var(--border-primary);
+    }
+
+    .sidebar-logo {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: var(--text-xl);
+      color: var(--accent);
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+
+    .sidebar-logo-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      margin-left: 2px;
+      vertical-align: super;
+      animation: pulse-dot 3s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; box-shadow: 0 0 4px var(--accent); }
+      50% { opacity: 0.4; box-shadow: none; }
+    }
+
+    /* Notification bell */
+    .notification-bell {
+      position: relative;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-sm);
+      color: var(--text-tertiary);
+      transition: all var(--transition-fast);
+    }
+
+    .notification-bell:hover {
+      color: var(--text-secondary);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .notification-bell svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .notification-dot {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      width: 7px;
+      height: 7px;
+      background: var(--priority-p0);
+      border-radius: 50%;
+      border: 2px solid #131210;
+      animation: pulse-notification 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-notification {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.4); }
+      50% { box-shadow: 0 0 0 3px rgba(248, 113, 113, 0); }
+    }
+
+    .sidebar-nav {
+      padding: var(--space-3) var(--space-2);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: 8px 12px;
+      font-size: var(--text-sm);
+      font-weight: 500;
+      color: var(--text-tertiary);
+      border-radius: var(--radius-sm);
+      transition: all var(--transition-fast);
+      position: relative;
+      cursor: pointer;
+    }
+
+    .nav-item:hover {
+      color: var(--text-secondary);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .nav-item.is-active {
+      color: var(--accent);
+      background: var(--accent-subtle);
+    }
+
+    .nav-item.is-active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 16px;
+      background: var(--accent);
+      border-radius: 0 2px 2px 0;
+    }
+
+    .nav-icon {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      opacity: 0.5;
+    }
+
+    .is-active .nav-icon { opacity: 1; }
+
+    .nav-badge {
+      margin-left: auto;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      background: rgba(255, 255, 255, 0.04);
+      padding: 1px 6px;
+      border-radius: var(--radius-full);
+      min-width: 20px;
+      text-align: center;
+    }
+
+    .is-active .nav-badge {
+      color: var(--accent);
+      background: rgba(232, 180, 58, 0.12);
+    }
+
+    .sidebar-section-label {
+      padding: var(--space-4) 12px var(--space-1);
+      font-family: var(--font-mono);
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-ghost);
+    }
+
+    .sidebar-footer {
+      padding: var(--space-3) var(--space-4);
+      border-top: 1px solid var(--border-primary);
+    }
+
+    .user-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: var(--text-sm);
+    }
+
+    .sidebar-footer .user-pill {
+      color: var(--text-secondary);
+    }
+
+    .user-pill-avatar {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      color: var(--bg-root);
+      font-size: 9px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      letter-spacing: -0.02em;
+    }
+
+    .user-pill-avatar--indigo { background: #a78bfa; }
+    .user-pill-avatar--teal   { background: #2dd4bf; }
+    .user-pill-avatar--amber  { background: var(--accent); }
+    .user-pill-avatar--rose   { background: #fb7185; }
+
+    /* §6 Main Content */
+    .main {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      padding: var(--space-8) var(--space-10);
+    }
+
+    /* Ambient gradient overlay */
+    .main::before {
+      content: '';
+      position: fixed;
+      top: -200px;
+      right: -200px;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(232, 180, 58, 0.03) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .main > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* §7 Command Bar */
+    .command-bar {
+      display: flex;
+      align-items: center;
+      position: relative;
+      margin-bottom: var(--space-6);
+      animation: fade-down 0.5s var(--ease-out) 0.04s both;
+    }
+
+    .command-bar-icon {
+      position: absolute;
+      left: 16px;
+      width: 15px;
+      height: 15px;
+      color: var(--text-tertiary);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .command-bar-input {
+      width: 100%;
+      font-family: var(--font-mono);
+      font-size: var(--text-sm);
+      padding: var(--space-3) var(--space-5);
+      padding-left: 42px;
+      height: 48px;
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius);
+      background: var(--bg-surface);
+      color: var(--text-primary);
+      transition: all var(--transition-fast);
+    }
+
+    .command-bar-input::placeholder {
+      color: var(--text-ghost);
+      font-weight: 400;
+    }
+
+    .command-bar-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-subtle), var(--shadow-glow);
+      background: var(--bg-raised);
+    }
+
+    .command-bar-kbd {
+      position: absolute;
+      right: 14px;
+      pointer-events: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 24px;
+      padding: 0 8px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-ghost);
+      background: var(--bg-raised);
+      border: 1px solid var(--border-primary);
+      border-radius: 4px;
+      gap: 2px;
+    }
+
+    /* §8 Page Header */
+    .page-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: var(--space-8);
+      animation: fade-down 0.5s var(--ease-out) both;
+    }
+
+    @keyframes fade-down {
+      from { opacity: 0; transform: translateY(-12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .page-header-breadcrumb {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-ghost);
+      margin-bottom: var(--space-2);
+    }
+
+    .page-header-breadcrumb span {
+      color: var(--text-tertiary);
+    }
+
+    .page-header h1 {
+      font-family: var(--font-display);
+      font-size: var(--text-2xl);
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      line-height: 1.1;
+      color: var(--text-primary);
+    }
+
+    .page-header-subtitle {
+      font-family: var(--font-body);
+      font-size: var(--text-sm);
+      color: var(--text-tertiary);
+      margin-top: var(--space-1);
+    }
+
+    /* §9 Stat Cards */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-4);
+      margin-bottom: var(--space-6);
+    }
+
+    .stat-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius);
+      padding: var(--space-5) var(--space-5);
+      transition: all var(--transition-fast);
+      cursor: default;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255, 245, 220, 0.12);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .stat-card-value {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      color: var(--text-primary);
+      margin-bottom: var(--space-1);
+    }
+
+    .stat-card-value--accent { color: var(--accent); }
+    .stat-card-value--progress { color: var(--status-progress-text); }
+    .stat-card-value--done { color: var(--status-done-text); }
+
+    .stat-card-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+    }
+
+    /* Staggered stat card animations */
+    .stat-card:nth-child(1) { animation: fade-down 0.5s var(--ease-out) 0.08s both; }
+    .stat-card:nth-child(2) { animation: fade-down 0.5s var(--ease-out) 0.12s both; }
+    .stat-card:nth-child(3) { animation: fade-down 0.5s var(--ease-out) 0.16s both; }
+    .stat-card:nth-child(4) { animation: fade-down 0.5s var(--ease-out) 0.20s both; }
+
+    /* §10 Content Grid */
+    .content-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: var(--space-6);
+      margin-bottom: var(--space-6);
+    }
+
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-4) var(--space-5);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .card-title {
+      font-family: var(--font-display);
+      font-size: var(--text-base);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+    }
+
+    .card-action {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-ghost);
+      letter-spacing: 0.04em;
+      transition: color var(--transition-fast);
+      cursor: pointer;
+    }
+
+    .card-action:hover { color: var(--accent); }
+
+    /* §11 Activity Items */
+    .activity-list {
+      padding: 0;
+    }
+
+    .activity-item {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+      padding: var(--space-3) var(--space-5);
+      border-bottom: 1px solid var(--border-subtle);
+      transition: background var(--transition-fast);
+    }
+
+    .activity-item:last-child { border-bottom: none; }
+    .activity-item:hover { background: var(--bg-hover); }
+
+    .activity-item .user-pill-avatar {
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+
+    .activity-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .activity-text {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    .activity-text strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .activity-text .activity-ref {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--accent);
+    }
+
+    .activity-time {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-ghost);
+      margin-top: 2px;
+    }
+
+    /* Staggered activity reveal */
+    .activity-item {
+      animation: row-reveal 0.4s var(--ease-out) both;
+    }
+    .activity-item:nth-child(1) { animation-delay: 0.24s; }
+    .activity-item:nth-child(2) { animation-delay: 0.28s; }
+    .activity-item:nth-child(3) { animation-delay: 0.32s; }
+    .activity-item:nth-child(4) { animation-delay: 0.36s; }
+    .activity-item:nth-child(5) { animation-delay: 0.40s; }
+
+    @keyframes row-reveal {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* §12 Quick Actions */
+    .quick-actions {
+      padding: var(--space-4) var(--space-5);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      height: 36px;
+      padding: 0 var(--space-4);
+      font-family: var(--font-body);
+      font-size: var(--text-sm);
+      font-weight: 600;
+      border-radius: var(--radius);
+      transition: all var(--transition-fast);
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg-root);
+      box-shadow: 0 1px 3px rgba(232, 180, 58, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      box-shadow: 0 2px 12px rgba(232, 180, 58, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid var(--border-primary);
+    }
+
+    .btn-ghost:hover {
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.03);
+      border-color: rgba(255, 245, 220, 0.12);
+    }
+
+    .btn-ghost:active {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .btn svg {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+    }
+
+    /* §13 Skeleton Table */
+    .table-section {
+      animation: fade-down 0.5s var(--ease-out) 0.44s both;
+    }
+
+    .table-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-4);
+    }
+
+    .table-section-title {
+      font-family: var(--font-display);
+      font-size: var(--text-lg);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: var(--text-primary);
+    }
+
+    .table-section-count {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      color: var(--text-ghost);
+      margin-left: var(--space-2);
+    }
+
+    .table-wrap {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .table {
+      width: 100%;
+      font-size: var(--text-sm);
+    }
+
+    .table th,
+    .table td {
+      padding: 0 var(--space-4);
+      text-align: left;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .table th {
+      height: 36px;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-ghost);
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-primary);
+      user-select: none;
+    }
+
+    .table td {
+      height: 46px;
+    }
+
+    .table-row {
+      transition: all var(--transition-fast);
+      position: relative;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .table-row:last-child { border-bottom: none; }
+    .table-row:hover { background: var(--bg-hover); }
+
+    /* Skeleton placeholders */
+    .skeleton {
+      background: var(--bg-raised);
+      border-radius: 3px;
+      display: inline-block;
+      animation: skeleton-pulse 1.8s ease-in-out infinite;
+    }
+
+    @keyframes skeleton-pulse {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 0.6; }
+    }
+
+    .skeleton--id { width: 48px; height: 14px; }
+    .skeleton--title { height: 14px; }
+    .skeleton--badge { width: 72px; height: 20px; border-radius: var(--radius-sm); }
+    .skeleton--avatar { width: 100px; height: 14px; }
+    .skeleton--date { width: 40px; height: 12px; }
+
+    .col-id { width: 80px; }
+    .col-title { /* auto */ }
+    .col-status { width: 120px; }
+    .col-priority { width: 75px; }
+    .col-owner { width: 130px; }
+    .col-updated { width: 85px; }
+
+    /* §14 Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-primary);
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-ghost);
+    }
+
+    /* §15 Cards animation for content grid */
+    .content-grid .card:nth-child(1) {
+      animation: fade-down 0.5s var(--ease-out) 0.24s both;
+    }
+    .content-grid .card:nth-child(2) {
+      animation: fade-down 0.5s var(--ease-out) 0.28s both;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-logo">S9<span class="sidebar-logo-dot"></span></span>
+        <button class="notification-bell" title="Notifications">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 13.5a2 2 0 0 0 4 0"/>
+            <path d="M12.5 6.5a4.5 4.5 0 1 0-9 0c0 2.5-.5 4-1.5 5.5h12c-1-.5-1.5-3-1.5-5.5z"/>
+          </svg>
+          <span class="notification-dot"></span>
+        </button>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="sidebar-section-label">Workspace</div>
+        <a class="nav-item" href="#" data-page="tickets">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2.5 4h11M2.5 8h11M2.5 12h7"/></svg>
+          <span>Tickets</span>
+          <span class="nav-badge">12</span>
+        </a>
+        <a class="nav-item" href="#" data-page="components">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1.5" y="1.5" width="5" height="5" rx="1"/><rect x="9.5" y="1.5" width="5" height="5" rx="1"/><rect x="1.5" y="9.5" width="5" height="5" rx="1"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/></svg>
+          <span>Components</span>
+          <span class="nav-badge">18</span>
+        </a>
+        <a class="nav-item" href="#" data-page="milestones">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 14V2l9 4-9 4"/></svg>
+          <span>Milestones</span>
+          <span class="nav-badge">3</span>
+        </a>
+
+        <div class="sidebar-section-label">Views</div>
+        <a class="nav-item" href="#" data-page="my-tickets">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3 2.5-5 6-5s6 2 6 5"/></svg>
+          <span>My Tickets</span>
+        </a>
+        <a class="nav-item" href="#" data-page="recent">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M8 4.5V8l2.5 1.5"/></svg>
+          <span>Recently Viewed</span>
+        </a>
+        <a class="nav-item" href="#" data-page="starred">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1.5l2 4.5 4.5.5-3.3 3 1 4.5L8 11.5l-4.2 2.5 1-4.5-3.3-3L6 6z"/></svg>
+          <span>Starred</span>
+        </a>
+
+        <div class="sidebar-section-label">Settings</div>
+        <a class="nav-item" href="#" data-page="admin">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="2.5"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4"/></svg>
+          <span>Admin</span>
+        </a>
+        <a class="nav-item" href="#" data-page="preferences">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h4M10 4h4M2 8h8M13 8h1M2 12h2M7 12h7"/><circle cx="8" cy="4" r="1.5"/><circle cx="12" cy="8" r="1.5"/><circle cx="5.5" cy="12" r="1.5"/></svg>
+          <span>Preferences</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-pill">
+          <span class="user-pill-avatar user-pill-avatar--indigo">AK</span>
+          <span>Alex Kim</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <div class="main">
+
+      <!-- Command Bar -->
+      <div class="command-bar">
+        <svg class="command-bar-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <circle cx="6.5" cy="6.5" r="4.5"/>
+          <path d="M10 10l4 4"/>
+        </svg>
+        <input class="command-bar-input" id="command-bar" type="text" placeholder="Search or jump to...">
+        <span class="command-bar-kbd">&lceil;K</span>
+      </div>
+
+      <!-- Page Header -->
+      <div class="page-header" id="page-header">
+        <div>
+          <div class="page-header-breadcrumb" id="breadcrumb">
+            <span>S9</span> / Dashboard
+          </div>
+          <h1 id="page-title">Dashboard</h1>
+          <div class="page-header-subtitle" id="page-subtitle">Overview of project activity and key metrics</div>
+        </div>
+      </div>
+
+      <!-- Stats Row -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-card-value">72</div>
+          <div class="stat-card-label">Total Tickets</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-value stat-card-value--accent">28</div>
+          <div class="stat-card-label">Open</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-value stat-card-value--progress">19</div>
+          <div class="stat-card-label">In Progress</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-value stat-card-value--done">25</div>
+          <div class="stat-card-label">Done</div>
+        </div>
+      </div>
+
+      <!-- Two-Column Grid -->
+      <div class="content-grid">
+
+        <!-- Recent Activity -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Recent Activity</span>
+            <span class="card-action">View all</span>
+          </div>
+          <div class="activity-list">
+            <div class="activity-item">
+              <span class="user-pill-avatar user-pill-avatar--indigo">AK</span>
+              <div class="activity-content">
+                <div class="activity-text"><strong>Alex Kim</strong> changed status to In Progress on <span class="activity-ref">S9-142</span></div>
+                <div class="activity-time">12 min ago</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <span class="user-pill-avatar user-pill-avatar--teal">MC</span>
+              <div class="activity-content">
+                <div class="activity-text"><strong>Maria Chen</strong> commented on <span class="activity-ref">S9-141</span></div>
+                <div class="activity-time">34 min ago</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <span class="user-pill-avatar user-pill-avatar--amber">BL</span>
+              <div class="activity-content">
+                <div class="activity-text"><strong>Bob Lee</strong> created ticket <span class="activity-ref">S9-143</span></div>
+                <div class="activity-time">1h ago</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <span class="user-pill-avatar user-pill-avatar--rose">JW</span>
+              <div class="activity-content">
+                <div class="activity-text"><strong>Jan Weber</strong> resolved <span class="activity-ref">S9-138</span></div>
+                <div class="activity-time">2h ago</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <span class="user-pill-avatar user-pill-avatar--teal">MC</span>
+              <div class="activity-content">
+                <div class="activity-text"><strong>Maria Chen</strong> assigned <span class="activity-ref">S9-140</span> to Bob Lee</div>
+                <div class="activity-time">3h ago</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Quick Actions</span>
+          </div>
+          <div class="quick-actions">
+            <button class="btn btn-primary">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
+              Create Ticket
+            </button>
+            <button class="btn btn-ghost">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1.5" y="1.5" width="5" height="5" rx="1"/><rect x="9.5" y="1.5" width="5" height="5" rx="1"/><rect x="1.5" y="9.5" width="5" height="5" rx="1"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/></svg>
+              Add Component
+            </button>
+            <button class="btn btn-ghost">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 14V2l9 4-9 4"/></svg>
+              New Milestone
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- My Tickets Table (Skeleton) -->
+      <div class="table-section">
+        <div class="table-section-header">
+          <span class="table-section-title">My Tickets <span class="table-section-count">4 assigned</span></span>
+        </div>
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th class="col-id">ID</th>
+                <th class="col-title">Title</th>
+                <th class="col-status">Status</th>
+                <th class="col-priority">Pri</th>
+                <th class="col-owner">Owner</th>
+                <th class="col-updated">Updated</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="table-row">
+                <td class="col-id"><span class="skeleton skeleton--id"></span></td>
+                <td class="col-title"><span class="skeleton skeleton--title" style="width:70%"></span></td>
+                <td class="col-status"><span class="skeleton skeleton--badge"></span></td>
+                <td class="col-priority"><span class="skeleton skeleton--date"></span></td>
+                <td class="col-owner"><span class="skeleton skeleton--avatar"></span></td>
+                <td class="col-updated"><span class="skeleton skeleton--date"></span></td>
+              </tr>
+              <tr class="table-row">
+                <td class="col-id"><span class="skeleton skeleton--id"></span></td>
+                <td class="col-title"><span class="skeleton skeleton--title" style="width:55%"></span></td>
+                <td class="col-status"><span class="skeleton skeleton--badge"></span></td>
+                <td class="col-priority"><span class="skeleton skeleton--date"></span></td>
+                <td class="col-owner"><span class="skeleton skeleton--avatar"></span></td>
+                <td class="col-updated"><span class="skeleton skeleton--date"></span></td>
+              </tr>
+              <tr class="table-row">
+                <td class="col-id"><span class="skeleton skeleton--id"></span></td>
+                <td class="col-title"><span class="skeleton skeleton--title" style="width:82%"></span></td>
+                <td class="col-status"><span class="skeleton skeleton--badge"></span></td>
+                <td class="col-priority"><span class="skeleton skeleton--date"></span></td>
+                <td class="col-owner"><span class="skeleton skeleton--avatar"></span></td>
+                <td class="col-updated"><span class="skeleton skeleton--date"></span></td>
+              </tr>
+              <tr class="table-row">
+                <td class="col-id"><span class="skeleton skeleton--id"></span></td>
+                <td class="col-title"><span class="skeleton skeleton--title" style="width:45%"></span></td>
+                <td class="col-status"><span class="skeleton skeleton--badge"></span></td>
+                <td class="col-priority"><span class="skeleton skeleton--date"></span></td>
+                <td class="col-owner"><span class="skeleton skeleton--avatar"></span></td>
+                <td class="col-updated"><span class="skeleton skeleton--date"></span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    // Command bar: focus with Cmd+K / Ctrl+K, blur with Escape
+    const commandBar = document.getElementById('command-bar');
+
+    document.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        commandBar.focus();
+      }
+      if (e.key === 'Escape' && document.activeElement === commandBar) {
+        commandBar.blur();
+      }
+    });
+
+    // Sidebar nav: update page header on click
+    const navItems = document.querySelectorAll('.nav-item[data-page]');
+    const breadcrumb = document.getElementById('breadcrumb');
+    const pageTitle = document.getElementById('page-title');
+    const pageSubtitle = document.getElementById('page-subtitle');
+
+    const pages = {
+      'tickets':     { title: 'Tickets',          breadcrumb: 'Workspace',  subtitle: 'All open and closed tickets' },
+      'components':  { title: 'Components',        breadcrumb: 'Workspace',  subtitle: 'System component hierarchy' },
+      'milestones':  { title: 'Milestones',        breadcrumb: 'Workspace',  subtitle: 'Release targets and progress' },
+      'my-tickets':  { title: 'My Tickets',        breadcrumb: 'Views',      subtitle: 'Tickets assigned to you' },
+      'recent':      { title: 'Recently Viewed',   breadcrumb: 'Views',      subtitle: 'Your browsing history' },
+      'starred':     { title: 'Starred',           breadcrumb: 'Views',      subtitle: 'Bookmarked tickets and items' },
+      'admin':       { title: 'Admin',             breadcrumb: 'Settings',   subtitle: 'Users, roles, and configuration' },
+      'preferences': { title: 'Preferences',       breadcrumb: 'Settings',   subtitle: 'Personal display and notification settings' },
+    };
+
+    navItems.forEach((item) => {
+      item.addEventListener('click', (e) => {
+        e.preventDefault();
+        const page = item.dataset.page;
+        const info = pages[page];
+        if (!info) return;
+
+        // Update active state
+        navItems.forEach((n) => n.classList.remove('is-active'));
+        item.classList.add('is-active');
+
+        // Update header
+        breadcrumb.innerHTML = `<span>S9</span> / ${info.breadcrumb} / ${info.title}`;
+        pageTitle.textContent = info.title;
+        pageSubtitle.textContent = info.subtitle;
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>S9 — Create Ticket</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600;700&family=Martian+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    /* ==========================================================================
+       S9 — Create Ticket Form
+       "Warm Midnight" — dark, textured, golden accents
+       Fonts: Bricolage Grotesque · Instrument Sans · Martian Mono
+       ========================================================================== */
+
+    /* §1 Reset */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    input, button, textarea, select { font: inherit; color: inherit; }
+    button { cursor: pointer; border: none; background: none; }
+    ul, ol { list-style: none; }
+    a { color: inherit; text-decoration: none; }
+    table { border-collapse: separate; border-spacing: 0; }
+
+    /* §2 Design Tokens */
+    :root {
+      --bg-root: #0e0d0b;
+      --bg-surface: #171613;
+      --bg-raised: #1e1d19;
+      --bg-hover: #242320;
+      --bg-selected: rgba(232, 180, 58, 0.06);
+
+      --border-primary: rgba(255, 245, 220, 0.08);
+      --border-subtle: rgba(255, 245, 220, 0.04);
+
+      --text-primary: #ede9dd;
+      --text-secondary: #8c8579;
+      --text-tertiary: #5c564d;
+      --text-ghost: #3d3830;
+
+      --accent: #e8b43a;
+      --accent-hover: #d4a230;
+      --accent-subtle: rgba(232, 180, 58, 0.10);
+      --accent-glow: rgba(232, 180, 58, 0.04);
+
+      --status-new-bg: rgba(255, 255, 255, 0.05);
+      --status-new-text: #8c8579;
+      --status-progress-bg: rgba(96, 165, 250, 0.12);
+      --status-progress-text: #7cb8f7;
+      --status-verify-bg: rgba(232, 180, 58, 0.12);
+      --status-verify-text: #e8b43a;
+      --status-done-bg: rgba(74, 222, 128, 0.10);
+      --status-done-text: #5eca7e;
+
+      --priority-p0: #f87171;
+      --priority-p1: #fb923c;
+      --priority-p2: #e8b43a;
+      --priority-p3: #7cb8f7;
+      --priority-p4: #5c564d;
+      --priority-p5: #3d3830;
+
+      --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
+      --font-body: 'Instrument Sans', system-ui, sans-serif;
+      --font-mono: 'Martian Mono', ui-monospace, monospace;
+
+      --text-xs: 0.6875rem;
+      --text-sm: 0.8125rem;
+      --text-base: 0.9375rem;
+      --text-lg: 1.125rem;
+      --text-xl: 1.5rem;
+      --text-2xl: 2rem;
+
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-5: 20px;
+      --space-6: 24px;
+      --space-8: 32px;
+      --space-10: 40px;
+
+      --sidebar-width: 224px;
+      --radius: 8px;
+      --radius-sm: 5px;
+      --radius-full: 9999px;
+
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --transition-fast: 150ms var(--ease-out);
+      --transition-med: 250ms var(--ease-out);
+
+      --shadow-glow: 0 0 20px rgba(232, 180, 58, 0.05);
+      --shadow-elevated: 0 4px 24px rgba(0, 0, 0, 0.4), 0 1px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    /* §3 Global */
+    body {
+      font-family: var(--font-body);
+      font-size: var(--text-sm);
+      line-height: 1.5;
+      color: var(--text-primary);
+      background: var(--bg-root);
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(circle, var(--text-ghost) 0.5px, transparent 0.5px);
+      background-size: 24px 24px;
+      opacity: 0.3;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* §4 Layout Shell */
+    .app {
+      display: flex;
+      min-height: 100vh;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* §5 Sidebar */
+    .sidebar {
+      width: var(--sidebar-width);
+      min-width: var(--sidebar-width);
+      height: 100vh;
+      position: sticky;
+      top: 0;
+      background: linear-gradient(180deg, #131210 0%, #0a0908 100%);
+      border-right: 1px solid var(--border-primary);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      z-index: 10;
+    }
+
+    .sidebar-header {
+      height: 56px;
+      display: flex;
+      align-items: center;
+      padding: 0 var(--space-5);
+      border-bottom: 1px solid var(--border-primary);
+    }
+
+    .sidebar-logo {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: var(--text-xl);
+      color: var(--accent);
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+
+    .sidebar-logo-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      margin-left: 2px;
+      vertical-align: super;
+      animation: pulse-dot 3s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; box-shadow: 0 0 4px var(--accent); }
+      50% { opacity: 0.4; box-shadow: none; }
+    }
+
+    .sidebar-nav {
+      padding: var(--space-3) var(--space-2);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: 8px 12px;
+      font-size: var(--text-sm);
+      font-weight: 500;
+      color: var(--text-tertiary);
+      border-radius: var(--radius-sm);
+      transition: all var(--transition-fast);
+      position: relative;
+    }
+
+    .nav-item:hover {
+      color: var(--text-secondary);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .nav-item.is-active {
+      color: var(--accent);
+      background: var(--accent-subtle);
+    }
+
+    .nav-item.is-active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 16px;
+      background: var(--accent);
+      border-radius: 0 2px 2px 0;
+    }
+
+    .nav-icon {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      opacity: 0.5;
+    }
+
+    .is-active .nav-icon { opacity: 1; }
+
+    .nav-badge {
+      margin-left: auto;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      background: rgba(255, 255, 255, 0.04);
+      padding: 1px 6px;
+      border-radius: var(--radius-full);
+      min-width: 20px;
+      text-align: center;
+    }
+
+    .is-active .nav-badge {
+      color: var(--accent);
+      background: rgba(232, 180, 58, 0.12);
+    }
+
+    .sidebar-section-label {
+      padding: var(--space-4) 12px var(--space-1);
+      font-family: var(--font-mono);
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-ghost);
+    }
+
+    .sidebar-footer {
+      padding: var(--space-3) var(--space-4);
+      border-top: 1px solid var(--border-primary);
+    }
+
+    .user-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: var(--text-sm);
+    }
+
+    .sidebar-footer .user-pill {
+      color: var(--text-secondary);
+    }
+
+    .user-pill-avatar {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      color: var(--bg-root);
+      font-size: 9px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      letter-spacing: -0.02em;
+    }
+
+    .user-pill-avatar--indigo { background: #a78bfa; }
+    .user-pill-avatar--teal   { background: #2dd4bf; }
+    .user-pill-avatar--amber  { background: var(--accent); }
+    .user-pill-avatar--rose   { background: #fb7185; }
+
+    /* §6 Main Content */
+    .main {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      padding: var(--space-8) var(--space-10);
+    }
+
+    /* §7 Animations */
+    @keyframes fade-down {
+      from { opacity: 0; transform: translateY(-12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes row-reveal {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* §8 Page Header */
+    .page-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: var(--space-8);
+      animation: fade-down 0.5s var(--ease-out) both;
+    }
+
+    .page-header-breadcrumb {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-ghost);
+      margin-bottom: var(--space-2);
+    }
+
+    .page-header-breadcrumb a {
+      color: var(--text-tertiary);
+      transition: color var(--transition-fast);
+    }
+
+    .page-header-breadcrumb a:hover {
+      color: var(--accent);
+    }
+
+    .page-header-breadcrumb .breadcrumb-sep {
+      margin: 0 6px;
+      color: var(--text-ghost);
+    }
+
+    .page-header h1 {
+      font-family: var(--font-display);
+      font-size: var(--text-2xl);
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      line-height: 1.1;
+      color: var(--text-primary);
+    }
+
+    /* §9 Sticky Header */
+    .sticky-header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      height: 0;
+      margin-left: calc(-1 * var(--space-10));
+      margin-right: calc(-1 * var(--space-10));
+      padding: 0 var(--space-10);
+      background: var(--bg-root);
+      border-bottom: 1px solid transparent;
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(-4px);
+      transition:
+        height 300ms var(--ease-out),
+        opacity 250ms var(--ease-out),
+        transform 250ms var(--ease-out),
+        border-color 300ms var(--ease-out),
+        padding 300ms var(--ease-out);
+      pointer-events: none;
+    }
+
+    .main.is-scrolled .sticky-header {
+      height: 48px;
+      opacity: 1;
+      transform: translateY(0);
+      border-bottom-color: var(--border-primary);
+      pointer-events: auto;
+    }
+
+    .sticky-header-title {
+      font-family: var(--font-display);
+      font-size: var(--text-lg);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: var(--text-primary);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .sticky-header-actions {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .sticky-header .btn {
+      height: 30px;
+      font-size: var(--text-xs);
+      padding: 0 var(--space-3);
+      flex-shrink: 0;
+    }
+
+    .sticky-header .btn svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    /* §10 Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      height: 36px;
+      padding: 0 var(--space-4);
+      font-family: var(--font-body);
+      font-size: var(--text-sm);
+      font-weight: 600;
+      border-radius: var(--radius);
+      transition: all var(--transition-fast);
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg-root);
+      box-shadow: 0 1px 3px rgba(232, 180, 58, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      box-shadow: 0 2px 12px rgba(232, 180, 58, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-ghost {
+      color: var(--text-secondary);
+      background: transparent;
+      border: 1px solid var(--border-primary);
+    }
+
+    .btn-ghost:hover {
+      color: var(--text-primary);
+      background: var(--bg-raised);
+      border-color: rgba(255, 245, 220, 0.12);
+    }
+
+    /* §11 Ambient gradient overlay */
+    .main::before {
+      content: '';
+      position: fixed;
+      top: -200px;
+      right: -200px;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(232, 180, 58, 0.03) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .main > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* §12 Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-primary);
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-ghost);
+    }
+
+    /* ======================================================================
+       Create Ticket — Page-Specific Styles
+       ====================================================================== */
+
+    /* §13 Form Card */
+    .form-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius);
+      max-width: 780px;
+      animation: fade-down 0.5s var(--ease-out) 0.08s both;
+    }
+
+    .form-section {
+      padding: var(--space-6);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .form-section:last-child {
+      border-bottom: none;
+    }
+
+    .form-section-title {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-ghost);
+      margin-bottom: var(--space-5);
+    }
+
+    /* §14 Form Groups */
+    .form-group {
+      margin-bottom: var(--space-5);
+      animation: row-reveal 0.4s var(--ease-out) both;
+    }
+
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .form-group:nth-child(1) { animation-delay: 0.12s; }
+    .form-group:nth-child(2) { animation-delay: 0.16s; }
+    .form-group:nth-child(3) { animation-delay: 0.20s; }
+    .form-group:nth-child(4) { animation-delay: 0.24s; }
+    .form-group:nth-child(5) { animation-delay: 0.28s; }
+    .form-group:nth-child(6) { animation-delay: 0.32s; }
+
+    .form-label {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-ghost);
+      margin-bottom: var(--space-2);
+    }
+
+    .form-label .required {
+      color: var(--priority-p0);
+      margin-left: 2px;
+    }
+
+    /* §15 Text Inputs */
+    .form-input {
+      display: block;
+      width: 100%;
+      height: 40px;
+      padding: var(--space-2) var(--space-3);
+      font-family: var(--font-body);
+      font-size: var(--text-sm);
+      color: var(--text-primary);
+      background: var(--bg-raised);
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius-sm);
+      transition: all var(--transition-fast);
+    }
+
+    .form-input::placeholder {
+      color: var(--text-ghost);
+    }
+
+    .form-input:hover {
+      border-color: rgba(255, 245, 220, 0.12);
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-subtle), var(--shadow-glow);
+      background: var(--bg-raised);
+    }
+
+    .form-input.is-error {
+      border-color: var(--priority-p0);
+      box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.10);
+    }
+
+    .form-input-title {
+      font-family: var(--font-display);
+      font-size: var(--text-lg);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      height: 48px;
+    }
+
+    /* §16 Textarea */
+    .form-textarea {
+      display: block;
+      width: 100%;
+      min-height: 160px;
+      padding: var(--space-3);
+      font-family: var(--font-body);
+      font-size: var(--text-sm);
+      line-height: 1.6;
+      color: var(--text-primary);
+      background: var(--bg-raised);
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius-sm);
+      resize: vertical;
+      transition: all var(--transition-fast);
+    }
+
+    .form-textarea::placeholder {
+      color: var(--text-ghost);
+    }
+
+    .form-textarea:hover {
+      border-color: rgba(255, 245, 220, 0.12);
+    }
+
+    .form-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-subtle), var(--shadow-glow);
+    }
+
+    .form-textarea.is-error {
+      border-color: var(--priority-p0);
+      box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.10);
+    }
+
+    .textarea-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: var(--space-2);
+    }
+
+    .textarea-hint {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-ghost);
+      letter-spacing: 0.02em;
+    }
+
+    .textarea-hint svg {
+      width: 12px;
+      height: 12px;
+      vertical-align: -2px;
+      margin-right: 4px;
+      opacity: 0.5;
+    }
+
+    .char-count {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-ghost);
+      letter-spacing: 0.02em;
+      transition: color var(--transition-fast);
+    }
+
+    .char-count.is-near-limit {
+      color: var(--priority-p2);
+    }
+
+    .char-count.is-over-limit {
+      color: var(--priority-p0);
+    }
+
+    /* §17 Select */
+    .form-select-wrap {
+      position: relative;
+    }
+
+    .form-select-wrap::after {
+      content: '';
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-top: 5px solid var(--text-tertiary);
+      pointer-events: none;
+      transition: border-color var(--transition-fast);
+    }
+
+    .form-select-wrap:hover::after {
+      border-top-color: var(--text-secondary);
+    }
+
+    .form-select {
+      display: block;
+      width: 100%;
+      height: 40px;
+      padding: var(--space-2) var(--space-8) var(--space-2) var(--space-3);
+      font-family: var(--font-body);
+      font-size: var(--text-sm);
+      color: var(--text-primary);
+      background: var(--bg-raised);
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius-sm);
+      appearance: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .form-select:hover {
+      border-color: rgba(255, 245, 220, 0.12);
+    }
+
+    .form-select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-subtle), var(--shadow-glow);
+    }
+
+    .form-select option {
+      background: var(--bg-raised);
+      color: var(--text-primary);
+    }
+
+    /* §18 Date Input */
+    .form-input[type="date"] {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      color: var(--text-secondary);
+    }
+
+    .form-input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(0.5) sepia(1) saturate(0.5) hue-rotate(10deg);
+      cursor: pointer;
+      opacity: 0.5;
+      transition: opacity var(--transition-fast);
+    }
+
+    .form-input[type="date"]::-webkit-calendar-picker-indicator:hover {
+      opacity: 0.8;
+    }
+
+    /* §19 Metadata Grid */
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-5) var(--space-6);
+    }
+
+    /* §20 Drop Zone */
+    .drop-zone {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-2);
+      padding: var(--space-8) var(--space-6);
+      border: 2px dashed var(--border-primary);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      animation: row-reveal 0.4s var(--ease-out) 0.36s both;
+    }
+
+    .drop-zone:hover {
+      border-color: var(--text-ghost);
+      background: rgba(255, 255, 255, 0.01);
+    }
+
+    .drop-zone.is-dragover {
+      border-color: var(--accent);
+      background: var(--accent-subtle);
+    }
+
+    .drop-zone-icon {
+      width: 32px;
+      height: 32px;
+      color: var(--text-ghost);
+      transition: color var(--transition-fast);
+    }
+
+    .drop-zone:hover .drop-zone-icon {
+      color: var(--text-tertiary);
+    }
+
+    .drop-zone.is-dragover .drop-zone-icon {
+      color: var(--accent);
+    }
+
+    .drop-zone-text {
+      font-size: var(--text-sm);
+      color: var(--text-tertiary);
+      transition: color var(--transition-fast);
+    }
+
+    .drop-zone:hover .drop-zone-text {
+      color: var(--text-secondary);
+    }
+
+    .drop-zone.is-dragover .drop-zone-text {
+      color: var(--accent);
+    }
+
+    .drop-zone-hint {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-ghost);
+      letter-spacing: 0.02em;
+    }
+
+    /* §21 Form Actions */
+    .form-actions {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-5) var(--space-6);
+      border-top: 1px solid var(--border-primary);
+      background: var(--bg-surface);
+      border-radius: 0 0 var(--radius) var(--radius);
+    }
+
+    .form-actions .btn-ghost-cancel {
+      margin-left: auto;
+    }
+
+    /* §22 Error message */
+    .form-error {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--priority-p0);
+      margin-top: var(--space-1);
+      letter-spacing: 0.02em;
+      display: none;
+    }
+
+    .form-error.is-visible {
+      display: block;
+    }
+
+    /* §23 Optional label */
+    .optional-tag {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      font-weight: 400;
+      letter-spacing: 0.06em;
+      color: var(--text-ghost);
+      text-transform: lowercase;
+      margin-left: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-logo">S9<span class="sidebar-logo-dot"></span></span>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="sidebar-section-label">Workspace</div>
+        <a class="nav-item is-active" href="#">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2.5 4h11M2.5 8h11M2.5 12h7"/></svg>
+          <span>Tickets</span>
+          <span class="nav-badge">12</span>
+        </a>
+        <a class="nav-item" href="#">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1.5" y="1.5" width="5" height="5" rx="1"/><rect x="9.5" y="1.5" width="5" height="5" rx="1"/><rect x="1.5" y="9.5" width="5" height="5" rx="1"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/></svg>
+          <span>Components</span>
+        </a>
+        <a class="nav-item" href="#">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 14V2l9 4-9 4"/></svg>
+          <span>Milestones</span>
+        </a>
+        <div class="sidebar-section-label">Settings</div>
+        <a class="nav-item" href="#">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="2.5"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4"/></svg>
+          <span>Admin</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-pill">
+          <span class="user-pill-avatar user-pill-avatar--indigo">AK</span>
+          <span>Alex Kim</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <div class="main" id="main">
+      <!-- Sticky condensed header -->
+      <div class="sticky-header">
+        <span class="sticky-header-title">Create Ticket</span>
+        <div class="sticky-header-actions">
+          <button class="btn btn-ghost" type="button" onclick="handleDraft()">Save as Draft</button>
+          <button class="btn btn-primary" type="button" onclick="handleSubmit()">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
+            Create
+          </button>
+        </div>
+      </div>
+
+      <!-- Page header -->
+      <div class="page-header" id="page-header">
+        <div>
+          <div class="page-header-breadcrumb">
+            <a href="#">All tickets</a>
+            <span class="breadcrumb-sep">/</span>
+            New
+          </div>
+          <h1>Create Ticket</h1>
+        </div>
+      </div>
+
+      <!-- Form -->
+      <form class="form-card" id="ticket-form" novalidate>
+
+        <!-- Basic Info -->
+        <div class="form-section">
+          <div class="form-section-title">Basic Info</div>
+
+          <div class="form-group">
+            <label class="form-label" for="ticket-title">Title <span class="required">*</span></label>
+            <input class="form-input form-input-title" type="text" id="ticket-title" placeholder="Ticket title..." required>
+            <div class="form-error" id="title-error">Title is required</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="ticket-desc">Description <span class="required">*</span></label>
+            <textarea class="form-textarea" id="ticket-desc" rows="6" placeholder="Describe the issue..." maxlength="2000" required></textarea>
+            <div class="textarea-footer">
+              <span class="textarea-hint">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 13l3-3M6.5 4.5l-2 2M10 8L6 4M4 10l6-6 3 3-6 6H4v-3z"/></svg>
+                Markdown supported
+              </span>
+              <span class="char-count" id="char-count">0 / 2000</span>
+            </div>
+            <div class="form-error" id="desc-error">Description is required</div>
+          </div>
+        </div>
+
+        <!-- Metadata -->
+        <div class="form-section">
+          <div class="form-section-title">Metadata</div>
+
+          <div class="meta-grid">
+            <div class="form-group">
+              <label class="form-label" for="ticket-status">Status</label>
+              <div class="form-select-wrap">
+                <select class="form-select" id="ticket-status">
+                  <option value="new" selected>New</option>
+                  <option value="in-progress">In Progress</option>
+                  <option value="verify">Verify</option>
+                  <option value="done">Done</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="ticket-priority">Priority</label>
+              <div class="form-select-wrap">
+                <select class="form-select" id="ticket-priority">
+                  <option value="p0">P0 Critical</option>
+                  <option value="p1">P1 High</option>
+                  <option value="p2" selected>P2 Medium</option>
+                  <option value="p3">P3 Low</option>
+                  <option value="p4">P4 Minor</option>
+                  <option value="p5">P5 Trivial</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="ticket-component">Component</label>
+              <div class="form-select-wrap">
+                <select class="form-select" id="ticket-component">
+                  <option value="">Select component...</option>
+                  <optgroup label="Platform">
+                    <option value="platform">Platform</option>
+                    <option value="networking">&nbsp;&nbsp;Networking</option>
+                    <option value="dns">&nbsp;&nbsp;&nbsp;&nbsp;DNS</option>
+                    <option value="tls-certs">&nbsp;&nbsp;&nbsp;&nbsp;TLS/Certs</option>
+                    <option value="load-balancer">&nbsp;&nbsp;&nbsp;&nbsp;Load Balancer</option>
+                    <option value="auth">&nbsp;&nbsp;Auth</option>
+                    <option value="oidc">&nbsp;&nbsp;&nbsp;&nbsp;OIDC</option>
+                    <option value="sessions">&nbsp;&nbsp;&nbsp;&nbsp;Sessions</option>
+                    <option value="storage">&nbsp;&nbsp;Storage</option>
+                  </optgroup>
+                  <optgroup label="UI Shell">
+                    <option value="ui-shell">UI Shell</option>
+                    <option value="tickets">&nbsp;&nbsp;Tickets</option>
+                    <option value="components">&nbsp;&nbsp;Components</option>
+                    <option value="search">&nbsp;&nbsp;Search</option>
+                    <option value="dashboard">&nbsp;&nbsp;Dashboard</option>
+                    <option value="milestones">&nbsp;&nbsp;Milestones</option>
+                  </optgroup>
+                  <optgroup label="Other">
+                    <option value="notifications">Notifications</option>
+                    <option value="comments">Comments</option>
+                  </optgroup>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="ticket-owner">Owner</label>
+              <div class="form-select-wrap">
+                <select class="form-select" id="ticket-owner">
+                  <option value="">Unassigned</option>
+                  <option value="alex-kim">Alex Kim</option>
+                  <option value="maria-chen">Maria Chen</option>
+                  <option value="bob-lee">Bob Lee</option>
+                  <option value="jess-wong">Jess Wong</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="ticket-milestone">Milestone <span class="optional-tag">optional</span></label>
+              <div class="form-select-wrap">
+                <select class="form-select" id="ticket-milestone">
+                  <option value="">No milestone</option>
+                  <option value="v1.0">v1.0 Launch</option>
+                  <option value="v1.1">v1.1 Polish</option>
+                  <option value="backlog">Backlog</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="ticket-due">Due Date <span class="optional-tag">optional</span></label>
+              <input class="form-input" type="date" id="ticket-due">
+            </div>
+          </div>
+        </div>
+
+        <!-- Attachments -->
+        <div class="form-section">
+          <div class="form-section-title">Attachments</div>
+          <div class="drop-zone" id="drop-zone">
+            <svg class="drop-zone-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 20V6M16 6l-5 5M16 6l5 5"/>
+              <path d="M6 22v4a2 2 0 002 2h16a2 2 0 002-2v-4"/>
+            </svg>
+            <span class="drop-zone-text">Drop files here or click to browse</span>
+            <span class="drop-zone-hint">PNG, JPG, PDF, TXT up to 10 MB</span>
+            <input type="file" id="file-input" multiple hidden>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="form-actions">
+          <button class="btn btn-primary" type="submit">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
+            Create Ticket
+          </button>
+          <button class="btn btn-ghost" type="button" onclick="handleDraft()">Save as Draft</button>
+          <button class="btn btn-ghost btn-ghost-cancel" type="button">Cancel</button>
+        </div>
+      </form>
+    </div>
+
+  </div>
+
+  <script>
+    // Sticky header scroll detection
+    const main = document.getElementById('main');
+    const pageHeader = document.getElementById('page-header');
+
+    const onScroll = () => {
+      const gone = pageHeader.getBoundingClientRect().bottom < 8;
+      if (gone !== main.classList.contains('is-scrolled')) {
+        main.classList.toggle('is-scrolled', gone);
+      }
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    // Character count for description
+    const descInput = document.getElementById('ticket-desc');
+    const charCount = document.getElementById('char-count');
+    const MAX_CHARS = 2000;
+
+    function updateCharCount() {
+      const len = descInput.value.length;
+      charCount.textContent = `${len} / ${MAX_CHARS}`;
+      charCount.classList.toggle('is-near-limit', len >= MAX_CHARS * 0.85 && len < MAX_CHARS);
+      charCount.classList.toggle('is-over-limit', len >= MAX_CHARS);
+    }
+
+    descInput.addEventListener('input', updateCharCount);
+
+    // Drop zone interaction
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('is-dragover');
+    });
+
+    dropZone.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('is-dragover');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('is-dragover');
+    });
+
+    // Form validation (visual only)
+    const form = document.getElementById('ticket-form');
+    const titleInput = document.getElementById('ticket-title');
+    const titleError = document.getElementById('title-error');
+    const descError = document.getElementById('desc-error');
+
+    function clearErrors() {
+      titleInput.classList.remove('is-error');
+      descInput.classList.remove('is-error');
+      titleError.classList.remove('is-visible');
+      descError.classList.remove('is-visible');
+    }
+
+    titleInput.addEventListener('input', () => {
+      if (titleInput.classList.contains('is-error') && titleInput.value.trim()) {
+        titleInput.classList.remove('is-error');
+        titleError.classList.remove('is-visible');
+      }
+    });
+
+    descInput.addEventListener('input', () => {
+      if (descInput.classList.contains('is-error') && descInput.value.trim()) {
+        descInput.classList.remove('is-error');
+        descError.classList.remove('is-visible');
+      }
+    });
+
+    function handleSubmit() {
+      clearErrors();
+      let valid = true;
+
+      if (!titleInput.value.trim()) {
+        titleInput.classList.add('is-error');
+        titleError.classList.add('is-visible');
+        titleInput.focus();
+        valid = false;
+      }
+
+      if (!descInput.value.trim()) {
+        descInput.classList.add('is-error');
+        descError.classList.add('is-visible');
+        if (valid) descInput.focus();
+        valid = false;
+      }
+
+      return valid;
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      handleSubmit();
+    });
+
+    function handleDraft() {
+      // Prototype — no action
+    }
+  </script>
+</body>
+</html>
