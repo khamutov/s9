@@ -4,6 +4,7 @@ mod cli;
 mod config;
 mod db;
 mod embed;
+mod models;
 
 use clap::Parser;
 use tracing_subscriber::EnvFilter;
