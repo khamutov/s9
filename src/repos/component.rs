@@ -5,6 +5,28 @@ use crate::models::{ComponentRow, CreateComponentRequest, UpdateComponentRequest
 
 use super::RepoError;
 
+/// Validates a slug against `^[A-Z][A-Z0-9]{1,9}$` (2–10 uppercase chars, starts with letter).
+fn validate_slug(slug: &str) -> Result<(), RepoError> {
+    let len = slug.len();
+    if len < 2 || len > 10 {
+        return Err(RepoError::Conflict(format!(
+            "slug must be 2–10 characters, got {len}"
+        )));
+    }
+    let bytes = slug.as_bytes();
+    if !bytes[0].is_ascii_uppercase() {
+        return Err(RepoError::Conflict(
+            "slug must start with an uppercase letter".to_string(),
+        ));
+    }
+    if !bytes[1..].iter().all(|b| b.is_ascii_uppercase() || b.is_ascii_digit()) {
+        return Err(RepoError::Conflict(
+            "slug must contain only uppercase letters and digits".to_string(),
+        ));
+    }
+    Ok(())
+}
+
 /// Returns all components ordered by materialized path.
 pub async fn list(pool: &SqlitePool) -> Result<Vec<ComponentRow>, RepoError> {
     let rows = sqlx::query_as::<_, ComponentRow>("SELECT * FROM components ORDER BY path")
@@ -70,10 +92,22 @@ pub async fn get_subtree(
 }
 
 /// Creates a new component, computing its materialized path from the parent.
+///
+/// Root components (no parent) must have a slug. Child components may omit it.
 pub async fn create(
     pool: &SqlitePool,
     req: &CreateComponentRequest,
 ) -> Result<ComponentRow, RepoError> {
+    if let Some(ref slug) = req.slug {
+        validate_slug(slug)?;
+    }
+
+    if req.parent_id.is_none() && req.slug.is_none() {
+        return Err(RepoError::Conflict(
+            "root components must have a slug".to_string(),
+        ));
+    }
+
     let path = match req.parent_id {
         None => format!("/{}/", req.name),
         Some(pid) => {
@@ -86,13 +120,14 @@ pub async fn create(
 
     let now = Utc::now();
     let id = sqlx::query_scalar::<_, i64>(
-        "INSERT INTO components (name, parent_id, path, owner_id, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?)
+        "INSERT INTO components (name, parent_id, path, slug, owner_id, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)
          RETURNING id",
     )
     .bind(&req.name)
     .bind(req.parent_id)
     .bind(&path)
+    .bind(&req.slug)
     .bind(req.owner_id)
     .bind(now)
     .bind(now)
@@ -105,7 +140,8 @@ pub async fn create(
 /// Updates a component with transactional reparent and descendant path cascade.
 ///
 /// Uses a transaction to atomically: update the component row, detect circular
-/// references, and cascade path changes to all descendants.
+/// references, and cascade path changes to all descendants. Slug uses double-Option:
+/// `None` = keep, `Some(None)` = clear, `Some(Some(v))` = set.
 pub async fn update(
     pool: &SqlitePool,
     id: i64,
@@ -128,6 +164,23 @@ pub async fn update(
         None => existing.parent_id,
         Some(inner) => *inner,
     };
+
+    // Resolve double-Option slug: None = keep, Some(None) = clear, Some(Some(v)) = set
+    let new_slug = match &req.slug {
+        None => existing.slug.clone(),
+        Some(inner) => inner.clone(),
+    };
+
+    if let Some(ref slug) = new_slug {
+        validate_slug(slug)?;
+    }
+
+    // Root components must have a slug
+    if new_parent_id.is_none() && new_slug.is_none() {
+        return Err(RepoError::Conflict(
+            "root components must have a slug".to_string(),
+        ));
+    }
 
     // Compute new path
     let new_path = match new_parent_id {
@@ -153,11 +206,12 @@ pub async fn update(
 
     let now = Utc::now();
     sqlx::query(
-        "UPDATE components SET name = ?, parent_id = ?, path = ?, owner_id = ?, updated_at = ? WHERE id = ?",
+        "UPDATE components SET name = ?, parent_id = ?, path = ?, slug = ?, owner_id = ?, updated_at = ? WHERE id = ?",
     )
     .bind(name)
     .bind(new_parent_id)
     .bind(&new_path)
+    .bind(&new_slug)
     .bind(owner_id)
     .bind(now)
     .bind(id)
@@ -245,13 +299,53 @@ mod tests {
         user::create(pool, &req, None).await.unwrap().id
     }
 
+    /// Helper that auto-generates a slug for root components (parent_id=None).
     fn make_create_request(name: &str, parent_id: Option<i64>, owner_id: i64) -> CreateComponentRequest {
+        let slug = if parent_id.is_none() {
+            Some(name.to_uppercase())
+        } else {
+            None
+        };
         CreateComponentRequest {
             name: name.to_string(),
             parent_id,
+            slug,
             owner_id,
         }
     }
+
+    // ── slug validation (unit) ──────────────────────────────────────────
+
+    #[test]
+    fn validate_slug_valid() {
+        assert!(validate_slug("AB").is_ok());
+        assert!(validate_slug("PLAT").is_ok());
+        assert!(validate_slug("NET42").is_ok());
+        assert!(validate_slug("ABCDEFGHIJ").is_ok()); // 10 chars
+    }
+
+    #[test]
+    fn validate_slug_too_short() {
+        assert!(validate_slug("A").is_err());
+    }
+
+    #[test]
+    fn validate_slug_too_long() {
+        assert!(validate_slug("ABCDEFGHIJK").is_err()); // 11 chars
+    }
+
+    #[test]
+    fn validate_slug_starts_with_digit() {
+        assert!(validate_slug("1ABC").is_err());
+    }
+
+    #[test]
+    fn validate_slug_lowercase() {
+        assert!(validate_slug("plat").is_err());
+        assert!(validate_slug("Plat").is_err());
+    }
+
+    // ── create with slug ────────────────────────────────────────────────
 
     #[tokio::test]
     async fn create_root_component() {
@@ -263,7 +357,80 @@ mod tests {
 
         assert_eq!(comp.name, "Platform");
         assert_eq!(comp.path, "/Platform/");
+        assert_eq!(comp.slug.as_deref(), Some("PLATFORM"));
         assert!(comp.parent_id.is_none());
+    }
+
+    #[tokio::test]
+    async fn create_root_without_slug_rejected() {
+        let pool = test_pool().await;
+        let owner = seed_user(&pool).await;
+        let req = CreateComponentRequest {
+            name: "NoSlug".to_string(),
+            parent_id: None,
+            slug: None,
+            owner_id: owner,
+        };
+        let result = create(&pool, &req).await;
+        assert!(matches!(result, Err(RepoError::Conflict(_))));
+    }
+
+    #[tokio::test]
+    async fn create_child_without_slug_ok() {
+        let pool = test_pool().await;
+        let owner = seed_user(&pool).await;
+        let parent = create(&pool, &make_create_request("Platform", None, owner))
+            .await
+            .unwrap();
+        let child = CreateComponentRequest {
+            name: "Networking".to_string(),
+            parent_id: Some(parent.id),
+            slug: None,
+            owner_id: owner,
+        };
+        let comp = create(&pool, &child).await.unwrap();
+        assert!(comp.slug.is_none());
+    }
+
+    #[tokio::test]
+    async fn create_with_invalid_slug_rejected() {
+        let pool = test_pool().await;
+        let owner = seed_user(&pool).await;
+        for bad in ["a", "ab", "1AB", "ABCDEFGHIJk"] {
+            let req = CreateComponentRequest {
+                name: "Test".to_string(),
+                parent_id: None,
+                slug: Some(bad.to_string()),
+                owner_id: owner,
+            };
+            assert!(
+                create(&pool, &req).await.is_err(),
+                "expected error for slug '{bad}'"
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn create_duplicate_slug_conflict() {
+        let pool = test_pool().await;
+        let owner = seed_user(&pool).await;
+        create(&pool, &CreateComponentRequest {
+            name: "Alpha".to_string(),
+            parent_id: None,
+            slug: Some("PLAT".to_string()),
+            owner_id: owner,
+        })
+        .await
+        .unwrap();
+
+        let result = create(&pool, &CreateComponentRequest {
+            name: "Beta".to_string(),
+            parent_id: None,
+            slug: Some("PLAT".to_string()),
+            owner_id: owner,
+        })
+        .await;
+        assert!(matches!(result, Err(RepoError::Conflict(_))));
     }
 
     #[tokio::test]
@@ -289,7 +456,13 @@ mod tests {
             .await
             .unwrap();
 
-        let result = create(&pool, &make_create_request("Platform", None, owner)).await;
+        let req = CreateComponentRequest {
+            name: "Platform".to_string(),
+            parent_id: None,
+            slug: Some("PLAT2".to_string()),
+            owner_id: owner,
+        };
+        let result = create(&pool, &req).await;
         assert!(matches!(result, Err(RepoError::Conflict(_))));
     }
 
@@ -387,6 +560,115 @@ mod tests {
         assert!(!paths.contains(&"/Auth/"));
     }
 
+    // ── update with slug ────────────────────────────────────────────────
+
+    #[tokio::test]
+    async fn update_set_slug() {
+        let pool = test_pool().await;
+        let owner = seed_user(&pool).await;
+        let parent = create(&pool, &make_create_request("Platform", None, owner))
+            .await
+            .unwrap();
+        let child = create(&pool, &make_create_request("Net", Some(parent.id), owner))
+            .await
+            .unwrap();
+        assert!(child.slug.is_none());
+
+        let updated = update(
+            &pool,
+            child.id,
+            &UpdateComponentRequest {
+                name: None,
+                parent_id: None,
+                slug: Some(Some("NET".to_string())),
+                owner_id: None,
+            },
+        )
+        .await
+        .unwrap();
+        assert_eq!(updated.slug.as_deref(), Some("NET"));
+    }
+
+    #[tokio::test]
+    async fn update_clear_slug_on_child_ok() {
+        let pool = test_pool().await;
+        let owner = seed_user(&pool).await;
+        let parent = create(&pool, &make_create_request("Platform", None, owner))
+            .await
+            .unwrap();
+        let child = create(&pool, &CreateComponentRequest {
+            name: "Net".to_string(),
+            parent_id: Some(parent.id),
+            slug: Some("NET".to_string()),
+            owner_id: owner,
+        })
+        .await
+        .unwrap();
+        assert_eq!(child.slug.as_deref(), Some("NET"));
+
+        let updated = update(
+            &pool,
+            child.id,
+            &UpdateComponentRequest {
+                name: None,
+                parent_id: None,
+                slug: Some(None),
+                owner_id: None,
+            },
+        )
+        .await
+        .unwrap();
+        assert!(updated.slug.is_none());
+    }
+
+    #[tokio::test]
+    async fn update_clear_slug_on_root_rejected() {
+        let pool = test_pool().await;
+        let owner = seed_user(&pool).await;
+        let root = create(&pool, &make_create_request("Platform", None, owner))
+            .await
+            .unwrap();
+
+        let result = update(
+            &pool,
+            root.id,
+            &UpdateComponentRequest {
+                name: None,
+                parent_id: None,
+                slug: Some(None),
+                owner_id: None,
+            },
+        )
+        .await;
+        assert!(matches!(result, Err(RepoError::Conflict(_))));
+    }
+
+    #[tokio::test]
+    async fn update_reparent_to_root_without_slug_rejected() {
+        let pool = test_pool().await;
+        let owner = seed_user(&pool).await;
+        let parent = create(&pool, &make_create_request("Platform", None, owner))
+            .await
+            .unwrap();
+        let child = create(&pool, &make_create_request("Net", Some(parent.id), owner))
+            .await
+            .unwrap();
+
+        // Move child to root without giving it a slug
+        let result = update(
+            &pool,
+            child.id,
+            &UpdateComponentRequest {
+                name: None,
+                parent_id: Some(None),
+                slug: None, // keep existing (None)
+                owner_id: None,
+            },
+        )
+        .await;
+        assert!(matches!(result, Err(RepoError::Conflict(_))));
+    }
+
     #[tokio::test]
     async fn update_rename() {
         let pool = test_pool().await;
@@ -407,6 +689,7 @@ mod tests {
             &UpdateComponentRequest {
                 name: Some("Networking".to_string()),
                 parent_id: None,
+                slug: None,
                 owner_id: None,
             },
         )
@@ -444,6 +727,7 @@ mod tests {
             &UpdateComponentRequest {
                 name: None,
                 parent_id: Some(Some(infra.id)),
+                slug: None,
                 owner_id: None,
             },
         )
@@ -464,20 +748,26 @@ mod tests {
         let platform = create(&pool, &make_create_request("Platform", None, owner))
             .await
             .unwrap();
-        let net = create(&pool, &make_create_request("Networking", Some(platform.id), owner))
-            .await
-            .unwrap();
+        let net = create(&pool, &CreateComponentRequest {
+            name: "Networking".to_string(),
+            parent_id: Some(platform.id),
+            slug: Some("NET".to_string()),
+            owner_id: owner,
+        })
+        .await
+        .unwrap();
         let dns = create(&pool, &make_create_request("DNS", Some(net.id), owner))
             .await
             .unwrap();
 
-        // Move Networking to root
+        // Move Networking to root — has slug so it's allowed
         let updated = update(
             &pool,
             net.id,
             &UpdateComponentRequest {
                 name: None,
                 parent_id: Some(None),
+                slug: None,
                 owner_id: None,
             },
         )
@@ -512,6 +802,7 @@ mod tests {
             &UpdateComponentRequest {
                 name: None,
                 parent_id: Some(Some(dns.id)),
+                slug: None,
                 owner_id: None,
             },
         )
@@ -581,8 +872,8 @@ mod tests {
 
         assert_eq!(count(&pool).await.unwrap(), 0);
 
-        create(&pool, &make_create_request("A", None, owner)).await.unwrap();
-        create(&pool, &make_create_request("B", None, owner)).await.unwrap();
+        create(&pool, &make_create_request("Alpha", None, owner)).await.unwrap();
+        create(&pool, &make_create_request("Beta", None, owner)).await.unwrap();
 
         assert_eq!(count(&pool).await.unwrap(), 2);
     }

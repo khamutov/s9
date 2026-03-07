@@ -492,6 +492,7 @@ mod tests {
         let req = CreateComponentRequest {
             name: name.to_string(),
             parent_id: None,
+            slug: Some(name.to_uppercase()),
             owner_id,
         };
         component::create(pool, &req).await.unwrap().id
@@ -1085,7 +1086,7 @@ mod tests {
     async fn enrich_comment_count() {
         let pool = test_pool().await;
         let user_id = seed_user(&pool, "commenter").await;
-        let comp_id = seed_component(&pool, "CommentComp", user_id).await;
+        let comp_id = seed_component(&pool, "CmtComp", user_id).await;
         let ticket = create(&pool, &make_create_request("Comments", user_id, comp_id), user_id)
             .await
             .unwrap();

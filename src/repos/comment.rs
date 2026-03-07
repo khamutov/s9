@@ -362,6 +362,7 @@ mod tests {
         let comp_req = CreateComponentRequest {
             name: "TestComp".to_string(),
             parent_id: None,
+            slug: Some("TESTCOMP".to_string()),
             owner_id,
         };
         let comp = component::create(pool, &comp_req).await.unwrap();

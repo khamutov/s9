@@ -50,7 +50,7 @@ Status legend: `[ ]` pending | `[~]` in progress | `[x]` completed
 - [x] **2.10** Search filter parser (micro-syntax → structured query) [blocked by: 0.2, 0.17]
 - [x] **2.11** Full-text search integration [blocked by: 0.2, 2.7]
 - [ ] **2.12** Attachment storage (SHA-256 content-addressed FS) [blocked by: 0.5]
-- [ ] **2.13** Slug schema migration (add slug column to components) [blocked by: 0.17, 2.1]
+- [x] **2.13** Slug schema migration (add slug column to components) [blocked by: 0.17, 2.1]
 - [ ] **2.14** Component slug cache + resolution service [blocked by: 0.17, 2.6, 2.13]
 
 ## Phase 3: Backend Auth & API
