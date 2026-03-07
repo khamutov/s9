@@ -1,3 +1,4 @@
+pub mod attachment;
 pub mod comment;
 pub mod component;
 pub mod cursor;
@@ -33,9 +34,10 @@ impl std::error::Error for RepoError {}
 
 impl From<sqlx::Error> for RepoError {
     fn from(err: sqlx::Error) -> Self {
-        // SQLite UNIQUE constraint violation has error code 2067.
+        // SQLite UNIQUE constraint violation (2067) or PRIMARY KEY
+        // constraint violation (1555).
         if let sqlx::Error::Database(ref db_err) = err
-            && db_err.code().as_deref() == Some("2067")
+            && matches!(db_err.code().as_deref(), Some("2067") | Some("1555"))
         {
             return Self::Conflict(db_err.message().to_string());
         }

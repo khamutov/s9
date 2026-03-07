@@ -8,6 +8,7 @@ mod models;
 mod repos;
 mod search;
 mod slug;
+mod storage;
 
 use clap::Parser;
 use tracing_subscriber::EnvFilter;
