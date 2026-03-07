@@ -507,15 +507,8 @@
       background: var(--bg-selected);
     }
 
-    .table-row.is-selected::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      width: 3px;
-      background: var(--accent);
-      border-radius: 0 2px 2px 0;
+    .table-row.is-selected td:first-child {
+      box-shadow: inset 3px 0 0 var(--accent);
     }
 
     /* Staggered row reveal animation */
