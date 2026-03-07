@@ -47,9 +47,11 @@ Status legend: `[ ]` pending | `[~]` in progress | `[x]` completed
 - [x] **2.7** Ticket repository (CRUD, filters, pagination) [blocked by: 2.4]
 - [x] **2.8** Comment repository [blocked by: 2.4]
 - [ ] **2.9** Milestone repository [blocked by: 2.4]
-- [ ] **2.10** Search filter parser (micro-syntax → structured query) [blocked by: 0.2]
+- [ ] **2.10** Search filter parser (micro-syntax → structured query) [blocked by: 0.2, 0.17]
 - [ ] **2.11** Full-text search integration [blocked by: 0.2, 2.7]
 - [ ] **2.12** Attachment storage (SHA-256 content-addressed FS) [blocked by: 0.5]
+- [ ] **2.13** Slug schema migration (add slug column to components) [blocked by: 0.17, 2.1]
+- [ ] **2.14** Component slug cache + resolution service [blocked by: 0.17, 2.6, 2.13]
 
 ## Phase 3: Backend Auth & API
 
@@ -58,9 +60,9 @@ Status legend: `[ ]` pending | `[~]` in progress | `[x]` completed
 - [ ] **3.3** Auth middleware [blocked by: 3.2]
 - [ ] **3.4** Login/logout endpoints [blocked by: 0.4, 3.1, 3.2]
 - [ ] **3.5** OIDC authentication flow [blocked by: 0.3, 3.2]
-- [ ] **3.6** Ticket API endpoints + OpenAPI [blocked by: 0.4, 2.7, 3.3]
+- [ ] **3.6** Ticket API endpoints + OpenAPI [blocked by: 0.4, 0.17, 2.7, 2.14, 3.3]
 - [ ] **3.7** Comment API endpoints [blocked by: 0.4, 2.8, 3.3]
-- [ ] **3.8** Component API endpoints [blocked by: 0.4, 2.6, 3.3]
+- [ ] **3.8** Component API endpoints [blocked by: 0.4, 0.17, 2.6, 2.13, 3.3]
 - [ ] **3.9** Milestone API endpoints [blocked by: 0.4, 2.9, 3.3]
 - [ ] **3.10** Attachment upload/download endpoints [blocked by: 0.4, 2.12, 3.3]
 - [ ] **3.11** User management endpoints (admin) [blocked by: 0.4, 2.5, 3.3]
@@ -76,7 +78,7 @@ Status legend: `[ ]` pending | `[~]` in progress | `[x]` completed
 - [ ] **4.3** Notification batching (2-min delay) [blocked by: 4.1, 4.2]
 - [ ] **4.4** Per-ticket mute preferences [blocked by: 4.1, 2.5]
 - [ ] **4.5** @mention parsing in comments [blocked by: 2.8, 4.1]
-- [ ] **4.6** Micro-syntax reference parsing (#ID, comment#N) [blocked by: 2.8]
+- [ ] **4.6** Micro-syntax reference parsing (#ID, #PREFIX-ID, comment#N) [blocked by: 0.17, 2.8, 2.14]
 
 ## Phase 5: Frontend
 
