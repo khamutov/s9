@@ -33,6 +33,27 @@ pub async fn init_pool(db_path: &Path) -> Result<SqlitePool, sqlx::Error> {
     Ok(pool)
 }
 
+/// Creates an in-memory SQLite pool with the same pragmas as [`init_pool`].
+///
+/// Intended for integration tests — each call produces an isolated database.
+pub async fn init_memory_pool() -> Result<SqlitePool, sqlx::Error> {
+    let options = SqliteConnectOptions::from_str("sqlite::memory:")?;
+
+    let pool = SqlitePoolOptions::new()
+        .max_connections(1)
+        .connect_with(options)
+        .await?;
+
+    sqlx::query("PRAGMA foreign_keys = ON")
+        .execute(&pool)
+        .await?;
+    sqlx::query("PRAGMA busy_timeout = 5000")
+        .execute(&pool)
+        .await?;
+
+    Ok(pool)
+}
+
 /// Run pending sqlx migrations from the `migrations/` directory.
 pub async fn run_migrations(pool: &SqlitePool) -> Result<(), sqlx::migrate::MigrateError> {
     sqlx::migrate!("./migrations").run(pool).await
