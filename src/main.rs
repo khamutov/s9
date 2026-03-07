@@ -6,6 +6,7 @@ mod db;
 mod embed;
 mod models;
 mod repos;
+mod search;
 
 use clap::Parser;
 use tracing_subscriber::EnvFilter;
