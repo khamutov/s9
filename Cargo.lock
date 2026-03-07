@@ -1624,6 +1624,7 @@ dependencies = [
  "hex",
  "infer",
  "mime_guess",
+ "rand_core",
  "rust-embed",
  "serde",
  "serde_json",
