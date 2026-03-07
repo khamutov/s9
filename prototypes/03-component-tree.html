@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>S9 — Components</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600;700&family=Martian+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    /* ==========================================================================
+       S9 — Component Tree Explorer
+       "Warm Midnight" — dark, textured, golden accents
+       Fonts: Bricolage Grotesque · Instrument Sans · Martian Mono
+       ========================================================================== */
+
+    /* §1 Reset */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    input, button, textarea, select { font: inherit; color: inherit; }
+    button { cursor: pointer; border: none; background: none; }
+    ul, ol { list-style: none; }
+    a { color: inherit; text-decoration: none; }
+    table { border-collapse: separate; border-spacing: 0; }
+
+    /* §2 Design Tokens */
+    :root {
+      --bg-root: #0e0d0b;
+      --bg-surface: #171613;
+      --bg-raised: #1e1d19;
+      --bg-hover: #242320;
+      --bg-selected: rgba(232, 180, 58, 0.06);
+
+      --border-primary: rgba(255, 245, 220, 0.08);
+      --border-subtle: rgba(255, 245, 220, 0.04);
+
+      --text-primary: #ede9dd;
+      --text-secondary: #8c8579;
+      --text-tertiary: #5c564d;
+      --text-ghost: #3d3830;
+
+      --accent: #e8b43a;
+      --accent-hover: #d4a230;
+      --accent-subtle: rgba(232, 180, 58, 0.10);
+      --accent-glow: rgba(232, 180, 58, 0.04);
+
+      --status-new-bg: rgba(255, 255, 255, 0.05);
+      --status-new-text: #8c8579;
+      --status-progress-bg: rgba(96, 165, 250, 0.12);
+      --status-progress-text: #7cb8f7;
+      --status-verify-bg: rgba(232, 180, 58, 0.12);
+      --status-verify-text: #e8b43a;
+      --status-done-bg: rgba(74, 222, 128, 0.10);
+      --status-done-text: #5eca7e;
+
+      --priority-p0: #f87171;
+      --priority-p1: #fb923c;
+      --priority-p2: #e8b43a;
+      --priority-p3: #7cb8f7;
+      --priority-p4: #5c564d;
+      --priority-p5: #3d3830;
+
+      --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
+      --font-body: 'Instrument Sans', system-ui, sans-serif;
+      --font-mono: 'Martian Mono', ui-monospace, monospace;
+
+      --text-xs: 0.6875rem;
+      --text-sm: 0.8125rem;
+      --text-base: 0.9375rem;
+      --text-lg: 1.125rem;
+      --text-xl: 1.5rem;
+      --text-2xl: 2rem;
+
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-5: 20px;
+      --space-6: 24px;
+      --space-8: 32px;
+      --space-10: 40px;
+
+      --sidebar-width: 224px;
+      --radius: 8px;
+      --radius-sm: 5px;
+      --radius-full: 9999px;
+
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --transition-fast: 150ms var(--ease-out);
+      --transition-med: 250ms var(--ease-out);
+
+      --shadow-glow: 0 0 20px rgba(232, 180, 58, 0.05);
+      --shadow-elevated: 0 4px 24px rgba(0, 0, 0, 0.4), 0 1px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    /* §3 Global */
+    body {
+      font-family: var(--font-body);
+      font-size: var(--text-sm);
+      line-height: 1.5;
+      color: var(--text-primary);
+      background: var(--bg-root);
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(circle, var(--text-ghost) 0.5px, transparent 0.5px);
+      background-size: 24px 24px;
+      opacity: 0.3;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* §4 Layout Shell */
+    .app {
+      display: flex;
+      min-height: 100vh;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* §5 Sidebar */
+    .sidebar {
+      width: var(--sidebar-width);
+      min-width: var(--sidebar-width);
+      height: 100vh;
+      position: sticky;
+      top: 0;
+      background: linear-gradient(180deg, #131210 0%, #0a0908 100%);
+      border-right: 1px solid var(--border-primary);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      z-index: 10;
+    }
+
+    .sidebar-header {
+      height: 56px;
+      display: flex;
+      align-items: center;
+      padding: 0 var(--space-5);
+      border-bottom: 1px solid var(--border-primary);
+    }
+
+    .sidebar-logo {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: var(--text-xl);
+      color: var(--accent);
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+
+    .sidebar-logo-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      margin-left: 2px;
+      vertical-align: super;
+      animation: pulse-dot 3s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; box-shadow: 0 0 4px var(--accent); }
+      50% { opacity: 0.4; box-shadow: none; }
+    }
+
+    .sidebar-nav {
+      padding: var(--space-3) var(--space-2);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: 8px 12px;
+      font-size: var(--text-sm);
+      font-weight: 500;
+      color: var(--text-tertiary);
+      border-radius: var(--radius-sm);
+      transition: all var(--transition-fast);
+      position: relative;
+    }
+
+    .nav-item:hover {
+      color: var(--text-secondary);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .nav-item.is-active {
+      color: var(--accent);
+      background: var(--accent-subtle);
+    }
+
+    .nav-item.is-active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 16px;
+      background: var(--accent);
+      border-radius: 0 2px 2px 0;
+    }
+
+    .nav-icon {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      opacity: 0.5;
+    }
+
+    .is-active .nav-icon { opacity: 1; }
+
+    .nav-badge {
+      margin-left: auto;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      background: rgba(255, 255, 255, 0.04);
+      padding: 1px 6px;
+      border-radius: var(--radius-full);
+      min-width: 20px;
+      text-align: center;
+    }
+
+    .is-active .nav-badge {
+      color: var(--accent);
+      background: rgba(232, 180, 58, 0.12);
+    }
+
+    .sidebar-section-label {
+      padding: var(--space-4) 12px var(--space-1);
+      font-family: var(--font-mono);
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-ghost);
+    }
+
+    .sidebar-footer {
+      padding: var(--space-3) var(--space-4);
+      border-top: 1px solid var(--border-primary);
+    }
+
+    .user-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: var(--text-sm);
+    }
+
+    .sidebar-footer .user-pill {
+      color: var(--text-secondary);
+    }
+
+    .user-pill-avatar {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      color: var(--bg-root);
+      font-size: 9px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      letter-spacing: -0.02em;
+    }
+
+    .user-pill-avatar--indigo { background: #a78bfa; }
+    .user-pill-avatar--teal   { background: #2dd4bf; }
+    .user-pill-avatar--amber  { background: var(--accent); }
+    .user-pill-avatar--rose   { background: #fb7185; }
+
+    /* §6 Main Content */
+    .main {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      padding: var(--space-8) var(--space-10);
+    }
+
+    /* §7 Page Header */
+    .page-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: var(--space-8);
+      animation: fade-down 0.5s var(--ease-out) both;
+    }
+
+    @keyframes fade-down {
+      from { opacity: 0; transform: translateY(-12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .page-header-breadcrumb {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-ghost);
+      margin-bottom: var(--space-2);
+    }
+
+    .page-header h1 {
+      font-family: var(--font-display);
+      font-size: var(--text-2xl);
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      line-height: 1.1;
+      color: var(--text-primary);
+    }
+
+    .page-count {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      font-weight: 400;
+      color: var(--text-ghost);
+      margin-left: var(--space-2);
+      vertical-align: middle;
+    }
+
+    /* §8 Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      height: 36px;
+      padding: 0 var(--space-4);
+      font-family: var(--font-body);
+      font-size: var(--text-sm);
+      font-weight: 600;
+      border-radius: var(--radius);
+      transition: all var(--transition-fast);
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg-root);
+      box-shadow: 0 1px 3px rgba(232, 180, 58, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      box-shadow: 0 2px 12px rgba(232, 180, 58, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-ghost {
+      color: var(--text-secondary);
+      background: transparent;
+      border: 1px solid var(--border-primary);
+    }
+
+    .btn-ghost:hover {
+      color: var(--text-primary);
+      background: var(--bg-raised);
+      border-color: rgba(255, 245, 220, 0.12);
+    }
+
+    .btn-danger {
+      color: var(--priority-p0);
+      background: transparent;
+      border: 1px solid rgba(248, 113, 113, 0.2);
+    }
+
+    .btn-danger:hover {
+      background: rgba(248, 113, 113, 0.08);
+      border-color: rgba(248, 113, 113, 0.35);
+    }
+
+    /* §9 Sticky Header */
+    .sticky-header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      height: 0;
+      margin-left: calc(-1 * var(--space-10));
+      margin-right: calc(-1 * var(--space-10));
+      padding: 0 var(--space-10);
+      background: var(--bg-root);
+      border-bottom: 1px solid transparent;
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(-4px);
+      transition:
+        height 300ms var(--ease-out),
+        opacity 250ms var(--ease-out),
+        transform 250ms var(--ease-out),
+        border-color 300ms var(--ease-out),
+        padding 300ms var(--ease-out);
+      pointer-events: none;
+    }
+
+    .main.is-scrolled .sticky-header {
+      height: 48px;
+      opacity: 1;
+      transform: translateY(0);
+      border-bottom-color: var(--border-primary);
+      pointer-events: auto;
+    }
+
+    .sticky-header-title {
+      font-family: var(--font-display);
+      font-size: var(--text-lg);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: var(--text-primary);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .sticky-header-title .page-count {
+      font-size: 10px;
+      vertical-align: baseline;
+    }
+
+    .sticky-header .btn {
+      height: 30px;
+      font-size: var(--text-xs);
+      padding: 0 var(--space-3);
+      flex-shrink: 0;
+      margin-left: auto;
+    }
+
+    .sticky-header .btn svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    /* §10 Ambient gradient */
+    .main::before {
+      content: '';
+      position: fixed;
+      top: -200px;
+      right: -200px;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(232, 180, 58, 0.03) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .main > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* §11 Animations */
+    @keyframes row-reveal {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* §12 Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-primary); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-ghost); }
+
+    /* ==========================================================================
+       Component Explorer — Page-Specific Styles
+       ========================================================================== */
+
+    /* §13 Two-Column Explorer Layout */
+    .component-explorer {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: var(--space-6);
+      animation: fade-down 0.5s var(--ease-out) 0.08s both;
+    }
+
+    /* §14 Tree Panel */
+    .tree-panel {
+      position: sticky;
+      top: 60px;
+      align-self: start;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius);
+      overflow: hidden;
+      max-height: calc(100vh - 80px);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tree-panel-header {
+      padding: var(--space-3) var(--space-4);
+      border-bottom: 1px solid var(--border-primary);
+    }
+
+    .tree-filter-wrap {
+      position: relative;
+    }
+
+    .tree-filter-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 13px;
+      height: 13px;
+      color: var(--text-tertiary);
+      pointer-events: none;
+    }
+
+    .tree-filter-input {
+      width: 100%;
+      height: 32px;
+      padding: 0 var(--space-3);
+      padding-left: 30px;
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius-sm);
+      background: var(--bg-raised);
+      color: var(--text-primary);
+      transition: all var(--transition-fast);
+    }
+
+    .tree-filter-input::placeholder {
+      color: var(--text-ghost);
+    }
+
+    .tree-filter-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-subtle), var(--shadow-glow);
+    }
+
+    .tree-panel-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--space-2) 0;
+    }
+
+    /* §15 Tree Structure */
+    .tree {
+      font-size: var(--text-sm);
+    }
+
+    .tree-node {
+      display: flex;
+      flex-direction: column;
+      animation: row-reveal 0.4s var(--ease-out) both;
+    }
+
+    .tree-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-1);
+      padding: 5px var(--space-3);
+      padding-right: var(--space-4);
+      cursor: pointer;
+      transition: background var(--transition-fast);
+      position: relative;
+    }
+
+    .tree-item:hover {
+      background: var(--bg-hover);
+    }
+
+    .tree-item.is-selected {
+      background: var(--bg-selected);
+      color: var(--accent);
+    }
+
+    .tree-item.is-selected::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: var(--accent);
+      border-radius: 0 2px 2px 0;
+    }
+
+    .tree-toggle {
+      width: 16px;
+      height: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--text-tertiary);
+      transition: transform 200ms var(--ease-out);
+      transform: rotate(0deg);
+    }
+
+    .tree-toggle svg {
+      width: 8px;
+      height: 8px;
+    }
+
+    .tree-toggle.is-expanded {
+      transform: rotate(90deg);
+    }
+
+    .tree-toggle.is-leaf {
+      visibility: hidden;
+    }
+
+    .tree-label {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 500;
+    }
+
+    .is-selected .tree-label {
+      color: var(--accent);
+    }
+
+    .tree-count {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-ghost);
+      font-variant-numeric: tabular-nums;
+      flex-shrink: 0;
+    }
+
+    .is-selected .tree-count {
+      color: var(--accent);
+      opacity: 0.6;
+    }
+
+    .tree-children {
+      padding-left: var(--space-5);
+    }
+
+    .tree-children.is-hidden {
+      display: none;
+    }
+
+    /* Stagger tree node animations */
+    .tree > .tree-node:nth-child(1) { animation-delay: 0.10s; }
+    .tree > .tree-node:nth-child(2) { animation-delay: 0.14s; }
+    .tree > .tree-node:nth-child(3) { animation-delay: 0.18s; }
+    .tree > .tree-node:nth-child(4) { animation-delay: 0.22s; }
+
+    .tree-children > .tree-node:nth-child(1) { animation-delay: 0.12s; }
+    .tree-children > .tree-node:nth-child(2) { animation-delay: 0.16s; }
+    .tree-children > .tree-node:nth-child(3) { animation-delay: 0.20s; }
+    .tree-children > .tree-node:nth-child(4) { animation-delay: 0.24s; }
+    .tree-children > .tree-node:nth-child(5) { animation-delay: 0.28s; }
+
+    .tree-children .tree-children > .tree-node:nth-child(1) { animation-delay: 0.14s; }
+    .tree-children .tree-children > .tree-node:nth-child(2) { animation-delay: 0.18s; }
+    .tree-children .tree-children > .tree-node:nth-child(3) { animation-delay: 0.22s; }
+
+    /* §16 Component Detail Panel */
+    .component-detail {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius);
+      padding: var(--space-6);
+      position: sticky;
+      top: 60px;
+      align-self: start;
+    }
+
+    .component-detail-header {
+      margin-bottom: var(--space-6);
+      padding-bottom: var(--space-5);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .component-detail-name {
+      font-family: var(--font-display);
+      font-size: var(--text-xl);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: var(--text-primary);
+      margin-bottom: var(--space-2);
+    }
+
+    .component-path {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-tertiary);
+      letter-spacing: 0.02em;
+    }
+
+    .component-path-segment {
+      color: var(--text-secondary);
+    }
+
+    .component-path-sep {
+      color: var(--text-ghost);
+      margin: 0 1px;
+    }
+
+    .component-path-current {
+      color: var(--accent);
+    }
+
+    /* §17 Meta Rows */
+    .component-meta {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+      margin-bottom: var(--space-6);
+    }
+
+    .component-meta-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+    }
+
+    .component-meta-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-ghost);
+      width: 80px;
+      flex-shrink: 0;
+    }
+
+    .component-meta-value {
+      color: var(--text-primary);
+      font-size: var(--text-sm);
+    }
+
+    .component-meta-value .user-pill {
+      font-size: var(--text-sm);
+    }
+
+    /* §18 Stats Bar */
+    .component-stats {
+      display: flex;
+      align-items: center;
+      gap: var(--space-5);
+      padding: var(--space-3) var(--space-4);
+      background: var(--bg-raised);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      margin-bottom: var(--space-6);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-ghost);
+      letter-spacing: 0.02em;
+    }
+
+    .component-stats .stat {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .component-stats .stat-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .component-stats .stat-value {
+      color: var(--text-tertiary);
+      font-weight: 600;
+    }
+
+    .component-stats-total {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-ghost);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: var(--space-2);
+    }
+
+    /* §19 Component Actions */
+    .component-actions {
+      display: flex;
+      gap: var(--space-2);
+      flex-wrap: wrap;
+    }
+
+    .component-actions .btn {
+      height: 32px;
+      font-size: var(--text-xs);
+    }
+
+    /* §20 Summary bar (stat dots at bottom) */
+    .summary-bar {
+      display: flex;
+      align-items: center;
+      gap: var(--space-6);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-ghost);
+      letter-spacing: 0.02em;
+    }
+
+    .summary-bar .stat {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .summary-bar .stat-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .summary-bar .stat-value {
+      color: var(--text-tertiary);
+      font-weight: 600;
+    }
+
+    /* §21 Children list in detail */
+    .component-children-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-1);
+    }
+
+    .component-child-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      height: 22px;
+      padding: 0 8px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-secondary);
+      background: var(--bg-raised);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .component-child-chip:hover {
+      color: var(--accent);
+      border-color: var(--accent-subtle);
+      background: var(--bg-hover);
+    }
+
+    .component-child-chip .chip-count {
+      color: var(--text-ghost);
+    }
+
+    /* Empty detail state */
+    .component-detail-empty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 300px;
+      color: var(--text-ghost);
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-logo">S9<span class="sidebar-logo-dot"></span></span>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="sidebar-section-label">Workspace</div>
+        <a class="nav-item" href="01-ticket-list.html">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2.5 4h11M2.5 8h11M2.5 12h7"/></svg>
+          <span>Tickets</span>
+          <span class="nav-badge">12</span>
+        </a>
+        <a class="nav-item is-active" href="#">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1.5" y="1.5" width="5" height="5" rx="1"/><rect x="9.5" y="1.5" width="5" height="5" rx="1"/><rect x="1.5" y="9.5" width="5" height="5" rx="1"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/></svg>
+          <span>Components</span>
+          <span class="nav-badge">18</span>
+        </a>
+        <a class="nav-item" href="#">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 14V2l9 4-9 4"/></svg>
+          <span>Milestones</span>
+        </a>
+        <div class="sidebar-section-label">Settings</div>
+        <a class="nav-item" href="#">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="2.5"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4"/></svg>
+          <span>Admin</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-pill">
+          <span class="user-pill-avatar user-pill-avatar--indigo">AK</span>
+          <span>Alex Kim</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <div class="main" id="main">
+      <!-- Sticky condensed header -->
+      <div class="sticky-header">
+        <span class="sticky-header-title">Components <span class="page-count">18</span></span>
+        <button class="btn btn-primary">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
+          Add Component
+        </button>
+      </div>
+
+      <!-- Full page header -->
+      <div class="page-header" id="page-header">
+        <div>
+          <div class="page-header-breadcrumb">All components</div>
+          <h1>Components <span class="page-count">18</span></h1>
+        </div>
+        <button class="btn btn-primary">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
+          Add Component
+        </button>
+      </div>
+
+      <!-- Explorer: tree + detail -->
+      <div class="component-explorer">
+
+        <!-- Tree Panel -->
+        <div class="tree-panel">
+          <div class="tree-panel-header">
+            <div class="tree-filter-wrap">
+              <svg class="tree-filter-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="6.5" cy="6.5" r="4.5"/><path d="M10 10l4 4"/></svg>
+              <input class="tree-filter-input" id="tree-filter" type="text" placeholder="Filter components…">
+            </div>
+          </div>
+          <div class="tree-panel-body">
+            <div class="tree" id="component-tree">
+
+              <!-- Platform -->
+              <div class="tree-node" data-id="platform">
+                <div class="tree-item" data-id="platform">
+                  <span class="tree-toggle is-expanded"><svg viewBox="0 0 8 8" fill="currentColor"><path d="M2 1l4 3-4 3z"/></svg></span>
+                  <span class="tree-label">Platform</span>
+                  <span class="tree-count">42</span>
+                </div>
+                <div class="tree-children">
+                  <!-- Networking -->
+                  <div class="tree-node" data-id="networking">
+                    <div class="tree-item" data-id="networking">
+                      <span class="tree-toggle is-expanded"><svg viewBox="0 0 8 8" fill="currentColor"><path d="M2 1l4 3-4 3z"/></svg></span>
+                      <span class="tree-label">Networking</span>
+                      <span class="tree-count">18</span>
+                    </div>
+                    <div class="tree-children">
+                      <div class="tree-node" data-id="dns">
+                        <div class="tree-item is-selected" data-id="dns">
+                          <span class="tree-toggle is-leaf"><svg viewBox="0 0 8 8" fill="currentColor"><path d="M2 1l4 3-4 3z"/></svg></span>
+                          <span class="tree-label">DNS</span>
+                          <span class="tree-count">7</span>
+                        </div>
+                      </div>
+                      <div class="tree-node" data-id="tls-certs">
+                        <div class="tree-item" data-id="tls-certs">
+                          <span class="tree-toggle is-leaf"><svg viewBox="0 0 8 8" fill="currentColor"><path d="M2 1l4 3-4 3z"/></svg></span>
+                          <span class="tree-label">TLS/Certs</span>
+                          <span class="tree-count">5</span>
+                        </div>
+                      </div>
+                      <div class="tree-node" data-id="load-balancer">
+                        <div class="tree-item" data-id="load-balancer">
+                          <span class="tree-toggle is-leaf"><svg viewBox="0 0 8 8" fill="currentColor"><path d="M2 1l4 3-4 3z"/></svg></span>
+                          <span class="tree-label">Load Balancer</span>
+                          <span class="tree-count">6</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Auth -->
+                  <div class="tree-node" data-id="auth">
+                    <div class="tree-item" data-id="auth">
+                      <span class="tree-toggle is-expanded"><svg viewBox="0 0 8 8" fill="currentColor"><path d="M2 1l4 3-4 3z"/></svg></span>
+                      <span class="tree-label">Auth</span>
+                      <span class="tree-count">12</span>
+                    </div>
+                    <div class="tree-children">
+                      <div class="tree-node" data-id="oidc">
+                        <div class="tree-item" data-id="oidc">
+                          <span class="tree-toggle is-leaf"><svg viewBox="0 0 8 8" fill="currentColor"><path d="M2 1l4 3-4 3z"/></svg></span>
+                          <span class="tree-label">OIDC</span>
+                          <span class="tree-count">5</span>
+                        </div>
+                      </div>
+                      <div class="tree-node" data-id="sessions">
+                        <div class="tree-item" data-id="sessions">
+                          <span class="tree-toggle is-leaf"><svg viewBox="0 0 8 8" fill="currentColor"><path d="M2 1l4 3-4 3z"/></svg></span>
+                          <span class="tree-label">Sessions</span>
+                          <span class="tree-count">7</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Storage -->
+                  <div class="tree-node" data-id="storage">
+                    <div class="tree-item" data-id="storage">
+                      <span class="tree-toggle is-leaf"><svg viewBox="0 0 8 8" fill="currentColor"><path d="M2 1l4 3-4 3z"/></svg></span>
+                      <span class="tree-label">Storage</span>
+                      <span class="tree-count">12</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- UI Shell -->
+              <div class="tree-node" data-id="ui-shell">
+                <div class="tree-item" data-id="ui-shell">
+                  <span class="tree-toggle is-expanded"><svg viewBox="0 0 8 8" fill="currentColor"><path d="M2 1l4 3-4 3z"/></svg></span>
+                  <span class="tree-label">UI Shell</span>
+                  <span class="tree-count">24</span>
+                </div>
+                <div class="tree-children">
+                  <div class="tree-node" data-id="tickets">
+                    <div class="tree-item" data-id="tickets">
+                      <span class="tree-toggle is-leaf"><svg viewBox="0 0 8 8" fill="currentColor"><path d="M2 1l4 3-4 3z"/></svg></span>
+                      <span class="tree-label">Tickets</span>
+                      <span class="tree-count">8</span>
+                    </div>
+                  </div>
+                  <div class="tree-node" data-id="components">
+                    <div class="tree-item" data-id="components">
+                      <span class="tree-toggle is-leaf"><svg viewBox="0 0 8 8" fill="currentColor"><path d="M2 1l4 3-4 3z"/></svg></span>
+                      <span class="tree-label">Components</span>
+                      <span class="tree-count">4</span>
+                    </div>
+                  </div>
+                  <div class="tree-node" data-id="search">
+                    <div class="tree-item" data-id="search">
+                      <span class="tree-toggle is-leaf"><svg viewBox="0 0 8 8" fill="currentColor"><path d="M2 1l4 3-4 3z"/></svg></span>
+                      <span class="tree-label">Search</span>
+                      <span class="tree-count">6</span>
+                    </div>
+                  </div>
+                  <div class="tree-node" data-id="dashboard">
+                    <div class="tree-item" data-id="dashboard">
+                      <span class="tree-toggle is-leaf"><svg viewBox="0 0 8 8" fill="currentColor"><path d="M2 1l4 3-4 3z"/></svg></span>
+                      <span class="tree-label">Dashboard</span>
+                      <span class="tree-count">3</span>
+                    </div>
+                  </div>
+                  <div class="tree-node" data-id="milestones">
+                    <div class="tree-item" data-id="milestones">
+                      <span class="tree-toggle is-leaf"><svg viewBox="0 0 8 8" fill="currentColor"><path d="M2 1l4 3-4 3z"/></svg></span>
+                      <span class="tree-label">Milestones</span>
+                      <span class="tree-count">3</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Notifications -->
+              <div class="tree-node" data-id="notifications">
+                <div class="tree-item" data-id="notifications">
+                  <span class="tree-toggle is-leaf"><svg viewBox="0 0 8 8" fill="currentColor"><path d="M2 1l4 3-4 3z"/></svg></span>
+                  <span class="tree-label">Notifications</span>
+                  <span class="tree-count">3</span>
+                </div>
+              </div>
+
+              <!-- Comments -->
+              <div class="tree-node" data-id="comments">
+                <div class="tree-item" data-id="comments">
+                  <span class="tree-toggle is-leaf"><svg viewBox="0 0 8 8" fill="currentColor"><path d="M2 1l4 3-4 3z"/></svg></span>
+                  <span class="tree-label">Comments</span>
+                  <span class="tree-count">3</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- Detail Panel -->
+        <div class="component-detail" id="detail-panel">
+          <!-- Populated by JS on selection; DNS is pre-selected -->
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Component data map
+    const components = {
+      'platform': {
+        name: 'Platform', path: ['Platform'], tickets: 42,
+        owner: { name: 'Alex Kim', initials: 'AK', color: 'indigo' },
+        children: ['networking', 'auth', 'storage'],
+        stats: { new: 8, progress: 12, verify: 6, done: 16 }
+      },
+      'networking': {
+        name: 'Networking', path: ['Platform', 'Networking'], tickets: 18,
+        owner: { name: 'Alex Kim', initials: 'AK', color: 'indigo' },
+        children: ['dns', 'tls-certs', 'load-balancer'],
+        stats: { new: 3, progress: 6, verify: 2, done: 7 }
+      },
+      'dns': {
+        name: 'DNS', path: ['Platform', 'Networking', 'DNS'], tickets: 7,
+        owner: { name: 'Bob Lee', initials: 'BL', color: 'amber' },
+        children: [],
+        stats: { new: 2, progress: 2, verify: 1, done: 2 }
+      },
+      'tls-certs': {
+        name: 'TLS/Certs', path: ['Platform', 'Networking', 'TLS/Certs'], tickets: 5,
+        owner: { name: 'Maria Chen', initials: 'MC', color: 'teal' },
+        children: [],
+        stats: { new: 1, progress: 2, verify: 0, done: 2 }
+      },
+      'load-balancer': {
+        name: 'Load Balancer', path: ['Platform', 'Networking', 'Load Balancer'], tickets: 6,
+        owner: { name: 'Alex Kim', initials: 'AK', color: 'indigo' },
+        children: [],
+        stats: { new: 0, progress: 2, verify: 1, done: 3 }
+      },
+      'auth': {
+        name: 'Auth', path: ['Platform', 'Auth'], tickets: 12,
+        owner: { name: 'Maria Chen', initials: 'MC', color: 'teal' },
+        children: ['oidc', 'sessions'],
+        stats: { new: 2, progress: 4, verify: 2, done: 4 }
+      },
+      'oidc': {
+        name: 'OIDC', path: ['Platform', 'Auth', 'OIDC'], tickets: 5,
+        owner: { name: 'Maria Chen', initials: 'MC', color: 'teal' },
+        children: [],
+        stats: { new: 1, progress: 2, verify: 1, done: 1 }
+      },
+      'sessions': {
+        name: 'Sessions', path: ['Platform', 'Auth', 'Sessions'], tickets: 7,
+        owner: { name: 'Alex Kim', initials: 'AK', color: 'indigo' },
+        children: [],
+        stats: { new: 1, progress: 2, verify: 1, done: 3 }
+      },
+      'storage': {
+        name: 'Storage', path: ['Platform', 'Storage'], tickets: 12,
+        owner: { name: 'Bob Lee', initials: 'BL', color: 'amber' },
+        children: [],
+        stats: { new: 3, progress: 3, verify: 2, done: 4 }
+      },
+      'ui-shell': {
+        name: 'UI Shell', path: ['UI Shell'], tickets: 24,
+        owner: { name: 'Jess Wong', initials: 'JW', color: 'rose' },
+        children: ['tickets', 'components', 'search', 'dashboard', 'milestones'],
+        stats: { new: 4, progress: 8, verify: 3, done: 9 }
+      },
+      'tickets': {
+        name: 'Tickets', path: ['UI Shell', 'Tickets'], tickets: 8,
+        owner: { name: 'Maria Chen', initials: 'MC', color: 'teal' },
+        children: [],
+        stats: { new: 2, progress: 3, verify: 1, done: 2 }
+      },
+      'components': {
+        name: 'Components', path: ['UI Shell', 'Components'], tickets: 4,
+        owner: { name: 'Jess Wong', initials: 'JW', color: 'rose' },
+        children: [],
+        stats: { new: 1, progress: 1, verify: 0, done: 2 }
+      },
+      'search': {
+        name: 'Search', path: ['UI Shell', 'Search'], tickets: 6,
+        owner: { name: 'Alex Kim', initials: 'AK', color: 'indigo' },
+        children: [],
+        stats: { new: 1, progress: 2, verify: 1, done: 2 }
+      },
+      'dashboard': {
+        name: 'Dashboard', path: ['UI Shell', 'Dashboard'], tickets: 3,
+        owner: { name: 'Jess Wong', initials: 'JW', color: 'rose' },
+        children: [],
+        stats: { new: 0, progress: 1, verify: 1, done: 1 }
+      },
+      'milestones': {
+        name: 'Milestones', path: ['UI Shell', 'Milestones'], tickets: 3,
+        owner: { name: 'Jess Wong', initials: 'JW', color: 'rose' },
+        children: [],
+        stats: { new: 0, progress: 1, verify: 0, done: 2 }
+      },
+      'notifications': {
+        name: 'Notifications', path: ['Notifications'], tickets: 3,
+        owner: { name: 'Bob Lee', initials: 'BL', color: 'amber' },
+        children: [],
+        stats: { new: 1, progress: 1, verify: 0, done: 1 }
+      },
+      'comments': {
+        name: 'Comments', path: ['Comments'], tickets: 3,
+        owner: { name: 'Maria Chen', initials: 'MC', color: 'teal' },
+        children: [],
+        stats: { new: 0, progress: 1, verify: 1, done: 1 }
+      }
+    };
+
+    // Render detail panel for a component
+    function renderDetail(id) {
+      const c = components[id];
+      if (!c) return;
+
+      const pathHtml = c.path.map((seg, i) => {
+        if (i === c.path.length - 1) {
+          return `<span class="component-path-current">${seg}</span>`;
+        }
+        return `<span class="component-path-segment">${seg}</span>`;
+      }).join('<span class="component-path-sep"> / </span>');
+
+      const childrenHtml = c.children.length > 0
+        ? c.children.map(cid => {
+            const child = components[cid];
+            return `<span class="component-child-chip" data-id="${cid}">${child.name} <span class="chip-count">${child.tickets}</span></span>`;
+          }).join('')
+        : '<span style="color:var(--text-ghost); font-size:var(--text-xs);">No subcomponents</span>';
+
+      document.getElementById('detail-panel').innerHTML = `
+        <div class="component-detail-header">
+          <div class="component-detail-name">${c.name}</div>
+          <div class="component-path">${pathHtml}</div>
+        </div>
+
+        <div class="component-meta">
+          <div class="component-meta-row">
+            <span class="component-meta-label">Owner</span>
+            <span class="component-meta-value">
+              <span class="user-pill">
+                <span class="user-pill-avatar user-pill-avatar--${c.owner.color}">${c.owner.initials}</span>
+                ${c.owner.name}
+              </span>
+            </span>
+          </div>
+          <div class="component-meta-row">
+            <span class="component-meta-label">Path</span>
+            <span class="component-meta-value component-path">${pathHtml}</span>
+          </div>
+          <div class="component-meta-row">
+            <span class="component-meta-label">Children</span>
+            <span class="component-meta-value">
+              <div class="component-children-list">${childrenHtml}</div>
+            </span>
+          </div>
+        </div>
+
+        <div class="component-stats-total">Tickets — ${c.tickets}</div>
+        <div class="component-stats">
+          <span class="stat"><span class="stat-dot" style="background:var(--status-new-text)"></span> <span class="stat-value">${c.stats.new}</span> New</span>
+          <span class="stat"><span class="stat-dot" style="background:var(--status-progress-text)"></span> <span class="stat-value">${c.stats.progress}</span> Progress</span>
+          <span class="stat"><span class="stat-dot" style="background:var(--status-verify-text)"></span> <span class="stat-value">${c.stats.verify}</span> Verify</span>
+          <span class="stat"><span class="stat-dot" style="background:var(--status-done-text)"></span> <span class="stat-value">${c.stats.done}</span> Done</span>
+        </div>
+
+        <div class="component-actions">
+          <button class="btn btn-primary">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2.5 4h11M2.5 8h11M2.5 12h7"/></svg>
+            View Tickets
+          </button>
+          <button class="btn btn-ghost">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
+            Add Subcomponent
+          </button>
+          <button class="btn btn-ghost">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 2l3 3-8 8H3v-3l8-8z"/></svg>
+            Edit
+          </button>
+          <button class="btn btn-danger">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h10M5.5 4V3a1 1 0 011-1h3a1 1 0 011 1v1M6.5 7v4M9.5 7v4"/><path d="M4 4l.5 9a1 1 0 001 1h5a1 1 0 001-1L12 4"/></svg>
+            Delete
+          </button>
+        </div>
+      `;
+
+      // Bind child chip clicks
+      document.querySelectorAll('.component-child-chip').forEach(chip => {
+        chip.addEventListener('click', () => selectNode(chip.dataset.id));
+      });
+    }
+
+    // Select a node in the tree
+    function selectNode(id) {
+      // Remove old selection
+      document.querySelectorAll('.tree-item.is-selected').forEach(el => el.classList.remove('is-selected'));
+
+      // Add new selection
+      const item = document.querySelector(`.tree-item[data-id="${id}"]`);
+      if (item) {
+        item.classList.add('is-selected');
+        item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+
+      renderDetail(id);
+    }
+
+    // Toggle expand/collapse
+    function toggleNode(toggle) {
+      const isLeaf = toggle.classList.contains('is-leaf');
+      if (isLeaf) return;
+
+      toggle.classList.toggle('is-expanded');
+      const item = toggle.closest('.tree-item');
+      const node = item.closest('.tree-node');
+      const children = node.querySelector(':scope > .tree-children');
+      if (children) {
+        children.classList.toggle('is-hidden');
+      }
+    }
+
+    // Event delegation on tree
+    document.getElementById('component-tree').addEventListener('click', (e) => {
+      const toggle = e.target.closest('.tree-toggle');
+      const item = e.target.closest('.tree-item');
+
+      if (toggle && !toggle.classList.contains('is-leaf')) {
+        toggleNode(toggle);
+        e.stopPropagation();
+        return;
+      }
+
+      if (item) {
+        selectNode(item.dataset.id);
+      }
+    });
+
+    // Filter input
+    document.getElementById('tree-filter').addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase().trim();
+      const nodes = document.querySelectorAll('.tree-node');
+
+      if (!query) {
+        nodes.forEach(n => n.style.display = '');
+        return;
+      }
+
+      nodes.forEach(node => {
+        const label = node.querySelector(':scope > .tree-item .tree-label');
+        const text = label ? label.textContent.toLowerCase() : '';
+        const hasMatch = text.includes(query);
+
+        // Check children too
+        const childLabels = node.querySelectorAll('.tree-children .tree-label');
+        let childMatch = false;
+        childLabels.forEach(cl => {
+          if (cl.textContent.toLowerCase().includes(query)) childMatch = true;
+        });
+
+        node.style.display = (hasMatch || childMatch) ? '' : 'none';
+      });
+    });
+
+    // Sticky header scroll detection
+    const main = document.getElementById('main');
+    const pageHeader = document.getElementById('page-header');
+
+    window.addEventListener('scroll', () => {
+      const gone = pageHeader.getBoundingClientRect().bottom < 8;
+      if (gone !== main.classList.contains('is-scrolled')) {
+        main.classList.toggle('is-scrolled', gone);
+      }
+    }, { passive: true });
+
+    // Pre-select DNS on load
+    renderDetail('dns');
+  </script>
+</body>
+</html>
