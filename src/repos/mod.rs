@@ -4,6 +4,7 @@ pub mod component;
 pub mod cursor;
 pub mod fts;
 pub mod milestone;
+pub mod session;
 pub mod ticket;
 pub mod user;
 
