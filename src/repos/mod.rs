@@ -1,3 +1,4 @@
+pub mod comment;
 pub mod component;
 pub mod cursor;
 pub mod ticket;

@@ -43,7 +43,7 @@ Status legend: `[ ]` pending | `[~]` in progress | `[x]` completed
 - [x] **2.5** User repository [blocked by: 2.4]
 - [x] **2.6** Component repository (tree ops) [blocked by: 2.4]
 - [x] **2.7** Ticket repository (CRUD, filters, pagination) [blocked by: 2.4]
-- [ ] **2.8** Comment repository [blocked by: 2.4]
+- [x] **2.8** Comment repository [blocked by: 2.4]
 - [ ] **2.9** Milestone repository [blocked by: 2.4]
 - [ ] **2.10** Search filter parser (micro-syntax → structured query) [blocked by: 0.2]
 - [ ] **2.11** Full-text search integration [blocked by: 0.2, 2.7]
