@@ -9,7 +9,7 @@ use super::milestone::CompactMilestone;
 use super::user::CompactUser;
 
 /// Database row for the `tickets` table.
-#[derive(Debug, Clone, sqlx::FromRow)]
+#[derive(Debug, Clone, Serialize, sqlx::FromRow)]
 pub struct TicketRow {
     pub id: i64,
     #[sqlx(rename = "type")]

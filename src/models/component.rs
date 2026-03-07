@@ -38,6 +38,16 @@ pub struct CompactComponent {
     pub path: String,
 }
 
+impl From<&ComponentRow> for CompactComponent {
+    fn from(row: &ComponentRow) -> Self {
+        Self {
+            id: row.id,
+            name: row.name.clone(),
+            path: row.path.clone(),
+        }
+    }
+}
+
 /// Request body for creating a new component.
 #[derive(Debug, Deserialize, ToSchema)]
 pub struct CreateComponentRequest {

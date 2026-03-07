@@ -49,6 +49,15 @@ pub struct CompactMilestone {
     pub name: String,
 }
 
+impl From<&MilestoneRow> for CompactMilestone {
+    fn from(row: &MilestoneRow) -> Self {
+        Self {
+            id: row.id,
+            name: row.name.clone(),
+        }
+    }
+}
+
 /// Request body for creating a new milestone.
 #[derive(Debug, Deserialize, ToSchema)]
 pub struct CreateMilestoneRequest {
