@@ -41,7 +41,7 @@ Status legend: `[ ]` pending | `[~]` in progress | `[x]` completed
 - [x] **2.3** Database schema migrations (all tables) [blocked by: 0.1, 2.1]
 - [x] **2.4** Domain models (Rust structs with serde) [blocked by: 2.3]
 - [x] **2.5** User repository [blocked by: 2.4]
-- [ ] **2.6** Component repository (tree ops) [blocked by: 2.4]
+- [x] **2.6** Component repository (tree ops) [blocked by: 2.4]
 - [ ] **2.7** Ticket repository (CRUD, filters, pagination) [blocked by: 2.4]
 - [ ] **2.8** Comment repository [blocked by: 2.4]
 - [ ] **2.9** Milestone repository [blocked by: 2.4]

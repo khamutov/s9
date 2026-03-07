@@ -1,3 +1,4 @@
+pub mod component;
 pub mod user;
 
 use std::fmt;
