@@ -72,7 +72,7 @@ impl IntoResponse for AuthError {
 }
 
 /// Extracts the `s9_session` token value from the `Cookie` header.
-fn extract_session_cookie(parts: &Parts) -> Option<&str> {
+pub(crate) fn extract_session_cookie(parts: &Parts) -> Option<&str> {
     parts
         .headers
         .get_all(COOKIE)
