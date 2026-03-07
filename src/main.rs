@@ -1,4 +1,4 @@
-mod api;
+pub(crate) mod api;
 mod auth;
 mod cli;
 mod config;
@@ -39,7 +39,7 @@ async fn serve(config: Config) -> anyhow::Result<()> {
     let pool = db::init_pool(&config.db_path).await?;
     db::run_migrations(&pool).await?;
 
-    let app = api::build_router();
+    let app = api::build_router(pool);
 
     let listener = tokio::net::TcpListener::bind(config.listen).await?;
     tracing::info!("listening on {}", config.listen);

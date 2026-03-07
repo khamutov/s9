@@ -1,10 +1,19 @@
 use axum::Router;
+use sqlx::SqlitePool;
+
+/// Shared application state threaded into all handlers via Axum's state system.
+#[derive(Clone)]
+pub struct AppState {
+    pub pool: SqlitePool,
+}
 
 /// Build the application router with all API routes and static file fallback.
-pub fn build_router() -> Router {
+pub fn build_router(pool: SqlitePool) -> Router {
+    let state = AppState { pool };
     let api = Router::new();
 
     Router::new()
         .nest("/api", api)
         .fallback(crate::embed::static_handler)
+        .with_state(state)
 }
