@@ -64,9 +64,10 @@ Warm dark theme — all backgrounds use warm undertones, never blue-blacks.
 | `--accent` | `#e8b43a` | Primary accent (golden) |
 | `--accent-hover` | `#d4a230` | Accent hover state |
 | `--text-primary` | `#ede9dd` | Main text (warm cream) |
-| `--text-secondary` | `#8c8579` | Supporting text |
-| `--text-tertiary` | `#5c564d` | Dimmed labels |
-| `--text-ghost` | `#3d3830` | Barely visible (headers, grid) |
+| `--text-label` | `#a89d90` | Small readable text — mono labels, table headers, timestamps, counts (7.3:1 on root) |
+| `--text-secondary` | `#8c8579` | Supporting body text at ≥13px (5.3:1 on root) |
+| `--text-tertiary` | `#5c564d` | Decorative hints only — placeholders, optional tags (2.7:1, not for readable text) |
+| `--text-ghost` | `#3d3830` | Dot-grid texture, borders, scrollbar (not for any text) |
 | `--border-primary` | `rgba(255,245,220,0.08)` | Borders |
 | `--border-subtle` | `rgba(255,245,220,0.04)` | Row separators |
 
@@ -104,3 +105,4 @@ Priority colors: P0=`#f87171`, P1=`#fb923c`, P2=`#e8b43a`, P3=`#7cb8f7`, P4=`#5c
 - Use mono font for anything data-oriented (IDs, counts, timestamps, labels, filter inputs)
 - Keep information dense but scannable — no excessive whitespace
 - Every interactive element needs a visible hover/focus state
+- **Contrast**: All readable text must meet WCAG AAA (7:1) against its background. Small mono text (≤11px labels, table headers, timestamps, counts) uses `--text-label` (#a89d90, 7.3:1 on root). Body-size supporting text (≥13px) uses `--text-secondary` (#8c8579, 5.3:1). `--text-tertiary` and `--text-ghost` are never used for text that users need to read — only for decorative hints, placeholders, borders, and textures. Always verify contrast ratios when introducing new colors or placing text on non-standard backgrounds.
