@@ -1,6 +1,7 @@
 pub mod comment;
 pub mod component;
 pub mod cursor;
+pub mod fts;
 pub mod milestone;
 pub mod ticket;
 pub mod user;

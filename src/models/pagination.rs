@@ -17,3 +17,14 @@ pub struct OffsetPage<T: Serialize> {
     pub page: i64,
     pub page_size: i64,
 }
+
+/// Dual-mode pagination for search results.
+///
+/// FTS queries use offset pagination (need total count for relevance ranking),
+/// while structured-only queries use cursor pagination (efficient for large sets).
+#[derive(Debug, Clone, Serialize)]
+#[serde(untagged)]
+pub enum SearchResult<T: Serialize> {
+    Cursor(CursorPage<T>),
+    Offset(OffsetPage<T>),
+}
