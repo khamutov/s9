@@ -73,16 +73,21 @@ def run_iteration(prompt: str, iteration: int, repo_root: Path) -> str:
     )
 
     lines: list[str] = []
-    assert proc.stdout is not None  # noqa: S101 — guaranteed by PIPE
-    for line in proc.stdout:
-        print(line, end="", flush=True)
-        lines.append(line)
+    try:
+        assert proc.stdout is not None  # noqa: S101 — guaranteed by PIPE
+        for line in proc.stdout:
+            print(line, end="", flush=True)
+            lines.append(line)
 
-    stderr = proc.stderr.read() if proc.stderr else ""
-    if stderr:
-        print(stderr, file=sys.stderr, flush=True)
+        stderr = proc.stderr.read() if proc.stderr else ""
+        if stderr:
+            print(stderr, file=sys.stderr, flush=True)
 
-    proc.wait()
+        proc.wait()
+    except KeyboardInterrupt:
+        proc.terminate()
+        proc.wait()
+        raise
 
     return "".join(lines)
 
