@@ -115,3 +115,15 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Tests**: 2 new tests (spec accessible without auth, all schemas present)
 - **Issues**: None; pre-existing clippy warnings unchanged
 - **Timestamp**: 2026-03-09
+
+## Task 3.15: Unified error handling
+- **Implemented**: Centralized `api::error` module with `AppError` enum implementing `IntoResponse`:
+  - `AppError` enum with variants: NotFound, Forbidden, Conflict, Validation, ValidationMsg, BadRequest, PayloadTooLarge, Unauthorized, Internal
+  - Convenience free functions (`not_found`, `forbidden`, `conflict`, `validation_error`, etc.) for ergonomic use in handlers
+  - All error responses follow DD 0.4 §5.3 JSON envelope: `{"error": "<code>", "message": "...", "details": {}}`
+  - Replaced duplicated error helpers across 7 handler files (ticket, comment, component, milestone, user, attachment, auth)
+  - Auth middleware `AuthError::IntoResponse` now delegates to the shared error module
+- **Files**: src/api/error.rs (new), src/api/ticket.rs, src/api/comment.rs, src/api/component.rs, src/api/milestone.rs, src/api/user.rs, src/api/attachment.rs, src/api/auth.rs, src/api/mod.rs, src/auth/middleware.rs
+- **Tests**: 6 new unit tests (not_found, forbidden, conflict, validation_error, validation_msg, internal_error) + all 377 existing tests pass
+- **Issues**: Pre-existing clippy warnings unchanged; frontend test failure pre-existing
+- **Timestamp**: 2026-03-09
