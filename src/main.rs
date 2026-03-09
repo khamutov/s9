@@ -6,6 +6,7 @@ mod db;
 pub(crate) mod email;
 mod embed;
 pub(crate) mod events;
+pub(crate) mod mentions;
 mod models;
 pub(crate) mod notifications;
 mod repos;

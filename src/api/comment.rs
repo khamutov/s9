@@ -108,14 +108,24 @@ pub async fn create_comment(
         Err(_) => return internal_error(),
     };
 
+    // Parse @mentions and resolve to user IDs (best-effort).
+    let mentioned_logins = crate::mentions::parse_mentions(&body.body);
+    let mut mentioned_ids = Vec::new();
+    for login in &mentioned_logins {
+        if let Ok(Some(u)) = repos::user::get_by_login(&state.pool, login).await {
+            mentioned_ids.push(u.id);
+        }
+    }
+
     // Emit notification event (best-effort).
     let _ = state
         .notif_producer
-        .emit(
+        .emit_with_mentions(
             path.id,
             NotifEvent::CommentAdded,
             user.id,
             json!({"actor": user.login}),
+            &mentioned_ids,
         )
         .await;
 

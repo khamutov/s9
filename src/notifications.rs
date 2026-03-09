@@ -70,13 +70,27 @@ impl NotificationProducer {
         actor_id: i64,
         payload: serde_json::Value,
     ) -> Result<(), sqlx::Error> {
+        self.emit_with_mentions(ticket_id, event, actor_id, payload, &[])
+            .await
+    }
+
+    /// Like [`emit`], but adds extra recipient user IDs (e.g. from @mentions).
+    pub async fn emit_with_mentions(
+        &self,
+        ticket_id: i64,
+        event: NotifEvent,
+        actor_id: i64,
+        payload: serde_json::Value,
+        extra_recipient_ids: &[i64],
+    ) -> Result<(), sqlx::Error> {
         if !self.smtp_enabled {
             return Ok(());
         }
 
-        let raw_recipients = self
+        let mut raw_recipients = self
             .resolve_raw_recipients(ticket_id, &event, actor_id)
             .await?;
+        raw_recipients.extend_from_slice(extra_recipient_ids);
 
         // Self-exclusion + dedup.
         let mut recipients: HashSet<i64> = raw_recipients.into_iter().collect();
@@ -596,6 +610,64 @@ mod tests {
             .unwrap();
 
         // Owner should appear only once despite being owner + CC.
+        let rows = get_pending_rows(&pool).await;
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0].user_id, owner);
+    }
+
+    #[tokio::test]
+    async fn emit_with_mentions_adds_mentioned_users() {
+        let pool = test_pool().await;
+        let owner = seed_user(&pool, "owner", None).await;
+        let commenter = seed_user(&pool, "commenter", None).await;
+        let mentioned = seed_user(&pool, "mentioned", None).await;
+        let comp_owner = seed_user(&pool, "comp_owner", None).await;
+        let comp_id = seed_component(&pool, "Comp", comp_owner).await;
+        let ticket_id = seed_ticket(&pool, owner, comp_id, commenter).await;
+
+        let producer = NotificationProducer::new(pool.clone(), 120, true);
+        producer
+            .emit_with_mentions(
+                ticket_id,
+                NotifEvent::CommentAdded,
+                commenter,
+                serde_json::json!({"actor": "commenter"}),
+                &[mentioned],
+            )
+            .await
+            .unwrap();
+
+        let rows = get_pending_rows(&pool).await;
+        assert_eq!(rows.len(), 2);
+        let user_ids: HashSet<i64> = rows.iter().map(|r| r.user_id).collect();
+        assert!(user_ids.contains(&owner));
+        assert!(user_ids.contains(&mentioned));
+        assert!(!user_ids.contains(&commenter));
+    }
+
+    #[tokio::test]
+    async fn emit_with_mentions_deduplicates_with_owner() {
+        let pool = test_pool().await;
+        let owner = seed_user(&pool, "owner", None).await;
+        let commenter = seed_user(&pool, "commenter", None).await;
+        let comp_owner = seed_user(&pool, "comp_owner", None).await;
+        let comp_id = seed_component(&pool, "Comp", comp_owner).await;
+        let ticket_id = seed_ticket(&pool, owner, comp_id, commenter).await;
+
+        let producer = NotificationProducer::new(pool.clone(), 120, true);
+        // Mention the owner who is already a recipient.
+        producer
+            .emit_with_mentions(
+                ticket_id,
+                NotifEvent::CommentAdded,
+                commenter,
+                serde_json::json!({"actor": "commenter"}),
+                &[owner],
+            )
+            .await
+            .unwrap();
+
+        // Owner should appear only once.
         let rows = get_pending_rows(&pool).await;
         assert_eq!(rows.len(), 1);
         assert_eq!(rows[0].user_id, owner);
