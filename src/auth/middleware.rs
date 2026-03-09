@@ -217,6 +217,7 @@ mod tests {
             pool,
             oidc: None,
             slug_cache: None,
+            data_dir: std::path::PathBuf::from("/tmp/test"),
         };
         let mut parts = make_parts(None);
 
@@ -231,6 +232,7 @@ mod tests {
             pool,
             oidc: None,
             slug_cache: None,
+            data_dir: std::path::PathBuf::from("/tmp/test"),
         };
         let mut parts = make_parts(Some("s9_session=nonexistent"));
 
@@ -259,6 +261,7 @@ mod tests {
             pool,
             oidc: None,
             slug_cache: None,
+            data_dir: std::path::PathBuf::from("/tmp/test"),
         };
         let mut parts = make_parts(Some("s9_session=expired-tok"));
 
@@ -283,6 +286,7 @@ mod tests {
             pool,
             oidc: None,
             slug_cache: None,
+            data_dir: std::path::PathBuf::from("/tmp/test"),
         };
         let mut parts = make_parts(Some(&format!("s9_session={}", sess.id)));
 
@@ -300,6 +304,7 @@ mod tests {
             pool,
             oidc: None,
             slug_cache: None,
+            data_dir: std::path::PathBuf::from("/tmp/test"),
         };
         let mut parts = make_parts(Some(&format!("s9_session={}", sess.id)));
 
@@ -326,6 +331,7 @@ mod tests {
             pool,
             oidc: None,
             slug_cache: None,
+            data_dir: std::path::PathBuf::from("/tmp/test"),
         };
         let mut parts = make_parts(Some(&format!("s9_session={}", sess.id)));
 
@@ -346,6 +352,7 @@ mod tests {
             pool,
             oidc: None,
             slug_cache: None,
+            data_dir: std::path::PathBuf::from("/tmp/test"),
         };
         let mut parts = make_parts(Some(&format!("s9_session={}", sess.id)));
 

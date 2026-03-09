@@ -63,7 +63,9 @@ async fn serve(config: Config) -> anyhow::Result<()> {
         }
     };
 
-    let app = api::build_router(pool, oidc, slug_cache);
+    storage::init_dirs(&config.data_dir).await?;
+
+    let app = api::build_router(pool, oidc, slug_cache, config.data_dir.clone());
 
     let listener = tokio::net::TcpListener::bind(config.listen).await?;
     tracing::info!("listening on {}", config.listen);

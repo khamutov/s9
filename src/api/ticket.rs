@@ -418,6 +418,7 @@ mod tests {
             pool,
             oidc: None,
             slug_cache: Some(slug_cache),
+            data_dir: std::path::PathBuf::from("/tmp/test"),
         };
 
         (state, sess.id)

@@ -1,3 +1,4 @@
+mod attachment;
 mod auth;
 mod comment;
 mod component;
@@ -5,6 +6,7 @@ mod milestone;
 pub mod oidc;
 mod ticket;
 
+use std::path::PathBuf;
 use std::sync::Arc;
 
 use axum::Router;
@@ -20,6 +22,7 @@ pub struct AppState {
     pub pool: SqlitePool,
     pub oidc: Option<Arc<oidc::OidcProvider>>,
     pub slug_cache: Option<SlugCache>,
+    pub data_dir: PathBuf,
 }
 
 /// Build the application router with all API routes and static file fallback.
@@ -27,11 +30,13 @@ pub fn build_router(
     pool: SqlitePool,
     oidc: Option<Arc<oidc::OidcProvider>>,
     slug_cache: Option<SlugCache>,
+    data_dir: PathBuf,
 ) -> Router {
     let state = AppState {
         pool,
         oidc,
         slug_cache,
+        data_dir,
     };
     build_router_with_state(state)
 }
@@ -75,6 +80,11 @@ pub fn build_router_with_state(state: AppState) -> Router {
         .route(
             "/milestones/{id}",
             patch(milestone::update_milestone).delete(milestone::delete_milestone),
+        )
+        .route("/attachments", post(attachment::upload_attachment))
+        .route(
+            "/attachments/{id}/{filename}",
+            get(attachment::download_attachment),
         );
 
     Router::new()
