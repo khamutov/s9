@@ -74,6 +74,20 @@ pub async fn delete(pool: &SqlitePool, token: &str) -> Result<(), RepoError> {
     Ok(())
 }
 
+/// Deletes all sessions for a user except the specified one.
+pub async fn delete_others_for_user(
+    pool: &SqlitePool,
+    user_id: i64,
+    keep_token: &str,
+) -> Result<(), RepoError> {
+    sqlx::query("DELETE FROM sessions WHERE user_id = ? AND id != ?")
+        .bind(user_id)
+        .bind(keep_token)
+        .execute(pool)
+        .await?;
+    Ok(())
+}
+
 /// Removes all expired sessions and returns the number of rows deleted.
 pub async fn delete_expired(pool: &SqlitePool) -> Result<u64, RepoError> {
     let now = Utc::now();

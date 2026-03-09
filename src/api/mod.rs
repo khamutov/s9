@@ -5,6 +5,7 @@ mod component;
 mod milestone;
 pub mod oidc;
 mod ticket;
+mod user;
 
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -85,7 +86,10 @@ pub fn build_router_with_state(state: AppState) -> Router {
         .route(
             "/attachments/{id}/{filename}",
             get(attachment::download_attachment),
-        );
+        )
+        .route("/users", get(user::list_users).post(user::create_user))
+        .route("/users/{id}", patch(user::update_user))
+        .route("/users/{id}/password", post(user::set_password));
 
     Router::new()
         .nest("/api", api)
