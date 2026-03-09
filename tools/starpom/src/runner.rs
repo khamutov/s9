@@ -89,14 +89,10 @@ fn run_iteration(
 ) -> anyhow::Result<String> {
     let reader = duct::cmd(
         "claude",
-        &[
-            "--dangerously-skip-permissions",
-            "--chrome",
-            "--print",
-            prompt,
-        ],
+        &["--dangerously-skip-permissions", "--chrome", "--print"],
     )
     .dir(root)
+    .stdin_bytes(prompt.as_bytes().to_vec())
     .stderr_to_stdout()
     .unchecked()
     .reader()
