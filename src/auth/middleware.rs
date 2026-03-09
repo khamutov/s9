@@ -252,6 +252,11 @@ mod tests {
     async fn auth_user_missing_cookie() {
         let pool = test_pool().await;
         let state = AppState {
+            notif_producer: crate::notifications::NotificationProducer::new(
+                pool.clone(),
+                120,
+                false,
+            ),
             pool,
             oidc: None,
             slug_cache: None,
@@ -268,6 +273,11 @@ mod tests {
     async fn auth_user_invalid_token() {
         let pool = test_pool().await;
         let state = AppState {
+            notif_producer: crate::notifications::NotificationProducer::new(
+                pool.clone(),
+                120,
+                false,
+            ),
             pool,
             oidc: None,
             slug_cache: None,
@@ -298,6 +308,11 @@ mod tests {
         .unwrap();
 
         let state = AppState {
+            notif_producer: crate::notifications::NotificationProducer::new(
+                pool.clone(),
+                120,
+                false,
+            ),
             pool,
             oidc: None,
             slug_cache: None,
@@ -324,6 +339,11 @@ mod tests {
 
         let sess = session::create(&pool, uid).await.unwrap();
         let state = AppState {
+            notif_producer: crate::notifications::NotificationProducer::new(
+                pool.clone(),
+                120,
+                false,
+            ),
             pool,
             oidc: None,
             slug_cache: None,
@@ -343,6 +363,11 @@ mod tests {
         let sess = session::create(&pool, uid).await.unwrap();
 
         let state = AppState {
+            notif_producer: crate::notifications::NotificationProducer::new(
+                pool.clone(),
+                120,
+                false,
+            ),
             pool,
             oidc: None,
             slug_cache: None,
@@ -371,6 +396,11 @@ mod tests {
         let sess = session::create(&pool, uid).await.unwrap();
 
         let state = AppState {
+            notif_producer: crate::notifications::NotificationProducer::new(
+                pool.clone(),
+                120,
+                false,
+            ),
             pool,
             oidc: None,
             slug_cache: None,
@@ -393,6 +423,11 @@ mod tests {
         let sess = session::create(&pool, uid).await.unwrap();
 
         let state = AppState {
+            notif_producer: crate::notifications::NotificationProducer::new(
+                pool.clone(),
+                120,
+                false,
+            ),
             pool,
             oidc: None,
             slug_cache: None,
@@ -408,12 +443,14 @@ mod tests {
     // --- Middleware layer integration tests ---
 
     fn build_test_app(pool: SqlitePool) -> axum::Router {
+        let notif = crate::notifications::NotificationProducer::new(pool.clone(), 120, false);
         crate::api::build_router(
             pool,
             None,
             None,
             std::path::PathBuf::from("/tmp/test"),
             crate::events::EventBus::new(),
+            notif,
         )
     }
 
@@ -498,6 +535,11 @@ mod tests {
         let pool = test_pool().await;
         let uid = create_test_user(&pool, Some(Role::User)).await;
         let state = AppState {
+            notif_producer: crate::notifications::NotificationProducer::new(
+                pool.clone(),
+                120,
+                false,
+            ),
             pool,
             oidc: None,
             slug_cache: None,

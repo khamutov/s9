@@ -6,6 +6,7 @@ mod db;
 mod embed;
 pub(crate) mod events;
 mod models;
+pub(crate) mod notifications;
 mod repos;
 mod search;
 mod slug;
@@ -66,8 +67,27 @@ async fn serve(config: Config) -> anyhow::Result<()> {
 
     storage::init_dirs(&config.data_dir).await?;
 
+    let smtp_enabled = config.smtp.is_some();
+    if smtp_enabled {
+        tracing::info!("SMTP configured, email notifications enabled");
+    } else {
+        tracing::info!("SMTP not configured, email notifications disabled");
+    }
+    let notif_producer = notifications::NotificationProducer::new(
+        pool.clone(),
+        config.notification_delay,
+        smtp_enabled,
+    );
+
     let event_bus = events::EventBus::new();
-    let app = api::build_router(pool, oidc, slug_cache, config.data_dir.clone(), event_bus);
+    let app = api::build_router(
+        pool,
+        oidc,
+        slug_cache,
+        config.data_dir.clone(),
+        event_bus,
+        notif_producer,
+    );
 
     let listener = tokio::net::TcpListener::bind(config.listen).await?;
     tracing::info!("listening on {}", config.listen);

@@ -7,6 +7,7 @@ pub struct PendingNotificationRow {
     pub user_id: i64,
     pub ticket_id: i64,
     pub event_type: String,
+    pub payload: Option<String>,
     pub created_at: DateTime<Utc>,
     pub send_after: DateTime<Utc>,
 }

@@ -4,6 +4,7 @@ use crate::auth::middleware::AuthUser;
 use crate::models::{
     CreateTicketRequest, CursorPage, OffsetPage, SearchResult, TicketResponse, UpdateTicketRequest,
 };
+use crate::notifications::NotifEvent;
 use crate::repos::{self, RepoError, cursor};
 use crate::search;
 use axum::Json;
@@ -11,6 +12,7 @@ use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use serde::Deserialize;
+use serde_json::json;
 
 use super::AppState;
 use super::error::{forbidden, internal_error, not_found, validation_error, validation_error_msg};
@@ -215,10 +217,21 @@ pub async fn create_ticket(
         return internal_error();
     }
 
-    let enriched = match enrich_with_slugs(&state, &[row]).await {
+    let enriched = match enrich_with_slugs(&state, &[row.clone()]).await {
         Ok(mut v) => v.remove(0),
         Err(_) => return internal_error(),
     };
+
+    // Emit notification event (best-effort, don't fail the request).
+    let _ = state
+        .notif_producer
+        .emit(
+            row.id,
+            NotifEvent::TicketCreated,
+            user.id,
+            json!({"actor": user.login}),
+        )
+        .await;
 
     (StatusCode::CREATED, Json(enriched)).into_response()
 }
@@ -242,16 +255,19 @@ pub async fn update_ticket(
     Path(id): Path<i64>,
     Json(body): Json<UpdateTicketRequest>,
 ) -> Response {
+    // Load existing ticket for authorization check and change detection.
+    let existing = match repos::ticket::get_by_id(&state.pool, id).await {
+        Ok(Some(r)) => r,
+        Ok(None) => return not_found("Ticket not found"),
+        Err(_) => return internal_error(),
+    };
+
     // If title is being changed, check authorization: only creator or admin.
-    if body.title.is_some() {
-        let existing = match repos::ticket::get_by_id(&state.pool, id).await {
-            Ok(Some(r)) => r,
-            Ok(None) => return not_found("Ticket not found"),
-            Err(_) => return internal_error(),
-        };
-        if existing.created_by != user.id && user.role != crate::models::Role::Admin {
-            return forbidden("Only the ticket creator or an admin can change the title.");
-        }
+    if body.title.is_some()
+        && existing.created_by != user.id
+        && user.role != crate::models::Role::Admin
+    {
+        return forbidden("Only the ticket creator or an admin can change the title.");
     }
 
     if let Some(ref title) = body.title {
@@ -263,6 +279,13 @@ pub async fn update_ticket(
         }
     }
 
+    // Capture old milestone IDs before the update replaces them.
+    let old_milestone_ids = if body.milestones.is_some() {
+        repos::ticket::get_milestone_ids(&state.pool, id).await.ok()
+    } else {
+        None
+    };
+
     let row = match repos::ticket::update(&state.pool, id, &body).await {
         Ok(r) => r,
         Err(RepoError::NotFound) => return not_found("Ticket not found"),
@@ -270,10 +293,13 @@ pub async fn update_ticket(
         Err(_) => return internal_error(),
     };
 
-    let enriched = match enrich_with_slugs(&state, &[row]).await {
+    let enriched = match enrich_with_slugs(&state, &[row.clone()]).await {
         Ok(mut v) => v.remove(0),
         Err(_) => return internal_error(),
     };
+
+    // Emit per-field notification events (best-effort).
+    emit_update_notifications(&state, &existing, &row, &body, &user, old_milestone_ids).await;
 
     (StatusCode::OK, Json(enriched)).into_response()
 }
@@ -281,6 +307,113 @@ pub async fn update_ticket(
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+/// Emits per-field notification events for changed ticket fields.
+///
+/// Per DD 0.6 §7.2, each changed field gets its own event. All errors are
+/// silently logged — notifications are best-effort and must not fail the request.
+async fn emit_update_notifications(
+    state: &AppState,
+    old: &crate::models::TicketRow,
+    new: &crate::models::TicketRow,
+    body: &UpdateTicketRequest,
+    user: &AuthUser,
+    old_milestone_ids: Option<Vec<i64>>,
+) {
+    let producer = &state.notif_producer;
+    let actor = &user.login;
+    let ticket_id = old.id;
+
+    if body.status.is_some() && old.status != new.status {
+        let _ = producer
+            .emit(
+                ticket_id,
+                NotifEvent::StatusChanged,
+                user.id,
+                json!({
+                    "actor": actor,
+                    "old_status": old.status,
+                    "new_status": new.status,
+                }),
+            )
+            .await;
+    }
+
+    if body.priority.is_some() && old.priority != new.priority {
+        let _ = producer
+            .emit(
+                ticket_id,
+                NotifEvent::PriorityChanged,
+                user.id,
+                json!({
+                    "actor": actor,
+                    "old_priority": old.priority,
+                    "new_priority": new.priority,
+                }),
+            )
+            .await;
+    }
+
+    if body.owner_id.is_some() && old.owner_id != new.owner_id {
+        let old_owner_login = resolve_user_login(&state.pool, old.owner_id).await;
+        let new_owner_login = resolve_user_login(&state.pool, new.owner_id).await;
+        let _ = producer
+            .emit(
+                ticket_id,
+                NotifEvent::OwnerChanged,
+                user.id,
+                json!({
+                    "actor": actor,
+                    "old_owner": old_owner_login,
+                    "new_owner": new_owner_login,
+                }),
+            )
+            .await;
+    }
+
+    // Detect newly added milestones by comparing old vs new milestone sets.
+    if let (Some(old_ids), Some(new_ids)) = (old_milestone_ids, &body.milestones) {
+        let old_set: std::collections::HashSet<i64> = old_ids.into_iter().collect();
+        for &mid in new_ids {
+            if !old_set.contains(&mid) {
+                let ms_name = resolve_milestone_name(&state.pool, mid).await;
+                let _ = producer
+                    .emit(
+                        ticket_id,
+                        NotifEvent::MilestoneAdded,
+                        user.id,
+                        json!({
+                            "actor": actor,
+                            "milestone_name": ms_name,
+                        }),
+                    )
+                    .await;
+            }
+        }
+    }
+}
+
+/// Resolves a user's login name by ID, returning "unknown" on failure.
+async fn resolve_user_login(pool: &sqlx::SqlitePool, user_id: i64) -> String {
+    sqlx::query_scalar::<_, String>("SELECT login FROM users WHERE id = ?")
+        .bind(user_id)
+        .fetch_optional(pool)
+        .await
+        .ok()
+        .flatten()
+        .unwrap_or_else(|| "unknown".to_string())
+}
+
+/// Resolves a milestone name by ID, returning "unknown" on failure.
+async fn resolve_milestone_name(pool: &sqlx::SqlitePool, milestone_id: i64) -> String {
+    sqlx::query_scalar::<_, String>("SELECT name FROM milestones WHERE id = ?")
+        .bind(milestone_id)
+        .fetch_optional(pool)
+        .await
+        .ok()
+        .flatten()
+        .unwrap_or_else(|| "unknown".to_string())
+}
 
 /// Executes the main search SQL and returns raw ticket rows.
 async fn exec_search_query(
@@ -400,6 +533,11 @@ mod tests {
         let slug_cache = SlugCache::new(&pool).await.unwrap();
 
         let state = AppState {
+            notif_producer: crate::notifications::NotificationProducer::new(
+                pool.clone(),
+                120,
+                false,
+            ),
             pool,
             oidc: None,
             slug_cache: Some(slug_cache),

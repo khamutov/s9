@@ -197,6 +197,11 @@ mod tests {
         let slug_cache = SlugCache::new(&pool).await.unwrap();
 
         let state = AppState {
+            notif_producer: crate::notifications::NotificationProducer::new(
+                pool.clone(),
+                120,
+                false,
+            ),
             pool,
             oidc: None,
             slug_cache: Some(slug_cache),

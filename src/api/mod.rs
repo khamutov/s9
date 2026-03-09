@@ -23,6 +23,7 @@ use utoipa::openapi::security::{ApiKey, ApiKeyValue, SecurityScheme};
 use crate::auth::middleware::{require_admin, require_auth};
 use crate::config::OidcConfig;
 use crate::events::EventBus;
+use crate::notifications::NotificationProducer;
 use crate::slug::SlugCache;
 
 /// Shared application state threaded into all handlers via Axum's state system.
@@ -33,6 +34,7 @@ pub struct AppState {
     pub slug_cache: Option<SlugCache>,
     pub data_dir: PathBuf,
     pub event_bus: EventBus,
+    pub notif_producer: NotificationProducer,
 }
 
 /// OpenAPI specification for the S9 Bug Tracker API.
@@ -158,6 +160,7 @@ pub fn build_router(
     slug_cache: Option<SlugCache>,
     data_dir: PathBuf,
     event_bus: EventBus,
+    notif_producer: NotificationProducer,
 ) -> Router {
     let state = AppState {
         pool,
@@ -165,6 +168,7 @@ pub fn build_router(
         slug_cache,
         data_dir,
         event_bus,
+        notif_producer,
     };
     build_router_with_state(state)
 }
@@ -256,6 +260,11 @@ mod tests {
         db::run_migrations(&pool).await.unwrap();
 
         let state = AppState {
+            notif_producer: crate::notifications::NotificationProducer::new(
+                pool.clone(),
+                120,
+                false,
+            ),
             pool,
             oidc: None,
             slug_cache: None,

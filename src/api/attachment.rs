@@ -217,6 +217,11 @@ mod tests {
         storage::init_dirs(tmp_dir.path()).await.unwrap();
 
         let state = AppState {
+            notif_producer: crate::notifications::NotificationProducer::new(
+                pool.clone(),
+                120,
+                false,
+            ),
             pool,
             oidc: None,
             slug_cache: Some(slug_cache),

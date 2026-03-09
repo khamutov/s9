@@ -80,6 +80,11 @@ mod tests {
         let sess = session::create(&pool, admin.id).await.unwrap();
 
         let state = AppState {
+            notif_producer: crate::notifications::NotificationProducer::new(
+                pool.clone(),
+                120,
+                false,
+            ),
             pool,
             oidc: None,
             slug_cache: None,

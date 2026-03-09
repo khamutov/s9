@@ -9,6 +9,7 @@ use serde_json::json;
 
 use crate::auth::middleware::{AuthUser, RequireAdmin};
 use crate::models::{CommentResponse, CreateCommentRequest, EditCommentRequest, Role};
+use crate::notifications::NotifEvent;
 use crate::repos::{self, RepoError};
 
 use super::AppState;
@@ -106,6 +107,17 @@ pub async fn create_comment(
         Ok(r) => r,
         Err(_) => return internal_error(),
     };
+
+    // Emit notification event (best-effort).
+    let _ = state
+        .notif_producer
+        .emit(
+            path.id,
+            NotifEvent::CommentAdded,
+            user.id,
+            json!({"actor": user.login}),
+        )
+        .await;
 
     (StatusCode::CREATED, Json(enriched)).into_response()
 }
@@ -244,6 +256,11 @@ mod tests {
         let slug_cache = SlugCache::new(&pool).await.unwrap();
 
         let state = AppState {
+            notif_producer: crate::notifications::NotificationProducer::new(
+                pool.clone(),
+                120,
+                false,
+            ),
             pool,
             oidc: None,
             slug_cache: Some(slug_cache),

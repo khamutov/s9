@@ -228,12 +228,14 @@ mod tests {
     async fn login_success() {
         let pool = test_pool().await;
         create_user(&pool, "alice", Some("correct_password")).await;
+        let notif = crate::notifications::NotificationProducer::new(pool.clone(), 120, false);
         let app = build_router(
             pool,
             None,
             None,
             std::path::PathBuf::from("/tmp/test"),
             crate::events::EventBus::new(),
+            notif,
         );
 
         let resp = app
@@ -262,12 +264,14 @@ mod tests {
     async fn login_wrong_password() {
         let pool = test_pool().await;
         create_user(&pool, "bob", Some("correct_password")).await;
+        let notif = crate::notifications::NotificationProducer::new(pool.clone(), 120, false);
         let app = build_router(
             pool,
             None,
             None,
             std::path::PathBuf::from("/tmp/test"),
             crate::events::EventBus::new(),
+            notif,
         );
 
         let resp = app
@@ -283,12 +287,14 @@ mod tests {
     #[tokio::test]
     async fn login_unknown_user() {
         let pool = test_pool().await;
+        let notif = crate::notifications::NotificationProducer::new(pool.clone(), 120, false);
         let app = build_router(
             pool,
             None,
             None,
             std::path::PathBuf::from("/tmp/test"),
             crate::events::EventBus::new(),
+            notif,
         );
 
         let resp = app
@@ -310,12 +316,14 @@ mod tests {
             .execute(&pool)
             .await
             .unwrap();
+        let notif = crate::notifications::NotificationProducer::new(pool.clone(), 120, false);
         let app = build_router(
             pool,
             None,
             None,
             std::path::PathBuf::from("/tmp/test"),
             crate::events::EventBus::new(),
+            notif,
         );
 
         let resp = app
@@ -332,12 +340,14 @@ mod tests {
     async fn login_no_password_hash() {
         let pool = test_pool().await;
         create_user(&pool, "oidcuser", None).await;
+        let notif = crate::notifications::NotificationProducer::new(pool.clone(), 120, false);
         let app = build_router(
             pool,
             None,
             None,
             std::path::PathBuf::from("/tmp/test"),
             crate::events::EventBus::new(),
+            notif,
         );
 
         let resp = app
@@ -357,12 +367,14 @@ mod tests {
         let pool = test_pool().await;
         let uid = create_user(&pool, "charlie", Some("password123")).await;
         let sess = session::create(&pool, uid).await.unwrap();
+        let notif = crate::notifications::NotificationProducer::new(pool.clone(), 120, false);
         let app = build_router(
             pool.clone(),
             None,
             None,
             std::path::PathBuf::from("/tmp/test"),
             crate::events::EventBus::new(),
+            notif,
         );
 
         let resp = app
@@ -390,12 +402,14 @@ mod tests {
     #[tokio::test]
     async fn logout_no_cookie() {
         let pool = test_pool().await;
+        let notif = crate::notifications::NotificationProducer::new(pool.clone(), 120, false);
         let app = build_router(
             pool,
             None,
             None,
             std::path::PathBuf::from("/tmp/test"),
             crate::events::EventBus::new(),
+            notif,
         );
 
         let resp = app
@@ -419,12 +433,14 @@ mod tests {
         let pool = test_pool().await;
         let uid = create_user(&pool, "diana", Some("password123")).await;
         let sess = session::create(&pool, uid).await.unwrap();
+        let notif = crate::notifications::NotificationProducer::new(pool.clone(), 120, false);
         let app = build_router(
             pool,
             None,
             None,
             std::path::PathBuf::from("/tmp/test"),
             crate::events::EventBus::new(),
+            notif,
         );
 
         let resp = app
@@ -449,12 +465,14 @@ mod tests {
     #[tokio::test]
     async fn me_unauthenticated() {
         let pool = test_pool().await;
+        let notif = crate::notifications::NotificationProducer::new(pool.clone(), 120, false);
         let app = build_router(
             pool,
             None,
             None,
             std::path::PathBuf::from("/tmp/test"),
             crate::events::EventBus::new(),
+            notif,
         );
 
         let resp = app
