@@ -191,3 +191,17 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Tests**: 11 mention parser tests + 2 notification producer tests (mentioned users added, dedup with owner); all 422 tests pass
 - **Issues**: Pre-existing clippy warnings unchanged
 - **Timestamp**: 2026-03-09
+
+## Task 4.6: Micro-syntax reference parsing (#ID, #PREFIX-ID, comment#N)
+- **Implemented**: Reference parser module per PRD §4.1 and DD 0.17 §7.5:
+  - `src/references.rs` — regex-based `parse_references()` extracts four reference types from text
+  - `Reference::Ticket { id }` — `#42` numeric ticket reference
+  - `Reference::SlugTicket { prefix, id }` — `#MAP-23` slug-prefixed ticket reference
+  - `Reference::Comment { number }` — `comment#5` comment in current ticket
+  - `Reference::TicketComment { prefix, ticket_id, comment_number }` — `#42/comment#3` or `#MAP-23/comment#1`
+  - Longer patterns match first via leftmost-first regex alternation
+  - Deduplication via HashSet, zero IDs skipped, boundary-aware (won't match inside words/URLs)
+- **Files**: src/references.rs (new), src/main.rs
+- **Tests**: 20 unit tests covering all patterns, dedup, edge cases, priority; all 442 tests pass
+- **Issues**: Pre-existing clippy warnings unchanged; new dead_code warnings for Reference/parse_references (no callers yet — will be used by frontend markdown renderer task 5.12)
+- **Timestamp**: 2026-03-09

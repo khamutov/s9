@@ -78,7 +78,7 @@ Status legend: `[ ]` pending | `[~]` in progress | `[x]` completed
 - [x] **4.3** Notification batching (2-min delay) [blocked by: 4.1, 4.2]
 - [x] **4.4** Per-ticket mute preferences [blocked by: 4.1, 2.5]
 - [x] **4.5** @mention parsing in comments [blocked by: 2.8, 4.1]
-- [ ] **4.6** Micro-syntax reference parsing (#ID, #PREFIX-ID, comment#N) [blocked by: 0.17, 2.8, 2.14]
+- [x] **4.6** Micro-syntax reference parsing (#ID, #PREFIX-ID, comment#N) [blocked by: 0.17, 2.8, 2.14]
 
 ## Phase 5: Frontend
 
