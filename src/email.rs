@@ -324,10 +324,12 @@ pub async fn notification_worker(
 async fn process_pending(pool: &SqlitePool, sender: &EmailSender) -> Result<(), anyhow::Error> {
     let now = Utc::now().format("%Y-%m-%dT%H:%M:%S%.6fZ").to_string();
 
+    // Use ASCII Record Separator (0x1E) as group_concat delimiter because
+    // JSON payloads contain commas that would corrupt comma-delimited splitting.
     let groups: Vec<BatchedGroup> = sqlx::query_as(
         "SELECT user_id, ticket_id, group_concat(id) AS notification_ids,
-                group_concat(event_type) AS event_types,
-                group_concat(payload) AS payloads
+                group_concat(event_type, char(30)) AS event_types,
+                group_concat(payload, char(30)) AS payloads
          FROM pending_notifications
          WHERE send_after <= ?
          GROUP BY user_id, ticket_id
@@ -368,9 +370,9 @@ async fn process_pending(pool: &SqlitePool, sender: &EmailSender) -> Result<(), 
             .await?
             .unwrap_or_else(|| format!("Ticket #{}", group.ticket_id));
 
-        // Parse event list.
-        let event_types: Vec<&str> = group.event_types.split(',').collect();
-        let payloads_raw: Vec<&str> = group.payloads.split(',').collect();
+        // Parse event list (split on ASCII Record Separator 0x1E).
+        let event_types: Vec<&str> = group.event_types.split('\x1E').collect();
+        let payloads_raw: Vec<&str> = group.payloads.split('\x1E').collect();
         let events: Vec<NotificationEvent> = event_types
             .into_iter()
             .zip(payloads_raw)
@@ -596,6 +598,294 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(count, 0);
+    }
+
+    /// Helper: seed a second user for batching tests.
+    async fn seed_second_user(pool: &SqlitePool) -> i64 {
+        use crate::models::CreateUserRequest;
+        use crate::repos::user;
+
+        user::create(
+            pool,
+            &CreateUserRequest {
+                login: "user2".to_string(),
+                display_name: "User Two".to_string(),
+                email: "user2@example.com".to_string(),
+                password: None,
+                role: None,
+            },
+            None,
+        )
+        .await
+        .unwrap()
+        .id
+    }
+
+    /// Helper: seed a second ticket for batching tests.
+    async fn seed_second_ticket(pool: &SqlitePool, user_id: i64, comp_id: i64) -> i64 {
+        let now = Utc::now();
+        sqlx::query_scalar(
+            "INSERT INTO tickets (type, title, status, priority, owner_id, component_id, created_by, created_at, updated_at)
+             VALUES ('bug', 'Second ticket', 'new', 'P3', ?, ?, ?, ?, ?) RETURNING id",
+        )
+        .bind(user_id)
+        .bind(comp_id)
+        .bind(user_id)
+        .bind(now)
+        .bind(now)
+        .fetch_one(pool)
+        .await
+        .unwrap()
+    }
+
+    /// Insert a pending notification with configurable send_after.
+    async fn insert_pending(
+        pool: &SqlitePool,
+        user_id: i64,
+        ticket_id: i64,
+        event_type: &str,
+        payload: &str,
+        send_after_offset_secs: i64,
+    ) {
+        let now = Utc::now();
+        let send_after = now + chrono::Duration::seconds(send_after_offset_secs);
+        sqlx::query(
+            "INSERT INTO pending_notifications (user_id, ticket_id, event_type, payload, created_at, send_after)
+             VALUES (?, ?, ?, ?, ?, ?)",
+        )
+        .bind(user_id)
+        .bind(ticket_id)
+        .bind(event_type)
+        .bind(payload)
+        .bind(now)
+        .bind(send_after)
+        .execute(pool)
+        .await
+        .unwrap();
+    }
+
+    #[tokio::test]
+    async fn batching_groups_by_user_and_ticket() {
+        let pool = crate::db::init_memory_pool().await.unwrap();
+        crate::db::run_migrations(&pool).await.unwrap();
+        let (user_id, ticket_id) = seed_test_data(&pool).await;
+
+        // Insert two ready events for the same (user, ticket) with JSON payloads containing commas.
+        insert_pending(
+            &pool,
+            user_id,
+            ticket_id,
+            "status_changed",
+            r#"{"actor":"alice","old_status":"new","new_status":"in_progress"}"#,
+            -10, // already past send_after
+        )
+        .await;
+        insert_pending(
+            &pool,
+            user_id,
+            ticket_id,
+            "priority_changed",
+            r#"{"actor":"alice","old_priority":"P3","new_priority":"P1"}"#,
+            -5,
+        )
+        .await;
+
+        // Run the batching query directly.
+        let now = Utc::now().format("%Y-%m-%dT%H:%M:%S%.6fZ").to_string();
+        let groups: Vec<BatchedGroup> = sqlx::query_as(
+            "SELECT user_id, ticket_id, group_concat(id) AS notification_ids,
+                    group_concat(event_type, char(30)) AS event_types,
+                    group_concat(payload, char(30)) AS payloads
+             FROM pending_notifications
+             WHERE send_after <= ?
+             GROUP BY user_id, ticket_id
+             ORDER BY min(created_at)",
+        )
+        .bind(&now)
+        .fetch_all(&pool)
+        .await
+        .unwrap();
+
+        assert_eq!(
+            groups.len(),
+            1,
+            "two events for same (user, ticket) should batch into one group"
+        );
+        let group = &groups[0];
+        assert_eq!(group.user_id, user_id);
+        assert_eq!(group.ticket_id, ticket_id);
+
+        // Verify event_types parse correctly with RS separator.
+        let event_types: Vec<&str> = group.event_types.split('\x1E').collect();
+        assert_eq!(event_types, vec!["status_changed", "priority_changed"]);
+
+        // Verify payloads parse correctly (JSON with commas must not be corrupted).
+        let payloads: Vec<&str> = group.payloads.split('\x1E').collect();
+        assert_eq!(payloads.len(), 2);
+        let p0: serde_json::Value = serde_json::from_str(payloads[0]).unwrap();
+        assert_eq!(p0["old_status"], "new");
+        assert_eq!(p0["new_status"], "in_progress");
+        let p1: serde_json::Value = serde_json::from_str(payloads[1]).unwrap();
+        assert_eq!(p1["old_priority"], "P3");
+    }
+
+    #[tokio::test]
+    async fn batching_separates_different_tickets() {
+        let pool = crate::db::init_memory_pool().await.unwrap();
+        crate::db::run_migrations(&pool).await.unwrap();
+        let (user_id, ticket_id) = seed_test_data(&pool).await;
+
+        // Get the component ID for the second ticket.
+        let comp_id: i64 = sqlx::query_scalar("SELECT component_id FROM tickets WHERE id = ?")
+            .bind(ticket_id)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+        let ticket_id_2 = seed_second_ticket(&pool, user_id, comp_id).await;
+
+        // Insert one event per ticket, both ready.
+        insert_pending(
+            &pool,
+            user_id,
+            ticket_id,
+            "comment_added",
+            r#"{"actor":"bob"}"#,
+            -10,
+        )
+        .await;
+        insert_pending(
+            &pool,
+            user_id,
+            ticket_id_2,
+            "ticket_created",
+            r#"{"actor":"bob"}"#,
+            -10,
+        )
+        .await;
+
+        let now = Utc::now().format("%Y-%m-%dT%H:%M:%S%.6fZ").to_string();
+        let groups: Vec<BatchedGroup> = sqlx::query_as(
+            "SELECT user_id, ticket_id, group_concat(id) AS notification_ids,
+                    group_concat(event_type, char(30)) AS event_types,
+                    group_concat(payload, char(30)) AS payloads
+             FROM pending_notifications
+             WHERE send_after <= ?
+             GROUP BY user_id, ticket_id
+             ORDER BY min(created_at)",
+        )
+        .bind(&now)
+        .fetch_all(&pool)
+        .await
+        .unwrap();
+
+        assert_eq!(
+            groups.len(),
+            2,
+            "events for different tickets must not be grouped together"
+        );
+    }
+
+    #[tokio::test]
+    async fn batching_respects_send_after_window() {
+        let pool = crate::db::init_memory_pool().await.unwrap();
+        crate::db::run_migrations(&pool).await.unwrap();
+        let (user_id, ticket_id) = seed_test_data(&pool).await;
+
+        // One event past its send_after, one still in the future.
+        insert_pending(
+            &pool,
+            user_id,
+            ticket_id,
+            "comment_added",
+            r#"{"actor":"a"}"#,
+            -10,
+        )
+        .await;
+        insert_pending(
+            &pool,
+            user_id,
+            ticket_id,
+            "status_changed",
+            r#"{"actor":"a"}"#,
+            300,
+        )
+        .await;
+
+        let now = Utc::now().format("%Y-%m-%dT%H:%M:%S%.6fZ").to_string();
+        let groups: Vec<BatchedGroup> = sqlx::query_as(
+            "SELECT user_id, ticket_id, group_concat(id) AS notification_ids,
+                    group_concat(event_type, char(30)) AS event_types,
+                    group_concat(payload, char(30)) AS payloads
+             FROM pending_notifications
+             WHERE send_after <= ?
+             GROUP BY user_id, ticket_id
+             ORDER BY min(created_at)",
+        )
+        .bind(&now)
+        .fetch_all(&pool)
+        .await
+        .unwrap();
+
+        assert_eq!(groups.len(), 1);
+        // Only the ready event should be in the batch.
+        let event_types: Vec<&str> = groups[0].event_types.split('\x1E').collect();
+        assert_eq!(event_types, vec!["comment_added"]);
+
+        // The future event should still be in the table.
+        let (total,): (i64,) = sqlx::query_as("SELECT COUNT(*) FROM pending_notifications")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+        assert_eq!(total, 2, "future event must remain pending");
+    }
+
+    #[tokio::test]
+    async fn batching_groups_different_users_separately() {
+        let pool = crate::db::init_memory_pool().await.unwrap();
+        crate::db::run_migrations(&pool).await.unwrap();
+        let (user_id, ticket_id) = seed_test_data(&pool).await;
+        let user_id_2 = seed_second_user(&pool).await;
+
+        // Same ticket, different users.
+        insert_pending(
+            &pool,
+            user_id,
+            ticket_id,
+            "comment_added",
+            r#"{"actor":"x"}"#,
+            -10,
+        )
+        .await;
+        insert_pending(
+            &pool,
+            user_id_2,
+            ticket_id,
+            "comment_added",
+            r#"{"actor":"x"}"#,
+            -10,
+        )
+        .await;
+
+        let now = Utc::now().format("%Y-%m-%dT%H:%M:%S%.6fZ").to_string();
+        let groups: Vec<BatchedGroup> = sqlx::query_as(
+            "SELECT user_id, ticket_id, group_concat(id) AS notification_ids,
+                    group_concat(event_type, char(30)) AS event_types,
+                    group_concat(payload, char(30)) AS payloads
+             FROM pending_notifications
+             WHERE send_after <= ?
+             GROUP BY user_id, ticket_id
+             ORDER BY min(created_at)",
+        )
+        .bind(&now)
+        .fetch_all(&pool)
+        .await
+        .unwrap();
+
+        assert_eq!(
+            groups.len(),
+            2,
+            "same ticket for different users must produce separate batches"
+        );
     }
 
     #[tokio::test]
