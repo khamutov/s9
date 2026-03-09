@@ -207,6 +207,17 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Issues**: ESLint react-refresh rule required splitting context/hooks into separate files (context in PageHeaderContext.tsx, state in pageHeaderState.ts, hook in usePageHeader.ts)
 - **Timestamp**: 2026-03-09
 
+## Task 5.3: Routing setup
+- **Implemented**: Full route map per DD §7 with React.lazy() code splitting:
+  - 12 routes: `/login`, `/tickets`, `/tickets/new`, `/tickets/:id`, `/components`, `/milestones`, `/milestones/:id`, `/admin`, `/admin/users`, `/admin/components`, `/admin/settings`, plus `/` redirect to `/tickets`
+  - Login route outside RootLayout; all other routes nested under layout shell
+  - Page stub components created in `features/` directories per DD §11 (auth, tickets, components, milestones, admin)
+  - `Lazy` wrapper component extracted to `components/Lazy.tsx` for react-refresh compatibility
+- **Files created**: 12 files (11 page stubs + Lazy.tsx)
+- **Files modified**: frontend/src/router.tsx
+- **Issues**: Pre-existing prettier warnings on 5 files, pre-existing backend clippy and frontend test failures unchanged
+- **Timestamp**: 2026-03-09
+
 ## Codebase Patterns
 - Frontend CSS uses CSS Modules for components + global styles in `src/styles/` (tokens.css, reset.css, typography.css, globals.css)
 - Design token names use short form without `color-` prefix: `--bg-root`, `--accent`, `--text-primary`
@@ -214,7 +225,9 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - Layout components live in `src/components/layout/` with CSS Modules
 - React context + hooks must be split into separate files for react-refresh compatibility: context definition in .tsx, state/types in .ts, hook in .ts
 - NavLink active state for query-string routes needs custom location matching (useLocation + manual comparison)
-- Pre-existing failures: backend clippy warns on dead_code in references.rs; frontend has no test files yet (vitest exits 1)
+- Pre-existing failures: backend clippy warns on dead_code in references.rs; frontend has no test files yet (vitest exits 1); prettier warns on 5 pre-existing files
+- Page components go in `features/<domain>/` with `*Page.tsx` naming; lazy-loaded via React.lazy() in router.tsx
+- Helper components used in router.tsx must be in separate files (react-refresh rule: files exporting non-components can't contain component definitions)
 
 ## Task 4.6: Micro-syntax reference parsing (#ID, #PREFIX-ID, comment#N)
 - **Implemented**: Reference parser module per PRD §4.1 and DD 0.17 §7.5:
