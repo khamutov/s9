@@ -192,10 +192,28 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Issues**: Pre-existing clippy warnings unchanged
 - **Timestamp**: 2026-03-09
 
+## Task 5.2: Layout shell component (sidebar, command bar, page header)
+- **Implemented**: RootLayout component wrapping all authenticated pages with persistent chrome:
+  - `RootLayout.tsx` — flex layout with sidebar + main content area, wraps `<Outlet />` with PageHeaderProvider
+  - `Sidebar.tsx` — sticky 240px nav with logo, notification bell, 3 sections (Workspace/Views/Settings), NavLink active states with golden left bar, user pill at bottom
+  - `CommandBar.tsx` — mono search input with Cmd+K focus and Escape blur keyboard shortcuts
+  - `PageHeader.tsx` — context-driven breadcrumb/title/subtitle via usePageHeader hook
+  - `PageHeaderContext.tsx` / `pageHeaderState.ts` / `usePageHeader.ts` — React context split across three files for react-refresh compatibility
+  - `navConfig.tsx` — centralized navigation item definitions with icons
+  - `router.tsx` — nested routes under RootLayout for all authenticated pages
+- **Files created**: frontend/src/components/layout/ (12 files: 4 components + 4 CSS modules + navConfig + context/state/hook)
+- **Files modified**: frontend/src/router.tsx, frontend/src/styles/tokens.css
+- **Design tokens added**: --space-5, --space-10, --accent-subtle, --shadow-glow
+- **Issues**: ESLint react-refresh rule required splitting context/hooks into separate files (context in PageHeaderContext.tsx, state in pageHeaderState.ts, hook in usePageHeader.ts)
+- **Timestamp**: 2026-03-09
+
 ## Codebase Patterns
 - Frontend CSS uses CSS Modules for components + global styles in `src/styles/` (tokens.css, reset.css, typography.css, globals.css)
 - Design token names use short form without `color-` prefix: `--bg-root`, `--accent`, `--text-primary`
 - Three font families: `--font-display` (Bricolage Grotesque), `--font-body` (Instrument Sans), `--font-mono` (Martian Mono)
+- Layout components live in `src/components/layout/` with CSS Modules
+- React context + hooks must be split into separate files for react-refresh compatibility: context definition in .tsx, state/types in .ts, hook in .ts
+- NavLink active state for query-string routes needs custom location matching (useLocation + manual comparison)
 - Pre-existing failures: backend clippy warns on dead_code in references.rs; frontend has no test files yet (vitest exits 1)
 
 ## Task 4.6: Micro-syntax reference parsing (#ID, #PREFIX-ID, comment#N)
