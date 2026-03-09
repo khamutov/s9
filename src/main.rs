@@ -7,6 +7,7 @@ pub(crate) mod email;
 mod embed;
 pub(crate) mod events;
 pub(crate) mod mentions;
+pub(crate) mod references;
 mod models;
 pub(crate) mod notifications;
 mod repos;
