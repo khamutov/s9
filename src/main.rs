@@ -52,7 +52,18 @@ async fn serve(config: Config) -> anyhow::Result<()> {
         }
     };
 
-    let app = api::build_router(pool, oidc);
+    let slug_cache = match slug::SlugCache::new(&pool).await {
+        Ok(cache) => {
+            tracing::info!("slug cache loaded");
+            Some(cache)
+        }
+        Err(e) => {
+            tracing::warn!("slug cache init failed (slugs will be unavailable): {e}");
+            None
+        }
+    };
+
+    let app = api::build_router(pool, oidc, slug_cache);
 
     let listener = tokio::net::TcpListener::bind(config.listen).await?;
     tracing::info!("listening on {}", config.listen);

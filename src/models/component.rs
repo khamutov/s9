@@ -39,6 +39,9 @@ pub struct CompactComponent {
     pub name: String,
     pub path: String,
     pub slug: Option<String>,
+    /// Resolved slug from inheritance (never null when slugs are configured).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub effective_slug: Option<String>,
 }
 
 impl From<&ComponentRow> for CompactComponent {
@@ -48,6 +51,7 @@ impl From<&ComponentRow> for CompactComponent {
             name: row.name.clone(),
             path: row.path.clone(),
             slug: row.slug.clone(),
+            effective_slug: None,
         }
     }
 }

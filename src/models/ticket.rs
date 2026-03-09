@@ -29,6 +29,10 @@ pub struct TicketRow {
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct TicketResponse {
     pub id: i64,
+    /// Human-readable slug: `"{effective_slug}-{id}"`, e.g. `"PLAT-42"`.
+    /// `None` when the component tree has no slug configured.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub slug: Option<String>,
     #[serde(rename = "type")]
     pub ticket_type: TicketType,
     pub title: String,

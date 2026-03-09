@@ -437,6 +437,7 @@ pub async fn enrich_many(
 
         responses.push(TicketResponse {
             id: row.id,
+            slug: None,
             ticket_type: row.ticket_type,
             title: row.title.clone(),
             status: row.status,

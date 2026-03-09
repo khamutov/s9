@@ -1,7 +1,7 @@
 use axum::Json;
 use axum::extract::{Query, State};
-use axum::http::header::{HeaderValue, SET_COOKIE};
 use axum::http::StatusCode;
+use axum::http::header::{HeaderValue, SET_COOKIE};
 use axum::response::{IntoResponse, Response};
 use openidconnect::core::{
     CoreIdTokenClaims, CoreProviderMetadata, CoreResponseType, CoreTokenResponse,
@@ -440,7 +440,7 @@ mod tests {
         let pool = crate::db::init_memory_pool().await.unwrap();
         crate::db::run_migrations(&pool).await.unwrap();
 
-        let app = crate::api::build_router(pool, None);
+        let app = crate::api::build_router(pool, None, None);
 
         let resp = app
             .oneshot(
@@ -461,7 +461,7 @@ mod tests {
         let pool = crate::db::init_memory_pool().await.unwrap();
         crate::db::run_migrations(&pool).await.unwrap();
 
-        let app = crate::api::build_router(pool, None);
+        let app = crate::api::build_router(pool, None, None);
 
         let resp = app
             .oneshot(

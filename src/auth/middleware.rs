@@ -213,7 +213,11 @@ mod tests {
     #[tokio::test]
     async fn auth_user_missing_cookie() {
         let pool = test_pool().await;
-        let state = AppState { pool, oidc: None };
+        let state = AppState {
+            pool,
+            oidc: None,
+            slug_cache: None,
+        };
         let mut parts = make_parts(None);
 
         let result = AuthUser::from_request_parts(&mut parts, &state).await;
@@ -223,7 +227,11 @@ mod tests {
     #[tokio::test]
     async fn auth_user_invalid_token() {
         let pool = test_pool().await;
-        let state = AppState { pool, oidc: None };
+        let state = AppState {
+            pool,
+            oidc: None,
+            slug_cache: None,
+        };
         let mut parts = make_parts(Some("s9_session=nonexistent"));
 
         let result = AuthUser::from_request_parts(&mut parts, &state).await;
@@ -247,7 +255,11 @@ mod tests {
         .await
         .unwrap();
 
-        let state = AppState { pool, oidc: None };
+        let state = AppState {
+            pool,
+            oidc: None,
+            slug_cache: None,
+        };
         let mut parts = make_parts(Some("s9_session=expired-tok"));
 
         let result = AuthUser::from_request_parts(&mut parts, &state).await;
@@ -267,7 +279,11 @@ mod tests {
             .unwrap();
 
         let sess = session::create(&pool, uid).await.unwrap();
-        let state = AppState { pool, oidc: None };
+        let state = AppState {
+            pool,
+            oidc: None,
+            slug_cache: None,
+        };
         let mut parts = make_parts(Some(&format!("s9_session={}", sess.id)));
 
         let result = AuthUser::from_request_parts(&mut parts, &state).await;
@@ -280,7 +296,11 @@ mod tests {
         let uid = create_test_user(&pool, Some(Role::Admin)).await;
         let sess = session::create(&pool, uid).await.unwrap();
 
-        let state = AppState { pool, oidc: None };
+        let state = AppState {
+            pool,
+            oidc: None,
+            slug_cache: None,
+        };
         let mut parts = make_parts(Some(&format!("s9_session={}", sess.id)));
 
         let auth = AuthUser::from_request_parts(&mut parts, &state)
@@ -302,7 +322,11 @@ mod tests {
         let uid = create_test_user(&pool, Some(Role::Admin)).await;
         let sess = session::create(&pool, uid).await.unwrap();
 
-        let state = AppState { pool, oidc: None };
+        let state = AppState {
+            pool,
+            oidc: None,
+            slug_cache: None,
+        };
         let mut parts = make_parts(Some(&format!("s9_session={}", sess.id)));
 
         let admin = RequireAdmin::from_request_parts(&mut parts, &state)
@@ -318,7 +342,11 @@ mod tests {
         let uid = create_test_user(&pool, Some(Role::User)).await;
         let sess = session::create(&pool, uid).await.unwrap();
 
-        let state = AppState { pool, oidc: None };
+        let state = AppState {
+            pool,
+            oidc: None,
+            slug_cache: None,
+        };
         let mut parts = make_parts(Some(&format!("s9_session={}", sess.id)));
 
         let result = RequireAdmin::from_request_parts(&mut parts, &state).await;
