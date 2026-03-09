@@ -192,6 +192,12 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Issues**: Pre-existing clippy warnings unchanged
 - **Timestamp**: 2026-03-09
 
+## Codebase Patterns
+- Frontend CSS uses CSS Modules for components + global styles in `src/styles/` (tokens.css, reset.css, typography.css, globals.css)
+- Design token names use short form without `color-` prefix: `--bg-root`, `--accent`, `--text-primary`
+- Three font families: `--font-display` (Bricolage Grotesque), `--font-body` (Instrument Sans), `--font-mono` (Martian Mono)
+- Pre-existing failures: backend clippy warns on dead_code in references.rs; frontend has no test files yet (vitest exits 1)
+
 ## Task 4.6: Micro-syntax reference parsing (#ID, #PREFIX-ID, comment#N)
 - **Implemented**: Reference parser module per PRD §4.1 and DD 0.17 §7.5:
   - `src/references.rs` — regex-based `parse_references()` extracts four reference types from text
@@ -204,4 +210,15 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Files**: src/references.rs (new), src/main.rs
 - **Tests**: 20 unit tests covering all patterns, dedup, edge cases, priority; all 442 tests pass
 - **Issues**: Pre-existing clippy warnings unchanged; new dead_code warnings for Reference/parse_references (no callers yet — will be used by frontend markdown renderer task 5.12)
+- **Timestamp**: 2026-03-09
+
+## Task 5.1: Design tokens + global CSS (from prototype)
+- **Implemented**: Complete Warm Midnight design token system and global CSS for the React frontend:
+  - `tokens.css` — extended with layout (content-max-width, header-height), border-radius (sm, default, full), and shadow tokens (xs, sm, md)
+  - `typography.css` — heading styles using Bricolage Grotesque (h1–h3 with -0.04em tracking, weight 700–800), body headings (h4 Instrument Sans), mono section/table-header labels (9–10px uppercase)
+  - `globals.css` — dot-grid background texture (0.5px dots at 24px spacing), ambient golden accent glow (top-right radial gradient), golden focus rings, custom scrollbar styling, selection highlight, page-load animations (fade-down, row-reveal), pulse-dot animation, sr-only utility
+  - `index.html` — Google Fonts link for Bricolage Grotesque, Instrument Sans, Martian Mono; title set to "S9"
+  - `main.tsx` — imports wired for all four CSS files in correct cascade order
+- **Files**: frontend/src/styles/tokens.css, frontend/src/styles/typography.css (new), frontend/src/styles/globals.css (new), frontend/index.html, frontend/src/main.tsx
+- **Issues**: Pre-existing backend clippy and frontend test failures unchanged
 - **Timestamp**: 2026-03-09

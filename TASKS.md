@@ -82,7 +82,7 @@ Status legend: `[ ]` pending | `[~]` in progress | `[x]` completed
 
 ## Phase 5: Frontend
 
-- [ ] **5.1** Design tokens + global CSS (from prototype) [blocked by: 0.7, 0.9, 1.2]
+- [x] **5.1** Design tokens + global CSS (from prototype) [blocked by: 0.7, 0.9, 1.2]
 - [ ] **5.2** Layout shell component [blocked by: 5.1, 0.14]
 - [ ] **5.3** Routing setup [blocked by: 0.7, 1.2]
 - [ ] **5.4** API client layer (fetch wrapper, TS types) [blocked by: 0.4, 1.2]
