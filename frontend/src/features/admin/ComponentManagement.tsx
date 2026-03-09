@@ -2,6 +2,6 @@ import { usePageHeader } from '../../components/layout/usePageHeader';
 
 /** Admin component tree management with create, rename, reparent, delete. */
 export default function ComponentManagement() {
-  usePageHeader({ title: 'Component Management' });
+  usePageHeader({ title: 'Component Management', breadcrumb: ['Admin'] });
   return <div>Component Management</div>;
 }
