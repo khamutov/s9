@@ -67,3 +67,15 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Tests**: 9 integration tests (upload success, no file 422, blocked extension 422, unauth 401, download file, image inline, force download, wrong filename 404, nonexistent 404, unauth download 401)
 - **Issues**: None; pre-existing clippy warnings and frontend test failure unchanged
 - **Timestamp**: 2026-03-09
+
+## Task 3.11: User management endpoints (admin)
+- **Implemented**: Four user management endpoints per DD 0.4 §12:
+  - GET /api/users — admin-only list with optional `include_inactive` query param
+  - POST /api/users — admin-only create with password hashing, validation, and duplicate login detection
+  - PATCH /api/users/:id — mixed auth: self can change display_name/email, admin can also change role/is_active; deactivation deletes all user sessions
+  - POST /api/users/:id/password — self requires current_password verification, admin can set directly; deletes other sessions on success
+- **Files**: src/api/user.rs (new), src/api/mod.rs, src/repos/session.rs
+- **Tests**: 16 integration tests (CRUD, auth/admin checks, self-edit, role restriction, deactivation, password validation)
+- **Infrastructure**: Added `delete_others_for_user` to session repo for password-change session cleanup
+- **Issues**: None; pre-existing clippy warnings and frontend test failure unchanged
+- **Timestamp**: 2026-03-09
