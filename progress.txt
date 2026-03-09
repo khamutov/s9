@@ -34,3 +34,15 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Tests**: 9 integration tests (CRUD, auth, edit history, forbidden/admin checks, validation)
 - **Issues**: None
 - **Timestamp**: 2026-03-09
+
+## Task 3.8: Component API endpoints
+- **Implemented**: Four component CRUD endpoints per DD 0.4 §9:
+  - GET /api/components — flat list with expanded owner, ticket_count, slug, effective_slug
+  - POST /api/components — admin-only, validates slug format/uniqueness for root components
+  - PATCH /api/components/:id — admin-only, delegates to repo which handles path cascade and circular reference checks
+  - DELETE /api/components/:id — admin-only, rejects if has children or assigned tickets
+- **Files**: src/api/component.rs (new), src/api/mod.rs, src/models/component.rs
+- **Key design**: Slug cache is reloaded after every component mutation. ComponentResponse gains effective_slug field per DD 0.17 §7.3.
+- **Tests**: 10 integration tests (CRUD, admin-only auth, slug inheritance, conflict detection)
+- **Issues**: Pre-existing clippy warnings (unused imports, dead code) cause `task lint` to fail with `-D warnings`; no new warnings introduced.
+- **Timestamp**: 2026-03-09
