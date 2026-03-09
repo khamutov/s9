@@ -14,6 +14,22 @@ pub struct Cli {
     #[arg(long, env = "S9_LISTEN", default_value = "127.0.0.1:8080")]
     pub listen: SocketAddr,
 
+    /// OIDC issuer URL (e.g. `https://idp.example.com/realm`). Enables OIDC when set.
+    #[arg(long, env = "S9_OIDC_ISSUER_URL")]
+    pub oidc_issuer_url: Option<String>,
+
+    /// OIDC client ID registered with the identity provider.
+    #[arg(long, env = "S9_OIDC_CLIENT_ID")]
+    pub oidc_client_id: Option<String>,
+
+    /// OIDC client secret.
+    #[arg(long, env = "S9_OIDC_CLIENT_SECRET")]
+    pub oidc_client_secret: Option<String>,
+
+    /// Display name for the OIDC login button.
+    #[arg(long, env = "S9_OIDC_DISPLAY_NAME", default_value = "SSO")]
+    pub oidc_display_name: String,
+
     #[command(subcommand)]
     pub command: Option<Command>,
 }

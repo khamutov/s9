@@ -35,10 +35,7 @@ pub async fn list(
 }
 
 /// Finds a milestone by primary key.
-pub async fn get_by_id(
-    pool: &SqlitePool,
-    id: i64,
-) -> Result<Option<MilestoneRow>, RepoError> {
+pub async fn get_by_id(pool: &SqlitePool, id: i64) -> Result<Option<MilestoneRow>, RepoError> {
     let row = sqlx::query_as::<_, MilestoneRow>("SELECT * FROM milestones WHERE id = ?")
         .bind(id)
         .fetch_optional(pool)
@@ -234,10 +231,7 @@ async fn compute_stats_batch(
 }
 
 /// Enriches a single milestone row into a full API response with stats.
-pub async fn enrich(
-    pool: &SqlitePool,
-    row: MilestoneRow,
-) -> Result<MilestoneResponse, RepoError> {
+pub async fn enrich(pool: &SqlitePool, row: MilestoneRow) -> Result<MilestoneResponse, RepoError> {
     let results = enrich_many(pool, vec![row]).await?;
     Ok(results.into_iter().next().unwrap())
 }
@@ -260,10 +254,7 @@ pub async fn enrich_many(
     let responses = rows
         .into_iter()
         .map(|row| {
-            let stats = stats_map
-                .get(&row.id)
-                .cloned()
-                .unwrap_or_default();
+            let stats = stats_map.get(&row.id).cloned().unwrap_or_default();
             MilestoneResponse {
                 id: row.id,
                 name: row.name,
@@ -372,7 +363,10 @@ mod tests {
 
         assert_eq!(row.name, "v1.0");
         assert_eq!(row.description.as_deref(), Some("First release"));
-        assert_eq!(row.due_date, Some(NaiveDate::from_ymd_opt(2026, 6, 1).unwrap()));
+        assert_eq!(
+            row.due_date,
+            Some(NaiveDate::from_ymd_opt(2026, 6, 1).unwrap())
+        );
         assert_eq!(row.status, MilestoneStatus::Open);
 
         let fetched = get_by_id(&pool, row.id).await.unwrap().unwrap();

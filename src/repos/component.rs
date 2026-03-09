@@ -19,7 +19,10 @@ fn validate_slug(slug: &str) -> Result<(), RepoError> {
             "slug must start with an uppercase letter".to_string(),
         ));
     }
-    if !bytes[1..].iter().all(|b| b.is_ascii_uppercase() || b.is_ascii_digit()) {
+    if !bytes[1..]
+        .iter()
+        .all(|b| b.is_ascii_uppercase() || b.is_ascii_digit())
+    {
         return Err(RepoError::Conflict(
             "slug must contain only uppercase letters and digits".to_string(),
         ));
@@ -111,9 +114,7 @@ pub async fn create(
     let path = match req.parent_id {
         None => format!("/{}/", req.name),
         Some(pid) => {
-            let parent = get_by_id(pool, pid)
-                .await?
-                .ok_or(RepoError::NotFound)?;
+            let parent = get_by_id(pool, pid).await?.ok_or(RepoError::NotFound)?;
             format!("{}{}/", parent.path, req.name)
         }
     };
@@ -149,12 +150,11 @@ pub async fn update(
 ) -> Result<ComponentRow, RepoError> {
     let mut tx = pool.begin().await?;
 
-    let existing =
-        sqlx::query_as::<_, ComponentRow>("SELECT * FROM components WHERE id = ?")
-            .bind(id)
-            .fetch_optional(&mut *tx)
-            .await?
-            .ok_or(RepoError::NotFound)?;
+    let existing = sqlx::query_as::<_, ComponentRow>("SELECT * FROM components WHERE id = ?")
+        .bind(id)
+        .fetch_optional(&mut *tx)
+        .await?
+        .ok_or(RepoError::NotFound)?;
 
     let name = req.name.as_deref().unwrap_or(&existing.name);
     let owner_id = req.owner_id.unwrap_or(existing.owner_id);
@@ -186,12 +186,11 @@ pub async fn update(
     let new_path = match new_parent_id {
         None => format!("/{name}/"),
         Some(pid) => {
-            let parent =
-                sqlx::query_as::<_, ComponentRow>("SELECT * FROM components WHERE id = ?")
-                    .bind(pid)
-                    .fetch_optional(&mut *tx)
-                    .await?
-                    .ok_or(RepoError::NotFound)?;
+            let parent = sqlx::query_as::<_, ComponentRow>("SELECT * FROM components WHERE id = ?")
+                .bind(pid)
+                .fetch_optional(&mut *tx)
+                .await?
+                .ok_or(RepoError::NotFound)?;
 
             // Circular reference check: new parent must not be under this node
             if parent.path.starts_with(&existing.path) {
@@ -300,7 +299,11 @@ mod tests {
     }
 
     /// Helper that auto-generates a slug for root components (parent_id=None).
-    fn make_create_request(name: &str, parent_id: Option<i64>, owner_id: i64) -> CreateComponentRequest {
+    fn make_create_request(
+        name: &str,
+        parent_id: Option<i64>,
+        owner_id: i64,
+    ) -> CreateComponentRequest {
         let slug = if parent_id.is_none() {
             Some(name.to_uppercase())
         } else {
@@ -414,21 +417,27 @@ mod tests {
     async fn create_duplicate_slug_conflict() {
         let pool = test_pool().await;
         let owner = seed_user(&pool).await;
-        create(&pool, &CreateComponentRequest {
-            name: "Alpha".to_string(),
-            parent_id: None,
-            slug: Some("PLAT".to_string()),
-            owner_id: owner,
-        })
+        create(
+            &pool,
+            &CreateComponentRequest {
+                name: "Alpha".to_string(),
+                parent_id: None,
+                slug: Some("PLAT".to_string()),
+                owner_id: owner,
+            },
+        )
         .await
         .unwrap();
 
-        let result = create(&pool, &CreateComponentRequest {
-            name: "Beta".to_string(),
-            parent_id: None,
-            slug: Some("PLAT".to_string()),
-            owner_id: owner,
-        })
+        let result = create(
+            &pool,
+            &CreateComponentRequest {
+                name: "Beta".to_string(),
+                parent_id: None,
+                slug: Some("PLAT".to_string()),
+                owner_id: owner,
+            },
+        )
         .await;
         assert!(matches!(result, Err(RepoError::Conflict(_))));
     }
@@ -440,9 +449,12 @@ mod tests {
         let parent = create(&pool, &make_create_request("Platform", None, owner))
             .await
             .unwrap();
-        let child = create(&pool, &make_create_request("Networking", Some(parent.id), owner))
-            .await
-            .unwrap();
+        let child = create(
+            &pool,
+            &make_create_request("Networking", Some(parent.id), owner),
+        )
+        .await
+        .unwrap();
 
         assert_eq!(child.path, "/Platform/Networking/");
         assert_eq!(child.parent_id, Some(parent.id));
@@ -493,9 +505,12 @@ mod tests {
         let parent = create(&pool, &make_create_request("Platform", None, owner))
             .await
             .unwrap();
-        create(&pool, &make_create_request("Networking", Some(parent.id), owner))
-            .await
-            .unwrap();
+        create(
+            &pool,
+            &make_create_request("Networking", Some(parent.id), owner),
+        )
+        .await
+        .unwrap();
         create(&pool, &make_create_request("Auth", None, owner))
             .await
             .unwrap();
@@ -515,12 +530,18 @@ mod tests {
         create(&pool, &make_create_request("Auth", None, owner))
             .await
             .unwrap();
-        create(&pool, &make_create_request("Networking", Some(platform.id), owner))
-            .await
-            .unwrap();
-        create(&pool, &make_create_request("Storage", Some(platform.id), owner))
-            .await
-            .unwrap();
+        create(
+            &pool,
+            &make_create_request("Networking", Some(platform.id), owner),
+        )
+        .await
+        .unwrap();
+        create(
+            &pool,
+            &make_create_request("Storage", Some(platform.id), owner),
+        )
+        .await
+        .unwrap();
 
         // Root children
         let roots = get_children(&pool, None).await.unwrap();
@@ -540,9 +561,12 @@ mod tests {
         let platform = create(&pool, &make_create_request("Platform", None, owner))
             .await
             .unwrap();
-        let net = create(&pool, &make_create_request("Networking", Some(platform.id), owner))
-            .await
-            .unwrap();
+        let net = create(
+            &pool,
+            &make_create_request("Networking", Some(platform.id), owner),
+        )
+        .await
+        .unwrap();
         create(&pool, &make_create_request("DNS", Some(net.id), owner))
             .await
             .unwrap();
@@ -596,12 +620,15 @@ mod tests {
         let parent = create(&pool, &make_create_request("Platform", None, owner))
             .await
             .unwrap();
-        let child = create(&pool, &CreateComponentRequest {
-            name: "Net".to_string(),
-            parent_id: Some(parent.id),
-            slug: Some("NET".to_string()),
-            owner_id: owner,
-        })
+        let child = create(
+            &pool,
+            &CreateComponentRequest {
+                name: "Net".to_string(),
+                parent_id: Some(parent.id),
+                slug: Some("NET".to_string()),
+                owner_id: owner,
+            },
+        )
         .await
         .unwrap();
         assert_eq!(child.slug.as_deref(), Some("NET"));
@@ -713,9 +740,12 @@ mod tests {
         let infra = create(&pool, &make_create_request("Infra", None, owner))
             .await
             .unwrap();
-        let net = create(&pool, &make_create_request("Networking", Some(platform.id), owner))
-            .await
-            .unwrap();
+        let net = create(
+            &pool,
+            &make_create_request("Networking", Some(platform.id), owner),
+        )
+        .await
+        .unwrap();
         let dns = create(&pool, &make_create_request("DNS", Some(net.id), owner))
             .await
             .unwrap();
@@ -748,12 +778,15 @@ mod tests {
         let platform = create(&pool, &make_create_request("Platform", None, owner))
             .await
             .unwrap();
-        let net = create(&pool, &CreateComponentRequest {
-            name: "Networking".to_string(),
-            parent_id: Some(platform.id),
-            slug: Some("NET".to_string()),
-            owner_id: owner,
-        })
+        let net = create(
+            &pool,
+            &CreateComponentRequest {
+                name: "Networking".to_string(),
+                parent_id: Some(platform.id),
+                slug: Some("NET".to_string()),
+                owner_id: owner,
+            },
+        )
         .await
         .unwrap();
         let dns = create(&pool, &make_create_request("DNS", Some(net.id), owner))
@@ -788,9 +821,12 @@ mod tests {
         let platform = create(&pool, &make_create_request("Platform", None, owner))
             .await
             .unwrap();
-        let net = create(&pool, &make_create_request("Networking", Some(platform.id), owner))
-            .await
-            .unwrap();
+        let net = create(
+            &pool,
+            &make_create_request("Networking", Some(platform.id), owner),
+        )
+        .await
+        .unwrap();
         let dns = create(&pool, &make_create_request("DNS", Some(net.id), owner))
             .await
             .unwrap();
@@ -872,8 +908,12 @@ mod tests {
 
         assert_eq!(count(&pool).await.unwrap(), 0);
 
-        create(&pool, &make_create_request("Alpha", None, owner)).await.unwrap();
-        create(&pool, &make_create_request("Beta", None, owner)).await.unwrap();
+        create(&pool, &make_create_request("Alpha", None, owner))
+            .await
+            .unwrap();
+        create(&pool, &make_create_request("Beta", None, owner))
+            .await
+            .unwrap();
 
         assert_eq!(count(&pool).await.unwrap(), 2);
     }

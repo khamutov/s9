@@ -25,33 +25,27 @@ pub async fn create(pool: &SqlitePool, user_id: i64) -> Result<SessionRow, RepoE
     let now = Utc::now();
     let expires_at = now + Duration::days(SESSION_TTL_DAYS);
 
-    sqlx::query(
-        "INSERT INTO sessions (id, user_id, expires_at, created_at) VALUES (?, ?, ?, ?)",
-    )
-    .bind(&token)
-    .bind(user_id)
-    .bind(expires_at)
-    .bind(now)
-    .execute(pool)
-    .await?;
+    sqlx::query("INSERT INTO sessions (id, user_id, expires_at, created_at) VALUES (?, ?, ?, ?)")
+        .bind(&token)
+        .bind(user_id)
+        .bind(expires_at)
+        .bind(now)
+        .execute(pool)
+        .await?;
 
     // Safe to unwrap: we just inserted the row and it cannot be expired yet.
     Ok(get_valid(pool, &token).await?.unwrap())
 }
 
 /// Looks up a session by token, returning `None` if missing or expired.
-pub async fn get_valid(
-    pool: &SqlitePool,
-    token: &str,
-) -> Result<Option<SessionRow>, RepoError> {
+pub async fn get_valid(pool: &SqlitePool, token: &str) -> Result<Option<SessionRow>, RepoError> {
     let now = Utc::now();
-    let row = sqlx::query_as::<_, SessionRow>(
-        "SELECT * FROM sessions WHERE id = ? AND expires_at > ?",
-    )
-    .bind(token)
-    .bind(now)
-    .fetch_optional(pool)
-    .await?;
+    let row =
+        sqlx::query_as::<_, SessionRow>("SELECT * FROM sessions WHERE id = ? AND expires_at > ?")
+            .bind(token)
+            .bind(now)
+            .fetch_optional(pool)
+            .await?;
     Ok(row)
 }
 

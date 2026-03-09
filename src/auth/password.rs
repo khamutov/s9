@@ -104,7 +104,10 @@ mod tests {
     #[test]
     fn hash_produces_phc_string() {
         let hash = hash_password("test_password_123").unwrap();
-        assert!(hash.starts_with("$argon2id$"), "expected PHC prefix, got: {hash}");
+        assert!(
+            hash.starts_with("$argon2id$"),
+            "expected PHC prefix, got: {hash}"
+        );
     }
 
     #[test]
@@ -138,7 +141,10 @@ mod tests {
 
     #[test]
     fn validate_policy_rejects_short() {
-        assert!(matches!(validate_policy("1234567"), Err(PasswordError::TooShort)));
+        assert!(matches!(
+            validate_policy("1234567"),
+            Err(PasswordError::TooShort)
+        ));
     }
 
     #[test]

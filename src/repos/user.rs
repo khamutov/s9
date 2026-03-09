@@ -40,10 +40,7 @@ pub async fn get_by_login(pool: &SqlitePool, login: &str) -> Result<Option<UserR
 }
 
 /// Finds a user by OIDC subject identifier (for OIDC callback).
-pub async fn get_by_oidc_sub(
-    pool: &SqlitePool,
-    sub: &str,
-) -> Result<Option<UserRow>, RepoError> {
+pub async fn get_by_oidc_sub(pool: &SqlitePool, sub: &str) -> Result<Option<UserRow>, RepoError> {
     let row = sqlx::query_as::<_, UserRow>("SELECT * FROM users WHERE oidc_sub = ?")
         .bind(sub)
         .fetch_optional(pool)
@@ -95,7 +92,10 @@ pub async fn update(
 ) -> Result<UserRow, RepoError> {
     let existing = get_by_id(pool, id).await?.ok_or(RepoError::NotFound)?;
 
-    let display_name = req.display_name.as_deref().unwrap_or(&existing.display_name);
+    let display_name = req
+        .display_name
+        .as_deref()
+        .unwrap_or(&existing.display_name);
     let email = req.email.as_deref().unwrap_or(&existing.email);
     let role = req.role.unwrap_or(existing.role);
     let is_active = req
@@ -126,39 +126,29 @@ pub async fn set_password(
     password_hash: &str,
 ) -> Result<bool, RepoError> {
     let now = Utc::now();
-    let result = sqlx::query(
-        "UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?",
-    )
-    .bind(password_hash)
-    .bind(now)
-    .bind(id)
-    .execute(pool)
-    .await?;
+    let result = sqlx::query("UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?")
+        .bind(password_hash)
+        .bind(now)
+        .bind(id)
+        .execute(pool)
+        .await?;
     Ok(result.rows_affected() > 0)
 }
 
 /// Sets the OIDC subject identifier. Returns `false` if the user doesn't exist.
-pub async fn set_oidc_sub(
-    pool: &SqlitePool,
-    id: i64,
-    oidc_sub: &str,
-) -> Result<bool, RepoError> {
+pub async fn set_oidc_sub(pool: &SqlitePool, id: i64, oidc_sub: &str) -> Result<bool, RepoError> {
     let now = Utc::now();
-    let result =
-        sqlx::query("UPDATE users SET oidc_sub = ?, updated_at = ? WHERE id = ?")
-            .bind(oidc_sub)
-            .bind(now)
-            .bind(id)
-            .execute(pool)
-            .await?;
+    let result = sqlx::query("UPDATE users SET oidc_sub = ?, updated_at = ? WHERE id = ?")
+        .bind(oidc_sub)
+        .bind(now)
+        .bind(id)
+        .execute(pool)
+        .await?;
     Ok(result.rows_affected() > 0)
 }
 
 /// Deletes all sessions for a user (used during deactivation).
-pub async fn delete_sessions_for_user(
-    pool: &SqlitePool,
-    user_id: i64,
-) -> Result<(), RepoError> {
+pub async fn delete_sessions_for_user(pool: &SqlitePool, user_id: i64) -> Result<(), RepoError> {
     sqlx::query("DELETE FROM sessions WHERE user_id = ?")
         .bind(user_id)
         .execute(pool)
@@ -299,15 +289,21 @@ mod tests {
         let pool = test_pool().await;
         assert_eq!(count(&pool).await.unwrap(), 0);
 
-        create(&pool, &make_create_request("u1"), None).await.unwrap();
-        create(&pool, &make_create_request("u2"), None).await.unwrap();
+        create(&pool, &make_create_request("u1"), None)
+            .await
+            .unwrap();
+        create(&pool, &make_create_request("u2"), None)
+            .await
+            .unwrap();
         assert_eq!(count(&pool).await.unwrap(), 2);
     }
 
     #[tokio::test]
     async fn update_partial_fields() {
         let pool = test_pool().await;
-        let user = create(&pool, &make_create_request("eve"), None).await.unwrap();
+        let user = create(&pool, &make_create_request("eve"), None)
+            .await
+            .unwrap();
 
         let updated = update(
             &pool,
@@ -348,7 +344,9 @@ mod tests {
     #[tokio::test]
     async fn set_password_updates_hash() {
         let pool = test_pool().await;
-        let user = create(&pool, &make_create_request("frank"), None).await.unwrap();
+        let user = create(&pool, &make_create_request("frank"), None)
+            .await
+            .unwrap();
         assert!(user.password_hash.is_none());
 
         let ok = set_password(&pool, user.id, "newhash").await.unwrap();
@@ -368,7 +366,9 @@ mod tests {
     #[tokio::test]
     async fn set_oidc_sub_and_get() {
         let pool = test_pool().await;
-        let user = create(&pool, &make_create_request("grace"), None).await.unwrap();
+        let user = create(&pool, &make_create_request("grace"), None)
+            .await
+            .unwrap();
 
         set_oidc_sub(&pool, user.id, "oidc-abc").await.unwrap();
 
@@ -379,35 +379,37 @@ mod tests {
     #[tokio::test]
     async fn delete_sessions_for_user_removes_rows() {
         let pool = test_pool().await;
-        let user = create(&pool, &make_create_request("heidi"), None).await.unwrap();
-
-        // Insert a session directly.
-        let now = Utc::now();
-        sqlx::query("INSERT INTO sessions (id, user_id, expires_at, created_at) VALUES (?, ?, ?, ?)")
-            .bind("sess-1")
-            .bind(user.id)
-            .bind(now)
-            .bind(now)
-            .execute(&pool)
+        let user = create(&pool, &make_create_request("heidi"), None)
             .await
             .unwrap();
 
-        let (before,): (i64,) =
-            sqlx::query_as("SELECT COUNT(*) FROM sessions WHERE user_id = ?")
-                .bind(user.id)
-                .fetch_one(&pool)
-                .await
-                .unwrap();
+        // Insert a session directly.
+        let now = Utc::now();
+        sqlx::query(
+            "INSERT INTO sessions (id, user_id, expires_at, created_at) VALUES (?, ?, ?, ?)",
+        )
+        .bind("sess-1")
+        .bind(user.id)
+        .bind(now)
+        .bind(now)
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        let (before,): (i64,) = sqlx::query_as("SELECT COUNT(*) FROM sessions WHERE user_id = ?")
+            .bind(user.id)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
         assert_eq!(before, 1);
 
         delete_sessions_for_user(&pool, user.id).await.unwrap();
 
-        let (after,): (i64,) =
-            sqlx::query_as("SELECT COUNT(*) FROM sessions WHERE user_id = ?")
-                .bind(user.id)
-                .fetch_one(&pool)
-                .await
-                .unwrap();
+        let (after,): (i64,) = sqlx::query_as("SELECT COUNT(*) FROM sessions WHERE user_id = ?")
+            .bind(user.id)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
         assert_eq!(after, 0);
     }
 

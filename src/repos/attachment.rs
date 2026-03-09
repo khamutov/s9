@@ -160,19 +160,15 @@ pub async fn find_orphans(
 
 /// Deletes orphan attachment rows by ID and returns the distinct SHA-256 digests
 /// of the deleted rows.
-pub async fn delete_orphan_rows(
-    pool: &SqlitePool,
-    ids: &[i64],
-) -> Result<Vec<String>, RepoError> {
+pub async fn delete_orphan_rows(pool: &SqlitePool, ids: &[i64]) -> Result<Vec<String>, RepoError> {
     if ids.is_empty() {
         return Ok(vec![]);
     }
 
     // Collect distinct sha256s before deleting.
     let placeholders = vec!["?"; ids.len()].join(",");
-    let select_sql = format!(
-        "SELECT DISTINCT sha256 FROM attachments WHERE id IN ({placeholders})"
-    );
+    let select_sql =
+        format!("SELECT DISTINCT sha256 FROM attachments WHERE id IN ({placeholders})");
     let mut select_query = sqlx::query_as::<_, (String,)>(&select_sql);
     for &id in ids {
         select_query = select_query.bind(id);
@@ -378,7 +374,9 @@ mod tests {
             .await
             .unwrap();
         link_to_comment(&pool, comment_id, att.id).await.unwrap();
-        unlink_from_comment(&pool, comment_id, att.id).await.unwrap();
+        unlink_from_comment(&pool, comment_id, att.id)
+            .await
+            .unwrap();
 
         let list = list_by_comment(&pool, comment_id).await.unwrap();
         assert!(list.is_empty());

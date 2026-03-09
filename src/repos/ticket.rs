@@ -2,13 +2,13 @@ use chrono::Utc;
 use sqlx::SqlitePool;
 
 use crate::models::{
-    format_estimation, parse_estimation, CompactComponent, CompactMilestone, CompactUser,
-    ComponentRow, CursorPage, MilestoneRow, CreateTicketRequest, TicketResponse, TicketRow,
-    UpdateTicketRequest, UserRow,
+    CompactComponent, CompactMilestone, CompactUser, ComponentRow, CreateTicketRequest, CursorPage,
+    MilestoneRow, TicketResponse, TicketRow, UpdateTicketRequest, UserRow, format_estimation,
+    parse_estimation,
 };
 
-use super::cursor::{decode_cursor, encode_cursor};
 use super::RepoError;
+use super::cursor::{decode_cursor, encode_cursor};
 
 /// Parameters for listing tickets with cursor-based pagination.
 pub struct ListTicketsParams {
@@ -54,8 +54,7 @@ pub async fn list(
     }
 
     let next_cursor = if has_more {
-        rows.last()
-            .map(|r| encode_cursor(&r.updated_at, r.id))
+        rows.last().map(|r| encode_cursor(&r.updated_at, r.id))
     } else {
         None
     };
@@ -251,10 +250,7 @@ pub async fn get_cc_user_ids(pool: &SqlitePool, ticket_id: i64) -> Result<Vec<i6
 }
 
 /// Returns all milestone IDs for a ticket.
-pub async fn get_milestone_ids(
-    pool: &SqlitePool,
-    ticket_id: i64,
-) -> Result<Vec<i64>, RepoError> {
+pub async fn get_milestone_ids(pool: &SqlitePool, ticket_id: i64) -> Result<Vec<i64>, RepoError> {
     let rows: Vec<(i64,)> = sqlx::query_as(
         "SELECT milestone_id FROM ticket_milestones WHERE ticket_id = ? ORDER BY milestone_id",
     )
@@ -295,9 +291,8 @@ pub async fn enrich_many(
 
     let cc_rows: Vec<(i64, i64)> = if !ticket_ids.is_empty() {
         let placeholders = vec!["?"; ticket_ids.len()].join(",");
-        let sql = format!(
-            "SELECT ticket_id, user_id FROM ticket_cc WHERE ticket_id IN ({placeholders})"
-        );
+        let sql =
+            format!("SELECT ticket_id, user_id FROM ticket_cc WHERE ticket_id IN ({placeholders})");
         let mut query = sqlx::query_as(&sql);
         for &tid in &ticket_ids {
             query = query.bind(tid);
@@ -328,10 +323,8 @@ pub async fn enrich_many(
     } else {
         vec![]
     };
-    let user_map: std::collections::HashMap<i64, CompactUser> = users
-        .iter()
-        .map(|u| (u.id, CompactUser::from(u)))
-        .collect();
+    let user_map: std::collections::HashMap<i64, CompactUser> =
+        users.iter().map(|u| (u.id, CompactUser::from(u))).collect();
 
     // Collect unique component IDs
     let mut component_ids: Vec<i64> = rows.iter().map(|r| r.component_id).collect();
@@ -468,7 +461,9 @@ pub async fn enrich_many(
 mod tests {
     use super::*;
     use crate::db;
-    use crate::models::{CreateComponentRequest, CreateUserRequest, Priority, TicketStatus, TicketType};
+    use crate::models::{
+        CreateComponentRequest, CreateUserRequest, Priority, TicketStatus, TicketType,
+    };
     use crate::repos::{component, user};
 
     async fn test_pool() -> SqlitePool {
@@ -565,9 +560,13 @@ mod tests {
         let user_id = seed_user(&pool, "bob").await;
         let comp_id = seed_component(&pool, "Frontend", user_id).await;
 
-        let ticket = create(&pool, &make_create_request("Default ticket", user_id, comp_id), user_id)
-            .await
-            .unwrap();
+        let ticket = create(
+            &pool,
+            &make_create_request("Default ticket", user_id, comp_id),
+            user_id,
+        )
+        .await
+        .unwrap();
 
         assert_eq!(ticket.status, TicketStatus::New);
         assert_eq!(ticket.priority, Priority::P3);
@@ -625,9 +624,13 @@ mod tests {
         let pool = test_pool().await;
         let user_id = seed_user(&pool, "dave").await;
         let comp_id = seed_component(&pool, "Infra", user_id).await;
-        let ticket = create(&pool, &make_create_request("Original title", user_id, comp_id), user_id)
-            .await
-            .unwrap();
+        let ticket = create(
+            &pool,
+            &make_create_request("Original title", user_id, comp_id),
+            user_id,
+        )
+        .await
+        .unwrap();
 
         let updated = update(
             &pool,
@@ -657,9 +660,13 @@ mod tests {
         let pool = test_pool().await;
         let user_id = seed_user(&pool, "eve").await;
         let comp_id = seed_component(&pool, "Platform", user_id).await;
-        let ticket = create(&pool, &make_create_request("Status test", user_id, comp_id), user_id)
-            .await
-            .unwrap();
+        let ticket = create(
+            &pool,
+            &make_create_request("Status test", user_id, comp_id),
+            user_id,
+        )
+        .await
+        .unwrap();
         assert_eq!(ticket.status, TicketStatus::New);
 
         let updated = update(
@@ -688,9 +695,13 @@ mod tests {
         let pool = test_pool().await;
         let user_id = seed_user(&pool, "frank").await;
         let comp_id = seed_component(&pool, "DB", user_id).await;
-        let ticket = create(&pool, &make_create_request("Est set", user_id, comp_id), user_id)
-            .await
-            .unwrap();
+        let ticket = create(
+            &pool,
+            &make_create_request("Est set", user_id, comp_id),
+            user_id,
+        )
+        .await
+        .unwrap();
         assert!(ticket.estimation_hours.is_none());
 
         let updated = update(
@@ -885,9 +896,13 @@ mod tests {
         let pool = test_pool().await;
         let user_id = seed_user(&pool, "ivan").await;
         let comp_id = seed_component(&pool, "Del", user_id).await;
-        let ticket = create(&pool, &make_create_request("To delete", user_id, comp_id), user_id)
-            .await
-            .unwrap();
+        let ticket = create(
+            &pool,
+            &make_create_request("To delete", user_id, comp_id),
+            user_id,
+        )
+        .await
+        .unwrap();
 
         delete(&pool, ticket.id).await.unwrap();
         assert!(get_by_id(&pool, ticket.id).await.unwrap().is_none());
@@ -976,9 +991,13 @@ mod tests {
         let comp_id = seed_component(&pool, "Page2", user_id).await;
 
         for i in 0..3 {
-            create(&pool, &make_create_request(&format!("T{i}"), user_id, comp_id), user_id)
-                .await
-                .unwrap();
+            create(
+                &pool,
+                &make_create_request(&format!("T{i}"), user_id, comp_id),
+                user_id,
+            )
+            .await
+            .unwrap();
             tokio::time::sleep(std::time::Duration::from_millis(10)).await;
         }
 
@@ -1032,9 +1051,13 @@ mod tests {
         let comp_id = seed_component(&pool, "Order", user_id).await;
 
         for i in 0..3 {
-            create(&pool, &make_create_request(&format!("Order{i}"), user_id, comp_id), user_id)
-                .await
-                .unwrap();
+            create(
+                &pool,
+                &make_create_request(&format!("Order{i}"), user_id, comp_id),
+                user_id,
+            )
+            .await
+            .unwrap();
             tokio::time::sleep(std::time::Duration::from_millis(10)).await;
         }
 
@@ -1087,9 +1110,13 @@ mod tests {
         let pool = test_pool().await;
         let user_id = seed_user(&pool, "commenter").await;
         let comp_id = seed_component(&pool, "CmtComp", user_id).await;
-        let ticket = create(&pool, &make_create_request("Comments", user_id, comp_id), user_id)
-            .await
-            .unwrap();
+        let ticket = create(
+            &pool,
+            &make_create_request("Comments", user_id, comp_id),
+            user_id,
+        )
+        .await
+        .unwrap();
 
         // Insert a comment via raw SQL
         let now = Utc::now();

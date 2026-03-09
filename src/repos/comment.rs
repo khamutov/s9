@@ -63,22 +63,20 @@ pub async fn create(
     let mut tx = pool.begin().await?;
 
     // Verify ticket exists
-    let ticket_exists: Option<(i64,)> =
-        sqlx::query_as("SELECT id FROM tickets WHERE id = ?")
-            .bind(ticket_id)
-            .fetch_optional(&mut *tx)
-            .await?;
+    let ticket_exists: Option<(i64,)> = sqlx::query_as("SELECT id FROM tickets WHERE id = ?")
+        .bind(ticket_id)
+        .fetch_optional(&mut *tx)
+        .await?;
     if ticket_exists.is_none() {
         return Err(RepoError::NotFound);
     }
 
     // Auto-assign number
-    let (next_number,): (i64,) = sqlx::query_as(
-        "SELECT COALESCE(MAX(number), -1) + 1 FROM comments WHERE ticket_id = ?",
-    )
-    .bind(ticket_id)
-    .fetch_one(&mut *tx)
-    .await?;
+    let (next_number,): (i64,) =
+        sqlx::query_as("SELECT COALESCE(MAX(number), -1) + 1 FROM comments WHERE ticket_id = ?")
+            .bind(ticket_id)
+            .fetch_one(&mut *tx)
+            .await?;
 
     let id = sqlx::query_scalar::<_, i64>(
         "INSERT INTO comments (ticket_id, number, author_id, body, created_at, updated_at)
@@ -96,11 +94,13 @@ pub async fn create(
     // Link attachments
     if let Some(attachment_ids) = &req.attachment_ids {
         for &aid in attachment_ids {
-            sqlx::query("INSERT INTO comment_attachments (comment_id, attachment_id) VALUES (?, ?)")
-                .bind(id)
-                .bind(aid)
-                .execute(&mut *tx)
-                .await?;
+            sqlx::query(
+                "INSERT INTO comment_attachments (comment_id, attachment_id) VALUES (?, ?)",
+            )
+            .bind(id)
+            .bind(aid)
+            .execute(&mut *tx)
+            .await?;
         }
     }
 
@@ -175,10 +175,7 @@ pub async fn get_edit_history(
 }
 
 /// Returns the attachment IDs linked to a comment.
-pub async fn get_attachment_ids(
-    pool: &SqlitePool,
-    comment_id: i64,
-) -> Result<Vec<i64>, RepoError> {
+pub async fn get_attachment_ids(pool: &SqlitePool, comment_id: i64) -> Result<Vec<i64>, RepoError> {
     let rows: Vec<(i64,)> = sqlx::query_as(
         "SELECT attachment_id FROM comment_attachments WHERE comment_id = ? ORDER BY attachment_id",
     )
@@ -268,7 +265,10 @@ pub async fn enrich_many(
     let mut comment_attachments: HashMap<i64, Vec<AttachmentResponse>> = HashMap::new();
     for (cid, aid) in &attachment_links {
         if let Some(att) = attachment_map.get(aid) {
-            comment_attachments.entry(*cid).or_default().push(att.clone());
+            comment_attachments
+                .entry(*cid)
+                .or_default()
+                .push(att.clone());
         }
     }
 
@@ -299,10 +299,12 @@ pub async fn enrich_many(
         let edit_rows: Vec<CommentEditRow> = query.fetch_all(pool).await?;
         let mut map: HashMap<i64, Vec<CommentEditResponse>> = HashMap::new();
         for e in &edit_rows {
-            map.entry(e.comment_id).or_default().push(CommentEditResponse {
-                old_body: e.old_body.clone(),
-                edited_at: e.edited_at,
-            });
+            map.entry(e.comment_id)
+                .or_default()
+                .push(CommentEditResponse {
+                    old_body: e.old_body.clone(),
+                    edited_at: e.edited_at,
+                });
         }
         map
     } else {
@@ -429,21 +431,36 @@ mod tests {
         let c0 = create(
             &pool,
             ticket_id,
-            &CreateCommentRequest { body: "first".into(), attachment_ids: None },
+            &CreateCommentRequest {
+                body: "first".into(),
+                attachment_ids: None,
+            },
             user_id,
-        ).await.unwrap();
+        )
+        .await
+        .unwrap();
         let c1 = create(
             &pool,
             ticket_id,
-            &CreateCommentRequest { body: "second".into(), attachment_ids: None },
+            &CreateCommentRequest {
+                body: "second".into(),
+                attachment_ids: None,
+            },
             user_id,
-        ).await.unwrap();
+        )
+        .await
+        .unwrap();
         let c2 = create(
             &pool,
             ticket_id,
-            &CreateCommentRequest { body: "third".into(), attachment_ids: None },
+            &CreateCommentRequest {
+                body: "third".into(),
+                attachment_ids: None,
+            },
             user_id,
-        ).await.unwrap();
+        )
+        .await
+        .unwrap();
 
         assert_eq!(c0.number, 0);
         assert_eq!(c1.number, 1);
@@ -492,15 +509,22 @@ mod tests {
         create(
             &pool,
             ticket_id,
-            &CreateCommentRequest { body: "desc".into(), attachment_ids: None },
+            &CreateCommentRequest {
+                body: "desc".into(),
+                attachment_ids: None,
+            },
             user_id,
-        ).await.unwrap();
+        )
+        .await
+        .unwrap();
 
         let found = get_by_ticket_and_number(&pool, ticket_id, 0).await.unwrap();
         assert!(found.is_some());
         assert_eq!(found.unwrap().body, "desc");
 
-        let missing = get_by_ticket_and_number(&pool, ticket_id, 99).await.unwrap();
+        let missing = get_by_ticket_and_number(&pool, ticket_id, 99)
+            .await
+            .unwrap();
         assert!(missing.is_none());
     }
 
@@ -514,9 +538,14 @@ mod tests {
             create(
                 &pool,
                 ticket_id,
-                &CreateCommentRequest { body: body.into(), attachment_ids: None },
+                &CreateCommentRequest {
+                    body: body.into(),
+                    attachment_ids: None,
+                },
                 user_id,
-            ).await.unwrap();
+            )
+            .await
+            .unwrap();
         }
 
         let comments = list_by_ticket(&pool, ticket_id).await.unwrap();
@@ -545,15 +574,24 @@ mod tests {
         let comment = create(
             &pool,
             ticket_id,
-            &CreateCommentRequest { body: "original".into(), attachment_ids: None },
+            &CreateCommentRequest {
+                body: "original".into(),
+                attachment_ids: None,
+            },
             user_id,
-        ).await.unwrap();
+        )
+        .await
+        .unwrap();
 
         let updated = update(
             &pool,
             comment.id,
-            &EditCommentRequest { body: "revised".into() },
-        ).await.unwrap();
+            &EditCommentRequest {
+                body: "revised".into(),
+            },
+        )
+        .await
+        .unwrap();
 
         assert_eq!(updated.body, "revised");
 
@@ -571,12 +609,21 @@ mod tests {
         let comment = create(
             &pool,
             ticket_id,
-            &CreateCommentRequest { body: "v1".into(), attachment_ids: None },
+            &CreateCommentRequest {
+                body: "v1".into(),
+                attachment_ids: None,
+            },
             user_id,
-        ).await.unwrap();
+        )
+        .await
+        .unwrap();
 
-        update(&pool, comment.id, &EditCommentRequest { body: "v2".into() }).await.unwrap();
-        update(&pool, comment.id, &EditCommentRequest { body: "v3".into() }).await.unwrap();
+        update(&pool, comment.id, &EditCommentRequest { body: "v2".into() })
+            .await
+            .unwrap();
+        update(&pool, comment.id, &EditCommentRequest { body: "v3".into() })
+            .await
+            .unwrap();
 
         let edits = get_edit_history(&pool, comment.id).await.unwrap();
         assert_eq!(edits.len(), 2);
@@ -587,7 +634,14 @@ mod tests {
     #[tokio::test]
     async fn update_not_found() {
         let pool = test_pool().await;
-        let result = update(&pool, 9999, &EditCommentRequest { body: "ghost".into() }).await;
+        let result = update(
+            &pool,
+            9999,
+            &EditCommentRequest {
+                body: "ghost".into(),
+            },
+        )
+        .await;
         assert!(matches!(result, Err(RepoError::NotFound)));
     }
 
@@ -600,9 +654,14 @@ mod tests {
         let comment = create(
             &pool,
             ticket_id,
-            &CreateCommentRequest { body: "bye".into(), attachment_ids: None },
+            &CreateCommentRequest {
+                body: "bye".into(),
+                attachment_ids: None,
+            },
             user_id,
-        ).await.unwrap();
+        )
+        .await
+        .unwrap();
 
         delete(&pool, comment.id).await.unwrap();
         assert!(get_by_id(&pool, comment.id).await.unwrap().is_none());
@@ -623,10 +682,20 @@ mod tests {
                 attachment_ids: Some(vec![att]),
             },
             user_id,
-        ).await.unwrap();
+        )
+        .await
+        .unwrap();
 
         // Add an edit so we can verify cascade
-        update(&pool, comment.id, &EditCommentRequest { body: "edited".into() }).await.unwrap();
+        update(
+            &pool,
+            comment.id,
+            &EditCommentRequest {
+                body: "edited".into(),
+            },
+        )
+        .await
+        .unwrap();
 
         delete(&pool, comment.id).await.unwrap();
 
@@ -655,13 +724,24 @@ mod tests {
         let comment = create(
             &pool,
             ticket_id,
-            &CreateCommentRequest { body: "a".into(), attachment_ids: None },
+            &CreateCommentRequest {
+                body: "a".into(),
+                attachment_ids: None,
+            },
             user_id,
-        ).await.unwrap();
+        )
+        .await
+        .unwrap();
 
-        update(&pool, comment.id, &EditCommentRequest { body: "b".into() }).await.unwrap();
-        update(&pool, comment.id, &EditCommentRequest { body: "c".into() }).await.unwrap();
-        update(&pool, comment.id, &EditCommentRequest { body: "d".into() }).await.unwrap();
+        update(&pool, comment.id, &EditCommentRequest { body: "b".into() })
+            .await
+            .unwrap();
+        update(&pool, comment.id, &EditCommentRequest { body: "c".into() })
+            .await
+            .unwrap();
+        update(&pool, comment.id, &EditCommentRequest { body: "d".into() })
+            .await
+            .unwrap();
 
         let edits = get_edit_history(&pool, comment.id).await.unwrap();
         assert_eq!(edits.len(), 3);
@@ -684,12 +764,25 @@ mod tests {
         let comment = create(
             &pool,
             ticket_id,
-            &CreateCommentRequest { body: "enrich me".into(), attachment_ids: None },
+            &CreateCommentRequest {
+                body: "enrich me".into(),
+                attachment_ids: None,
+            },
             user_id,
-        ).await.unwrap();
+        )
+        .await
+        .unwrap();
 
         // Add one edit
-        update(&pool, comment.id, &EditCommentRequest { body: "enriched".into() }).await.unwrap();
+        update(
+            &pool,
+            comment.id,
+            &EditCommentRequest {
+                body: "enriched".into(),
+            },
+        )
+        .await
+        .unwrap();
         let updated = get_by_id(&pool, comment.id).await.unwrap().unwrap();
 
         let resp = enrich(&pool, &updated, false).await.unwrap();
@@ -714,7 +807,9 @@ mod tests {
                 attachment_ids: Some(vec![att]),
             },
             user_id,
-        ).await.unwrap();
+        )
+        .await
+        .unwrap();
 
         let resp = enrich(&pool, &comment, false).await.unwrap();
         assert_eq!(resp.attachments.len(), 1);
@@ -731,12 +826,21 @@ mod tests {
         let comment = create(
             &pool,
             ticket_id,
-            &CreateCommentRequest { body: "v1".into(), attachment_ids: None },
+            &CreateCommentRequest {
+                body: "v1".into(),
+                attachment_ids: None,
+            },
             user_id,
-        ).await.unwrap();
+        )
+        .await
+        .unwrap();
 
-        update(&pool, comment.id, &EditCommentRequest { body: "v2".into() }).await.unwrap();
-        update(&pool, comment.id, &EditCommentRequest { body: "v3".into() }).await.unwrap();
+        update(&pool, comment.id, &EditCommentRequest { body: "v2".into() })
+            .await
+            .unwrap();
+        update(&pool, comment.id, &EditCommentRequest { body: "v3".into() })
+            .await
+            .unwrap();
         let updated = get_by_id(&pool, comment.id).await.unwrap().unwrap();
 
         let resp = enrich(&pool, &updated, true).await.unwrap();
@@ -755,11 +859,18 @@ mod tests {
         let comment = create(
             &pool,
             ticket_id,
-            &CreateCommentRequest { body: "v1".into(), attachment_ids: None },
+            &CreateCommentRequest {
+                body: "v1".into(),
+                attachment_ids: None,
+            },
             user_id,
-        ).await.unwrap();
+        )
+        .await
+        .unwrap();
 
-        update(&pool, comment.id, &EditCommentRequest { body: "v2".into() }).await.unwrap();
+        update(&pool, comment.id, &EditCommentRequest { body: "v2".into() })
+            .await
+            .unwrap();
         let updated = get_by_id(&pool, comment.id).await.unwrap().unwrap();
 
         let resp = enrich(&pool, &updated, false).await.unwrap();

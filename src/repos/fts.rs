@@ -210,13 +210,11 @@ mod tests {
 
     /// Searches FTS and returns matching rowids.
     async fn fts_search(pool: &SqlitePool, match_expr: &str) -> Vec<i64> {
-        sqlx::query_scalar::<_, i64>(
-            "SELECT rowid FROM tickets_fts WHERE tickets_fts MATCH ?",
-        )
-        .bind(match_expr)
-        .fetch_all(pool)
-        .await
-        .unwrap()
+        sqlx::query_scalar::<_, i64>("SELECT rowid FROM tickets_fts WHERE tickets_fts MATCH ?")
+            .bind(match_expr)
+            .fetch_all(pool)
+            .await
+            .unwrap()
     }
 
     #[sqlx::test]
@@ -224,7 +222,9 @@ mod tests {
         let pool = test_pool().await;
         insert_ticket(&pool, 1, "Login crash bug").await;
 
-        super::index_ticket(&pool, 1, "Login crash bug", "App crashes on login page").await.unwrap();
+        super::index_ticket(&pool, 1, "Login crash bug", "App crashes on login page")
+            .await
+            .unwrap();
 
         let results = fts_search(&pool, "crash").await;
         assert_eq!(results, vec![1]);
@@ -237,7 +237,9 @@ mod tests {
     async fn reindex_ticket_updates_content() {
         let pool = test_pool().await;
         insert_ticket(&pool, 1, "Old title").await;
-        super::index_ticket(&pool, 1, "Old title", "old body").await.unwrap();
+        super::index_ticket(&pool, 1, "Old title", "old body")
+            .await
+            .unwrap();
 
         // Update the ticket title and add a comment.
         sqlx::query("UPDATE tickets SET title = 'New title' WHERE id = 1")
@@ -269,7 +271,9 @@ mod tests {
     async fn delete_ticket_index_removes_entry() {
         let pool = test_pool().await;
         insert_ticket(&pool, 1, "Deletable").await;
-        super::index_ticket(&pool, 1, "Deletable", "some body").await.unwrap();
+        super::index_ticket(&pool, 1, "Deletable", "some body")
+            .await
+            .unwrap();
 
         assert_eq!(fts_search(&pool, "Deletable").await.len(), 1);
 

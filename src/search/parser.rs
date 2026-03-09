@@ -44,7 +44,10 @@ pub struct Filter {
 /// Typed filter conditions produced by the parser.
 #[derive(Debug, Clone, PartialEq)]
 pub enum FilterCondition {
-    User { field: UserField, login: String },
+    User {
+        field: UserField,
+        login: String,
+    },
     Status(String),
     Priority(String),
     TicketType(String),
@@ -52,8 +55,15 @@ pub enum FilterCondition {
     Milestone(String),
     Slug(Vec<String>),
     Is(IsCondition),
-    DateComparison { field: DateField, op: ComparisonOp, value: String },
-    EstimationComparison { op: ComparisonOp, hours: f64 },
+    DateComparison {
+        field: DateField,
+        op: ComparisonOp,
+        value: String,
+    },
+    EstimationComparison {
+        op: ComparisonOp,
+        hours: f64,
+    },
     Has(HasField),
 }
 
@@ -189,8 +199,14 @@ fn try_parse_filter(key: &str, raw_value: &str, negated: bool) -> Option<Filter>
     let value = strip_quotes(raw_value);
 
     let condition = match key {
-        "owner" => FilterCondition::User { field: UserField::Owner, login: value.to_string() },
-        "cc" => FilterCondition::User { field: UserField::Cc, login: value.to_string() },
+        "owner" => FilterCondition::User {
+            field: UserField::Owner,
+            login: value.to_string(),
+        },
+        "cc" => FilterCondition::User {
+            field: UserField::Cc,
+            login: value.to_string(),
+        },
         "status" => FilterCondition::Status(value.to_string()),
         "priority" => FilterCondition::Priority(value.to_string()),
         "type" => FilterCondition::TicketType(value.to_string()),
@@ -212,8 +228,16 @@ fn try_parse_filter(key: &str, raw_value: &str, negated: bool) -> Option<Filter>
         },
         "created" | "updated" => {
             let (op, date_value) = parse_comparison_prefix(value)?;
-            let field = if key == "created" { DateField::Created } else { DateField::Updated };
-            FilterCondition::DateComparison { field, op, value: date_value.to_string() }
+            let field = if key == "created" {
+                DateField::Created
+            } else {
+                DateField::Updated
+            };
+            FilterCondition::DateComparison {
+                field,
+                op,
+                value: date_value.to_string(),
+            }
         }
         "estimation" => {
             let (op, est_value) = parse_comparison_prefix(value)?;
@@ -289,7 +313,11 @@ pub fn parse(input: &str) -> ParsedQuery {
             body.to_string()
         };
 
-        items.push(ParsedItem::TextTerm(TextTerm { negated, text, is_phrase }));
+        items.push(ParsedItem::TextTerm(TextTerm {
+            negated,
+            text,
+            is_phrase,
+        }));
     }
 
     // Group OR chains: Filter OR Filter OR Filter → Clause::Or(vec![...])
@@ -352,7 +380,10 @@ fn build_query(items: Vec<ParsedItem>) -> ParsedQuery {
         }
     }
 
-    ParsedQuery { clauses, text_terms }
+    ParsedQuery {
+        clauses,
+        text_terms,
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -497,7 +528,10 @@ mod tests {
         let q = parse("is:open");
         assert!(matches!(
             &q.clauses[0],
-            Clause::Single(Filter { condition: FilterCondition::Is(IsCondition::Open), .. })
+            Clause::Single(Filter {
+                condition: FilterCondition::Is(IsCondition::Open),
+                ..
+            })
         ));
     }
 
@@ -506,7 +540,10 @@ mod tests {
         let q = parse("is:closed");
         assert!(matches!(
             &q.clauses[0],
-            Clause::Single(Filter { condition: FilterCondition::Is(IsCondition::Closed), .. })
+            Clause::Single(Filter {
+                condition: FilterCondition::Is(IsCondition::Closed),
+                ..
+            })
         ));
     }
 
@@ -515,7 +552,10 @@ mod tests {
         let q = parse("has:estimation");
         assert!(matches!(
             &q.clauses[0],
-            Clause::Single(Filter { condition: FilterCondition::Has(HasField::Estimation), .. })
+            Clause::Single(Filter {
+                condition: FilterCondition::Has(HasField::Estimation),
+                ..
+            })
         ));
     }
 
@@ -524,7 +564,10 @@ mod tests {
         let q = parse("has:milestone");
         assert!(matches!(
             &q.clauses[0],
-            Clause::Single(Filter { condition: FilterCondition::Has(HasField::Milestone), .. })
+            Clause::Single(Filter {
+                condition: FilterCondition::Has(HasField::Milestone),
+                ..
+            })
         ));
     }
 
@@ -735,13 +778,18 @@ mod tests {
         assert!(matches!(
             &q.clauses[0],
             Clause::Single(Filter {
-                condition: FilterCondition::User { field: UserField::Owner, .. }, ..
+                condition: FilterCondition::User {
+                    field: UserField::Owner,
+                    ..
+                },
+                ..
             })
         ));
         assert!(matches!(
             &q.clauses[1],
             Clause::Single(Filter {
-                condition: FilterCondition::Status(_), ..
+                condition: FilterCondition::Status(_),
+                ..
             })
         ));
     }

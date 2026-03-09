@@ -74,11 +74,7 @@ mod tests {
         let parsed: TicketStatus = serde_json::from_str(&json).unwrap();
         assert_eq!(parsed, TicketStatus::InProgress);
 
-        for status in [
-            TicketStatus::New,
-            TicketStatus::Verify,
-            TicketStatus::Done,
-        ] {
+        for status in [TicketStatus::New, TicketStatus::Verify, TicketStatus::Done] {
             let json = serde_json::to_string(&status).unwrap();
             let parsed: TicketStatus = serde_json::from_str(&json).unwrap();
             assert_eq!(parsed, status);

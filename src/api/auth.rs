@@ -1,8 +1,8 @@
-use axum::extract::State;
-use axum::http::header::{HeaderValue, COOKIE, SET_COOKIE};
-use axum::http::StatusCode;
-use axum::response::{IntoResponse, Response};
 use axum::Json;
+use axum::extract::State;
+use axum::http::StatusCode;
+use axum::http::header::{COOKIE, HeaderValue, SET_COOKIE};
+use axum::response::{IntoResponse, Response};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -33,17 +33,13 @@ pub struct AuthResponse {
 
 /// Build a `Set-Cookie` header value for the session token.
 fn session_cookie(token: &str, max_age: i64) -> HeaderValue {
-    let value = format!(
-        "s9_session={token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age={max_age}"
-    );
+    let value =
+        format!("s9_session={token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age={max_age}");
     HeaderValue::from_str(&value).expect("cookie value is valid ASCII")
 }
 
 /// `POST /api/auth/login` — authenticate with login and password.
-pub async fn login(
-    State(state): State<AppState>,
-    Json(body): Json<LoginRequest>,
-) -> Response {
+pub async fn login(State(state): State<AppState>, Json(body): Json<LoginRequest>) -> Response {
     let user = match repos::user::get_by_login(&state.pool, &body.login).await {
         Ok(Some(u)) => u,
         Ok(None) => {
@@ -121,10 +117,7 @@ fn extract_session_token(headers: &axum::http::HeaderMap) -> Option<String> {
 }
 
 /// `POST /api/auth/logout` — clear the session cookie and delete the session.
-pub async fn logout(
-    State(state): State<AppState>,
-    headers: axum::http::HeaderMap,
-) -> Response {
+pub async fn logout(State(state): State<AppState>, headers: axum::http::HeaderMap) -> Response {
     if let Some(token) = extract_session_token(&headers) {
         let _ = repos::session::delete(&state.pool, &token).await;
     }
@@ -236,7 +229,7 @@ mod tests {
     async fn login_success() {
         let pool = test_pool().await;
         create_user(&pool, "alice", Some("correct_password")).await;
-        let app = build_router(pool);
+        let app = build_router(pool, None);
 
         let resp = app
             .oneshot(login_request("alice", "correct_password"))
@@ -264,7 +257,7 @@ mod tests {
     async fn login_wrong_password() {
         let pool = test_pool().await;
         create_user(&pool, "bob", Some("correct_password")).await;
-        let app = build_router(pool);
+        let app = build_router(pool, None);
 
         let resp = app
             .oneshot(login_request("bob", "wrong_password"))
@@ -279,7 +272,7 @@ mod tests {
     #[tokio::test]
     async fn login_unknown_user() {
         let pool = test_pool().await;
-        let app = build_router(pool);
+        let app = build_router(pool, None);
 
         let resp = app
             .oneshot(login_request("nonexistent", "password123"))
@@ -300,7 +293,7 @@ mod tests {
             .execute(&pool)
             .await
             .unwrap();
-        let app = build_router(pool);
+        let app = build_router(pool, None);
 
         let resp = app
             .oneshot(login_request("inactive", "password123"))
@@ -316,7 +309,7 @@ mod tests {
     async fn login_no_password_hash() {
         let pool = test_pool().await;
         create_user(&pool, "oidcuser", None).await;
-        let app = build_router(pool);
+        let app = build_router(pool, None);
 
         let resp = app
             .oneshot(login_request("oidcuser", "password123"))
@@ -335,7 +328,7 @@ mod tests {
         let pool = test_pool().await;
         let uid = create_user(&pool, "charlie", Some("password123")).await;
         let sess = session::create(&pool, uid).await.unwrap();
-        let app = build_router(pool.clone());
+        let app = build_router(pool.clone(), None);
 
         let resp = app
             .oneshot(
@@ -362,7 +355,7 @@ mod tests {
     #[tokio::test]
     async fn logout_no_cookie() {
         let pool = test_pool().await;
-        let app = build_router(pool);
+        let app = build_router(pool, None);
 
         let resp = app
             .oneshot(
@@ -385,7 +378,7 @@ mod tests {
         let pool = test_pool().await;
         let uid = create_user(&pool, "diana", Some("password123")).await;
         let sess = session::create(&pool, uid).await.unwrap();
-        let app = build_router(pool);
+        let app = build_router(pool, None);
 
         let resp = app
             .oneshot(
@@ -409,7 +402,7 @@ mod tests {
     #[tokio::test]
     async fn me_unauthenticated() {
         let pool = test_pool().await;
-        let app = build_router(pool);
+        let app = build_router(pool, None);
 
         let resp = app
             .oneshot(

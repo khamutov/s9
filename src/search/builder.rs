@@ -91,14 +91,15 @@ pub fn build_search_query(
 
     // Assemble the full query.
     if has_fts {
-        build_fts_query(&where_parts, &binds, fts_match.as_deref(), page_size, offset)
-    } else {
-        Ok(build_cursor_query(
+        build_fts_query(
             &where_parts,
-            binds,
+            &binds,
+            fts_match.as_deref(),
             page_size,
-            cursor,
-        ))
+            offset,
+        )
+    } else {
+        Ok(build_cursor_query(&where_parts, binds, page_size, cursor))
     }
 }
 
@@ -174,9 +175,7 @@ fn build_condition(
             let pos = binds.len();
             match field {
                 UserField::Owner => {
-                    format!(
-                        "t.owner_id IN (SELECT id FROM users WHERE login = ?{pos})"
-                    )
+                    format!("t.owner_id IN (SELECT id FROM users WHERE login = ?{pos})")
                 }
                 UserField::Cc => {
                     format!(
@@ -210,9 +209,7 @@ fn build_condition(
             // Match component by path prefix: /Component/ matches itself and children.
             binds.push(SqlValue::Text(format!("/{c}/%")));
             let pos = binds.len();
-            format!(
-                "t.component_id IN (SELECT id FROM components WHERE path LIKE ?{pos})"
-            )
+            format!("t.component_id IN (SELECT id FROM components WHERE path LIKE ?{pos})")
         }
 
         FilterCondition::Milestone(m) => {
@@ -387,7 +384,10 @@ mod tests {
     #[test]
     fn filter_owner_sql() {
         let bq = build("owner:alex");
-        assert!(bq.sql.contains("t.owner_id IN (SELECT id FROM users WHERE login = ?1)"));
+        assert!(
+            bq.sql
+                .contains("t.owner_id IN (SELECT id FROM users WHERE login = ?1)")
+        );
         assert_eq!(bq.binds[0], SqlValue::Text("alex".into()));
         assert!(!bq.has_fts);
     }
@@ -431,7 +431,10 @@ mod tests {
     #[test]
     fn filter_milestone_sql() {
         let bq = build("milestone:v2.0");
-        assert!(bq.sql.contains("EXISTS (SELECT 1 FROM ticket_milestones tm"));
+        assert!(
+            bq.sql
+                .contains("EXISTS (SELECT 1 FROM ticket_milestones tm")
+        );
         assert!(bq.sql.contains("m.name = ?1"));
         assert_eq!(bq.binds[0], SqlValue::Text("v2.0".into()));
     }
@@ -478,7 +481,10 @@ mod tests {
     #[test]
     fn filter_has_milestone_sql() {
         let bq = build("has:milestone");
-        assert!(bq.sql.contains("EXISTS (SELECT 1 FROM ticket_milestones WHERE ticket_id = t.id)"));
+        assert!(
+            bq.sql
+                .contains("EXISTS (SELECT 1 FROM ticket_milestones WHERE ticket_id = t.id)")
+        );
     }
 
     // ---- Negation ---------------------------------------------------------
@@ -505,8 +511,16 @@ mod tests {
     #[test]
     fn fts_match_simple() {
         let terms = vec![
-            TextTerm { negated: false, text: "crash".into(), is_phrase: false },
-            TextTerm { negated: false, text: "startup".into(), is_phrase: false },
+            TextTerm {
+                negated: false,
+                text: "crash".into(),
+                is_phrase: false,
+            },
+            TextTerm {
+                negated: false,
+                text: "startup".into(),
+                is_phrase: false,
+            },
         ];
         assert_eq!(build_fts_match(&terms), "crash startup");
     }
@@ -523,13 +537,21 @@ mod tests {
 
     #[test]
     fn fts_match_short_term() {
-        let terms = vec![TextTerm { negated: false, text: "ab".into(), is_phrase: false }];
+        let terms = vec![TextTerm {
+            negated: false,
+            text: "ab".into(),
+            is_phrase: false,
+        }];
         assert_eq!(build_fts_match(&terms), "ab*");
     }
 
     #[test]
     fn fts_match_negated() {
-        let terms = vec![TextTerm { negated: true, text: "crash".into(), is_phrase: false }];
+        let terms = vec![TextTerm {
+            negated: true,
+            text: "crash".into(),
+            is_phrase: false,
+        }];
         assert_eq!(build_fts_match(&terms), "NOT crash");
     }
 
@@ -551,8 +573,7 @@ mod tests {
     #[test]
     fn cursor_pagination() {
         let q = parser::parse("status:new");
-        let bq =
-            build_search_query(&q, 25, None, Some(("2026-01-01T00:00:00.000Z", 42))).unwrap();
+        let bq = build_search_query(&q, 25, None, Some(("2026-01-01T00:00:00.000Z", 42))).unwrap();
         assert!(!bq.has_fts);
         assert!(bq.sql.contains("(t.updated_at, t.id) < (?2, ?3)"));
         assert!(bq.sql.contains("ORDER BY t.updated_at DESC, t.id DESC"));

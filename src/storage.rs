@@ -58,9 +58,7 @@ const ALLOWED_MIMES: &[&str] = &[
 ];
 
 /// File extensions that are always blocked, regardless of detected MIME.
-const BLOCKED_EXTENSIONS: &[&str] = &[
-    "exe", "sh", "bat", "cmd", "msi", "dll", "so", "dylib",
-];
+const BLOCKED_EXTENSIONS: &[&str] = &["exe", "sh", "bat", "cmd", "msi", "dll", "so", "dylib"];
 
 // ── StoreResult ────────────────────────────────────────────────
 
@@ -299,7 +297,9 @@ mod tests {
         let p = attachment_path(dir, sha);
         assert_eq!(
             p,
-            PathBuf::from("/data/attachments/ab/cd/abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890")
+            PathBuf::from(
+                "/data/attachments/ab/cd/abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+            )
         );
     }
 
@@ -419,7 +419,13 @@ mod tests {
         let err = store_file(dir.path(), &data, "big.txt", 50)
             .await
             .unwrap_err();
-        assert!(matches!(err, StorageError::TooLarge { limit: 50, actual: 100 }));
+        assert!(matches!(
+            err,
+            StorageError::TooLarge {
+                limit: 50,
+                actual: 100
+            }
+        ));
     }
 
     #[tokio::test]
@@ -427,9 +433,14 @@ mod tests {
         let dir = tempdir().unwrap();
         init_dirs(dir.path()).await.unwrap();
 
-        let err = store_file(dir.path(), b"#!/bin/bash", "script.sh", DEFAULT_MAX_FILE_SIZE)
-            .await
-            .unwrap_err();
+        let err = store_file(
+            dir.path(),
+            b"#!/bin/bash",
+            "script.sh",
+            DEFAULT_MAX_FILE_SIZE,
+        )
+        .await
+        .unwrap_err();
         assert!(matches!(err, StorageError::MimeBlocked(_)));
     }
 

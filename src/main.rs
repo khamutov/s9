@@ -39,7 +39,20 @@ async fn serve(config: Config) -> anyhow::Result<()> {
     let pool = db::init_pool(&config.db_path).await?;
     db::run_migrations(&pool).await?;
 
-    let app = api::build_router(pool);
+    let oidc = match &config.oidc {
+        Some(oidc_config) => {
+            tracing::info!("OIDC enabled, discovering provider metadata…");
+            let provider = api::init_oidc(oidc_config).await?;
+            tracing::info!("OIDC provider '{}' ready", provider.display_name);
+            Some(std::sync::Arc::new(provider))
+        }
+        None => {
+            tracing::info!("OIDC not configured (set S9_OIDC_ISSUER_URL to enable)");
+            None
+        }
+    };
+
+    let app = api::build_router(pool, oidc);
 
     let listener = tokio::net::TcpListener::bind(config.listen).await?;
     tracing::info!("listening on {}", config.listen);

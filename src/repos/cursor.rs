@@ -1,11 +1,14 @@
-use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
+use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use chrono::{DateTime, Utc};
 
 use super::RepoError;
 
 /// Encodes a `(updated_at, id)` pair into a base64url cursor string.
 pub fn encode_cursor(updated_at: &DateTime<Utc>, id: i64) -> String {
-    let plain = format!("{},{id}", updated_at.to_rfc3339_opts(chrono::SecondsFormat::Millis, true));
+    let plain = format!(
+        "{},{id}",
+        updated_at.to_rfc3339_opts(chrono::SecondsFormat::Millis, true)
+    );
     URL_SAFE_NO_PAD.encode(plain.as_bytes())
 }
 
@@ -46,10 +49,7 @@ mod tests {
         let (decoded_ts, decoded_id) = decode_cursor(&encoded).unwrap();
 
         assert_eq!(decoded_id, id);
-        assert_eq!(
-            decoded_ts.timestamp_millis(),
-            ts.timestamp_millis(),
-        );
+        assert_eq!(decoded_ts.timestamp_millis(), ts.timestamp_millis(),);
     }
 
     #[test]
