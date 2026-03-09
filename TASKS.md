@@ -73,7 +73,7 @@ Status legend: `[ ]` pending | `[~]` in progress | `[x]` completed
 
 ## Phase 4: Backend Notifications
 
-- [ ] **4.1** Notification event producer [blocked by: 0.6, 3.6, 3.7]
+- [x] **4.1** Notification event producer [blocked by: 0.6, 3.6, 3.7]
 - [ ] **4.2** Email sender (SMTP/lettre) [blocked by: 0.6]
 - [ ] **4.3** Notification batching (2-min delay) [blocked by: 4.1, 4.2]
 - [ ] **4.4** Per-ticket mute preferences [blocked by: 4.1, 2.5]

@@ -127,3 +127,19 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Tests**: 6 new unit tests (not_found, forbidden, conflict, validation_error, validation_msg, internal_error) + all 377 existing tests pass
 - **Issues**: Pre-existing clippy warnings unchanged; frontend test failure pre-existing
 - **Timestamp**: 2026-03-09
+
+## Task 4.1: Notification event producer
+- **Implemented**: NotificationProducer service per DD 0.6 §7 with recipient resolution:
+  - `NotificationProducer` struct with pool, delay_seconds, smtp_enabled fields
+  - `emit()` method resolves recipients per event type, applies mute/active filters, inserts into `pending_notifications`
+  - Six event types: ticket_created, comment_added, status_changed, priority_changed, owner_changed, milestone_added
+  - Recipient mapping per DD 0.6 §8: component owner (ticket_created), owner+CC (comment/status/priority), old+new owner+CC (owner_changed), owner only (milestone_added)
+  - Self-exclusion, HashSet deduplication, notification_mutes check, inactive user exclusion
+  - No-op when SMTP is disabled (smtp_enabled=false)
+- **SMTP config**: Added S9_SMTP_HOST, S9_SMTP_PORT, S9_SMTP_USERNAME, S9_SMTP_PASSWORD, S9_SMTP_TLS, S9_SMTP_FROM, S9_BASE_URL, S9_NOTIFICATION_DELAY env vars to CLI/Config
+- **Migration**: 004_add_notification_payload.sql adds `payload TEXT` column to pending_notifications
+- **Handler integration**: ticket create/update and comment create handlers call NotificationProducer.emit() best-effort after successful mutations; ticket update detects per-field changes (status, priority, owner, milestones)
+- **Files**: src/notifications.rs (new), migrations/004_add_notification_payload.sql (new), src/cli.rs, src/config.rs, src/main.rs, src/api/mod.rs, src/api/ticket.rs, src/api/comment.rs, src/models/notification.rs, + test updates across 8 files
+- **Tests**: 10 new unit tests (noop when disabled, ticket_created recipients, self-exclusion, comment_added recipients, muted users excluded, inactive users excluded, milestone_added recipients, send_after delay, payload JSON storage, deduplication)
+- **Issues**: Pre-existing clippy warnings unchanged; all 387 tests pass
+- **Timestamp**: 2026-03-09
