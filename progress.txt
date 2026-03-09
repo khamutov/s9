@@ -46,3 +46,14 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Tests**: 10 integration tests (CRUD, admin-only auth, slug inheritance, conflict detection)
 - **Issues**: Pre-existing clippy warnings (unused imports, dead code) cause `task lint` to fail with `-D warnings`; no new warnings introduced.
 - **Timestamp**: 2026-03-09
+
+## Task 3.9: Milestone API endpoints
+- **Implemented**: Four milestone CRUD endpoints per DD 0.4 §10:
+  - GET /api/milestones — list all milestones with optional `?status=open|closed` filter, enriched with computed ticket stats
+  - POST /api/milestones — admin-only create with name uniqueness enforcement
+  - PATCH /api/milestones/:id — admin-only partial update with double-Option null-clearing for description/due_date
+  - DELETE /api/milestones/:id — admin-only, rejects if milestone has assigned tickets
+- **Files**: src/api/milestone.rs (new), src/api/mod.rs
+- **Tests**: 11 integration tests (CRUD, auth, status filter, duplicate name, not found, empty name validation)
+- **Issues**: None; pre-existing clippy warnings unchanged
+- **Timestamp**: 2026-03-09
