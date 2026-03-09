@@ -101,7 +101,7 @@ Only add patterns that are **general and reusable**, not story-specific details.
 
 ## Update CLAUDE.md Files
 
-Before committing, check if any edited files have learnings worth preserving in nearby AGENTS.md files:
+Before committing, check if any edited files have learnings worth preserving in nearby CLAUDE.md files:
 
 1. **Identify directories with edited files** - Look at which directories you modified
 2. **Check for existing CLAUDE.md** - Look for CLAUDE.md in those directories or parent directories
