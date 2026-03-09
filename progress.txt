@@ -179,3 +179,15 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Tests**: 8 integration tests (mute 204, idempotent mute, unmute 204, idempotent unmute, not found, auth required, status false, status true after mute)
 - **Issues**: Pre-existing clippy warnings unchanged; all 409 tests pass
 - **Timestamp**: 2026-03-09
+
+## Task 4.5: @mention parsing in comments
+- **Implemented**: Mention parser and notification integration per DD 0.6 §8.1:
+  - `src/mentions.rs` — regex-based `parse_mentions()` extracts `@login` from text, deduplicates and lowercases
+  - `NotificationProducer::emit_with_mentions()` — new method accepting extra recipient IDs (from mentions)
+  - Comment create handler parses mentions from body, resolves logins to user IDs via `user::get_by_login`, passes to `emit_with_mentions`
+  - Mentions are deduplicated with existing recipients (owner, CC) and filtered by mute/active status
+- **Files**: src/mentions.rs (new), src/notifications.rs, src/api/comment.rs, src/main.rs, Cargo.toml
+- **Dependencies added**: regex 1
+- **Tests**: 11 mention parser tests + 2 notification producer tests (mentioned users added, dedup with owner); all 422 tests pass
+- **Issues**: Pre-existing clippy warnings unchanged
+- **Timestamp**: 2026-03-09
