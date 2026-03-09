@@ -143,3 +143,20 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Tests**: 10 new unit tests (noop when disabled, ticket_created recipients, self-exclusion, comment_added recipients, muted users excluded, inactive users excluded, milestone_added recipients, send_after delay, payload JSON storage, deduplication)
 - **Issues**: Pre-existing clippy warnings unchanged; all 387 tests pass
 - **Timestamp**: 2026-03-09
+
+## Task 4.2: Email sender (SMTP/lettre)
+- **Implemented**: EmailSender service and background notification worker per DD 0.6 §6, §10, §12:
+  - `EmailSender` struct wrapping `AsyncSmtpTransport<Tokio1Executor>` with from-address and base URL
+  - SMTP transport construction: supports none/starttls/tls modes with optional credentials
+  - `send_password_reset()` — immediate delivery bypassing queue per §13.4
+  - `send_notification()` — batched multipart HTML+text email per §12
+  - `notification_worker()` — background tokio task polling every 30s, groups by (user_id, ticket_id), sends batched emails, purges rows >24h
+  - Email templates for all 6 event types with detail lines per §12.4
+  - Subject line format: `[S9] #{ticket_id}: {ticket_title}` per §12.1
+  - Error handling: transport failures skip tick (§11.1), per-recipient failures log+delete (§11.2)
+- **Files**: src/email.rs (new), src/main.rs, Cargo.toml
+- **Dependencies added**: lettre 0.11 (builder, smtp-transport, tokio1-rustls-tls)
+- **Startup integration**: EmailSender built from SmtpConfig, notification_worker spawned with CancellationToken per §19 step 8
+- **Tests**: 10 new tests (6 event format lines, 2 email template builds, purge expired rows, delete by IDs)
+- **Issues**: Pre-existing clippy warnings unchanged; all 397 tests pass
+- **Timestamp**: 2026-03-09
