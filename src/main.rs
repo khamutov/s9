@@ -3,6 +3,7 @@ mod auth;
 mod cli;
 mod config;
 mod db;
+pub(crate) mod email;
 mod embed;
 pub(crate) mod events;
 mod models;
@@ -67,17 +68,44 @@ async fn serve(config: Config) -> anyhow::Result<()> {
 
     storage::init_dirs(&config.data_dir).await?;
 
-    let smtp_enabled = config.smtp.is_some();
-    if smtp_enabled {
-        tracing::info!("SMTP configured, email notifications enabled");
-    } else {
-        tracing::info!("SMTP not configured, email notifications disabled");
-    }
+    let email_sender = match &config.smtp {
+        Some(smtp_cfg) => {
+            if smtp_cfg.tls == "none" {
+                tracing::warn!(
+                    "SMTP connection is unencrypted. Set S9_SMTP_TLS=starttls or tls for production use."
+                );
+            }
+            match email::EmailSender::from_config(smtp_cfg) {
+                Ok(sender) => {
+                    tracing::info!("SMTP configured, email notifications enabled");
+                    Some(sender)
+                }
+                Err(e) => {
+                    tracing::error!("failed to initialize SMTP transport: {e}");
+                    None
+                }
+            }
+        }
+        None => {
+            tracing::info!("SMTP not configured, email notifications disabled");
+            None
+        }
+    };
+
+    let smtp_enabled = email_sender.is_some();
     let notif_producer = notifications::NotificationProducer::new(
         pool.clone(),
         config.notification_delay,
         smtp_enabled,
     );
+
+    // Spawn notification worker background task per DD 0.6 §10 / §19 step 8.
+    let cancel = tokio_util::sync::CancellationToken::new();
+    tokio::spawn(email::notification_worker(
+        pool.clone(),
+        email_sender,
+        cancel.clone(),
+    ));
 
     let event_bus = events::EventBus::new();
     let app = api::build_router(
@@ -92,6 +120,7 @@ async fn serve(config: Config) -> anyhow::Result<()> {
     let listener = tokio::net::TcpListener::bind(config.listen).await?;
     tracing::info!("listening on {}", config.listen);
     axum::serve(listener, app).await?;
+    cancel.cancel();
 
     Ok(())
 }
