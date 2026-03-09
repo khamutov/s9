@@ -62,23 +62,29 @@ def _build_prompt(repo_root: Path, target_phase: int | None) -> str:
 def run_iteration(prompt: str, iteration: int, repo_root: Path) -> str:
     """Run a single Claude invocation via `claude --dangerously-skip-permissions --print`.
 
-    Streams output to stdout while capturing the full response.
+    Streams stdout line-by-line as it arrives and returns the full output.
     """
-    result = subprocess.run(
+    proc = subprocess.Popen(
         ["claude", "--dangerously-skip-permissions", "--print", "--chrome", prompt],
-        capture_output=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
         text=True,
         cwd=repo_root,
     )
 
-    output = result.stdout
-    if output:
-        print(output)
+    lines: list[str] = []
+    assert proc.stdout is not None  # noqa: S101 — guaranteed by PIPE
+    for line in proc.stdout:
+        print(line, end="", flush=True)
+        lines.append(line)
 
-    if result.stderr:
-        print(result.stderr, file=sys.stderr)
+    stderr = proc.stderr.read() if proc.stderr else ""
+    if stderr:
+        print(stderr, file=sys.stderr, flush=True)
 
-    return output
+    proc.wait()
+
+    return "".join(lines)
 
 
 def run_loop(args: Namespace) -> None:
