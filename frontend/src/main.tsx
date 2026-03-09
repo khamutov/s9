@@ -5,6 +5,8 @@ import { RouterProvider } from 'react-router';
 import router from './router';
 import './styles/tokens.css';
 import './styles/reset.css';
+import './styles/typography.css';
+import './styles/globals.css';
 
 const queryClient = new QueryClient({
   defaultOptions: {

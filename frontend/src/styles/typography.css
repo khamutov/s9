@@ -1,0 +1,65 @@
+/* ==========================================================================
+   S9 — Typography
+   Bricolage Grotesque (display) · Instrument Sans (body) · Martian Mono (data)
+   ========================================================================== */
+
+h1 {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.04em;
+  color: var(--text-primary);
+}
+
+h2 {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.04em;
+  color: var(--text-primary);
+}
+
+h3 {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.04em;
+  color: var(--text-primary);
+}
+
+h4 {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--text-primary);
+}
+
+/* Mono labels: IDs, timestamps, counts, filter inputs, badges */
+.mono {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+/* Section labels (sidebar, table headers) — uppercase mono micro-text */
+.section-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-label);
+}
+
+/* Table header labels */
+.table-header-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-label);
+}
