@@ -1,0 +1,63 @@
+/* Command bar wrapper */
+.commandBar {
+  display: flex;
+  align-items: center;
+  position: relative;
+  margin-bottom: var(--space-6);
+  animation: fade-down 0.5s var(--ease-out) 0.04s both;
+}
+
+.icon {
+  position: absolute;
+  left: 16px;
+  width: 15px;
+  height: 15px;
+  color: var(--text-tertiary);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.input {
+  width: 100%;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  padding: var(--space-3) var(--space-5);
+  padding-left: 42px;
+  height: 48px;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  transition: all var(--transition-fast);
+}
+
+.input::placeholder {
+  color: var(--text-ghost);
+  font-weight: 400;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-subtle), var(--shadow-glow);
+  background: var(--bg-raised);
+}
+
+.kbd {
+  position: absolute;
+  right: 14px;
+  pointer-events: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  padding: 0 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-label);
+  background: var(--bg-raised);
+  border: 1px solid var(--border-primary);
+  border-radius: 4px;
+  gap: 2px;
+}
