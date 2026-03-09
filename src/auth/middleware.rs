@@ -1,9 +1,10 @@
 use std::ops::Deref;
 
-use axum::extract::FromRequestParts;
+use axum::extract::{FromRequestParts, Request, State};
 use axum::http::StatusCode;
 use axum::http::header::COOKIE;
 use axum::http::request::Parts;
+use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
 use serde_json::json;
 
@@ -14,9 +15,9 @@ use crate::repos;
 /// Authenticated user extracted from the session cookie.
 ///
 /// Include this in a handler's arguments to require authentication.
-/// The extractor validates the `s9_session` cookie, checks the session
-/// and user in the database, and extends the session's sliding window
-/// when it is past the halfway mark.
+/// If the `require_auth` middleware has already run, the validated user
+/// is read from request extensions (no extra DB lookup). Otherwise the
+/// extractor performs the full validation itself.
 #[derive(Debug, Clone)]
 pub struct AuthUser {
     pub id: i64,
@@ -43,7 +44,7 @@ impl Deref for RequireAdmin {
 }
 
 /// Error type for authentication/authorization failures.
-enum AuthError {
+pub(crate) enum AuthError {
     Unauthorized,
     Forbidden,
 }
@@ -82,6 +83,83 @@ pub(crate) fn extract_session_cookie(parts: &Parts) -> Option<&str> {
         .find_map(|pair| pair.strip_prefix("s9_session="))
 }
 
+/// Validates the session cookie and returns an `AuthUser` or an auth error.
+///
+/// Shared by both the middleware layer and the `AuthUser` extractor.
+async fn validate_session(parts: &Parts, state: &AppState) -> Result<AuthUser, AuthError> {
+    let token = extract_session_cookie(parts).ok_or(AuthError::Unauthorized)?;
+
+    let session = repos::session::get_valid(&state.pool, token)
+        .await
+        .map_err(|_| AuthError::Unauthorized)?
+        .ok_or(AuthError::Unauthorized)?;
+
+    let user = repos::user::get_by_id(&state.pool, session.user_id)
+        .await
+        .map_err(|_| AuthError::Unauthorized)?
+        .ok_or(AuthError::Unauthorized)?;
+
+    if user.is_active == 0 {
+        return Err(AuthError::Unauthorized);
+    }
+
+    // Extend sliding window if past the halfway mark (fire-and-forget).
+    if repos::session::needs_extension(&session) {
+        let pool = state.pool.clone();
+        let token = session.id.clone();
+        tokio::spawn(async move {
+            if let Err(e) = repos::session::extend(&pool, &token).await {
+                tracing::warn!("failed to extend session: {e}");
+            }
+        });
+    }
+
+    Ok(AuthUser {
+        id: user.id,
+        login: user.login,
+        display_name: user.display_name,
+        email: user.email,
+        role: user.role,
+        session_id: session.id,
+    })
+}
+
+/// Route-level middleware that enforces authentication.
+///
+/// Apply via `axum::middleware::from_fn_with_state` on route groups that
+/// require a valid session. The validated `AuthUser` is stored in request
+/// extensions so that downstream extractors (`AuthUser`, `RequireAdmin`)
+/// can retrieve it without a second database lookup.
+pub async fn require_auth(
+    State(state): State<AppState>,
+    mut request: Request,
+    next: Next,
+) -> Result<Response, Response> {
+    let (mut parts, body) = request.into_parts();
+    let user = validate_session(&parts, &state)
+        .await
+        .map_err(|e| e.into_response())?;
+    parts.extensions.insert(user);
+    request = Request::from_parts(parts, body);
+    Ok(next.run(request).await)
+}
+
+/// Route-level middleware that enforces admin role.
+///
+/// Must be applied *after* `require_auth` (or on a route group that already
+/// guarantees an `AuthUser` in extensions). Returns 403 if the user is not
+/// an admin, 401 if no user is present.
+pub async fn require_admin(request: Request, next: Next) -> Result<Response, Response> {
+    let user = request
+        .extensions()
+        .get::<AuthUser>()
+        .ok_or_else(|| AuthError::Unauthorized.into_response())?;
+    if user.role != Role::Admin {
+        return Err(AuthError::Forbidden.into_response());
+    }
+    Ok(next.run(request).await)
+}
+
 impl FromRequestParts<AppState> for AuthUser {
     type Rejection = Response;
 
@@ -89,42 +167,15 @@ impl FromRequestParts<AppState> for AuthUser {
         parts: &mut Parts,
         state: &AppState,
     ) -> Result<Self, Self::Rejection> {
-        let token =
-            extract_session_cookie(parts).ok_or_else(|| AuthError::Unauthorized.into_response())?;
-
-        let session = repos::session::get_valid(&state.pool, token)
-            .await
-            .map_err(|_| AuthError::Unauthorized.into_response())?
-            .ok_or_else(|| AuthError::Unauthorized.into_response())?;
-
-        let user = repos::user::get_by_id(&state.pool, session.user_id)
-            .await
-            .map_err(|_| AuthError::Unauthorized.into_response())?
-            .ok_or_else(|| AuthError::Unauthorized.into_response())?;
-
-        if user.is_active == 0 {
-            return Err(AuthError::Unauthorized.into_response());
+        // Reuse the user injected by the require_auth middleware layer.
+        if let Some(user) = parts.extensions.get::<AuthUser>() {
+            return Ok(user.clone());
         }
 
-        // Extend sliding window if past the halfway mark (fire-and-forget).
-        if repos::session::needs_extension(&session) {
-            let pool = state.pool.clone();
-            let token = session.id.clone();
-            tokio::spawn(async move {
-                if let Err(e) = repos::session::extend(&pool, &token).await {
-                    tracing::warn!("failed to extend session: {e}");
-                }
-            });
-        }
-
-        Ok(AuthUser {
-            id: user.id,
-            login: user.login,
-            display_name: user.display_name,
-            email: user.email,
-            role: user.role,
-            session_id: session.id,
-        })
+        // Fallback: full validation (for routes without the middleware layer).
+        validate_session(parts, state)
+            .await
+            .map_err(|e| e.into_response())
     }
 }
 
@@ -151,6 +202,8 @@ mod tests {
     use axum::http::Request;
     use chrono::{Duration, Utc};
     use sqlx::SqlitePool;
+
+    use tower::ServiceExt;
 
     use crate::db;
     use crate::models::CreateUserRequest;
@@ -365,5 +418,126 @@ mod tests {
 
         let result = RequireAdmin::from_request_parts(&mut parts, &state).await;
         assert!(result.is_err());
+    }
+
+    // --- Middleware layer integration tests ---
+
+    fn build_test_app(pool: SqlitePool) -> axum::Router {
+        crate::api::build_router(
+            pool,
+            None,
+            None,
+            std::path::PathBuf::from("/tmp/test"),
+            crate::events::EventBus::new(),
+        )
+    }
+
+    #[tokio::test]
+    async fn middleware_blocks_unauthenticated_protected_route() {
+        let pool = test_pool().await;
+        let app = build_test_app(pool);
+
+        let resp: axum::response::Response = app
+            .oneshot(
+                Request::builder()
+                    .uri("/api/tickets")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
+    }
+
+    #[tokio::test]
+    async fn middleware_allows_public_routes() {
+        let pool = test_pool().await;
+        let app = build_test_app(pool);
+
+        // POST /api/auth/logout should work without session (returns 204).
+        let resp: axum::response::Response = app
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/api/auth/logout")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::NO_CONTENT);
+    }
+
+    #[tokio::test]
+    async fn middleware_admin_layer_blocks_non_admin() {
+        let pool = test_pool().await;
+        let uid = create_test_user(&pool, Some(Role::User)).await;
+        let sess = session::create(&pool, uid).await.unwrap();
+        let app = build_test_app(pool);
+
+        let resp: axum::response::Response = app
+            .oneshot(
+                Request::builder()
+                    .uri("/api/users")
+                    .header("Cookie", format!("s9_session={}", sess.id))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::FORBIDDEN);
+    }
+
+    #[tokio::test]
+    async fn middleware_admin_layer_allows_admin() {
+        let pool = test_pool().await;
+        let uid = create_test_user(&pool, Some(Role::Admin)).await;
+        let sess = session::create(&pool, uid).await.unwrap();
+        let app = build_test_app(pool);
+
+        let resp: axum::response::Response = app
+            .oneshot(
+                Request::builder()
+                    .uri("/api/users")
+                    .header("Cookie", format!("s9_session={}", sess.id))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+    }
+
+    #[tokio::test]
+    async fn extractor_reuses_middleware_injected_user() {
+        let pool = test_pool().await;
+        let uid = create_test_user(&pool, Some(Role::User)).await;
+        let state = AppState {
+            pool,
+            oidc: None,
+            slug_cache: None,
+            data_dir: std::path::PathBuf::from("/tmp/test"),
+            event_bus: crate::events::EventBus::new(),
+        };
+
+        // Pre-inject an AuthUser into extensions (simulates what the middleware does).
+        let injected = AuthUser {
+            id: uid,
+            login: "testuser".to_string(),
+            display_name: "Test User".to_string(),
+            email: "test@example.com".to_string(),
+            role: Role::User,
+            session_id: "fake-session".to_string(),
+        };
+        let builder = Request::builder().uri("/api/test");
+        let (mut parts, _) = builder.body(Body::empty()).unwrap().into_parts();
+        parts.extensions.insert(injected);
+
+        // AuthUser extractor should return the injected user without a DB lookup.
+        let user = AuthUser::from_request_parts(&mut parts, &state)
+            .await
+            .unwrap();
+        assert_eq!(user.id, uid);
+        assert_eq!(user.session_id, "fake-session");
     }
 }
