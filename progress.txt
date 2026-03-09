@@ -79,3 +79,16 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Infrastructure**: Added `delete_others_for_user` to session repo for password-change session cleanup
 - **Issues**: None; pre-existing clippy warnings and frontend test failure unchanged
 - **Timestamp**: 2026-03-09
+
+## Task 3.12: SSE event stream
+- **Implemented**: SSE endpoint per DD 0.4 §14:
+  - GET /api/events — persistent Server-Sent Events stream, auth required via session cookie
+  - EventBus: tokio broadcast channel wrapper shared via AppState for publishing events
+  - Event enum: ticket_created, ticket_updated, comment_created, comment_updated, comment_deleted
+  - 30-second keepalive ping, lagged receivers gracefully skip missed events
+  - Global stream with no server-side filtering (clients filter on their end)
+- **Files**: src/events.rs (new), src/api/events.rs (new), src/api/mod.rs, src/main.rs, Cargo.toml
+- **Dependencies added**: tokio-stream (sync feature), futures-util
+- **Tests**: 7 unit tests (event types, bus send/receive, multiple receivers) + 2 integration tests (auth required, SSE stream response)
+- **Issues**: None; pre-existing clippy warnings unchanged
+- **Timestamp**: 2026-03-09
