@@ -29,6 +29,22 @@ pub struct ListTicketsQuery {
 }
 
 /// `GET /api/tickets` — list/search tickets with dual-mode pagination.
+#[utoipa::path(
+    get, path = "/api/tickets", tag = "Tickets",
+    params(
+        ("q" = Option<String>, Query, description = "Filter micro-syntax"),
+        ("cursor" = Option<String>, Query, description = "Cursor token for next page"),
+        ("page" = Option<i64>, Query, description = "Page number (offset mode, default: 1)"),
+        ("page_size" = Option<i64>, Query, description = "Items per page (default: 50, max: 200)"),
+        ("sort" = Option<String>, Query, description = "Sort field: updated_at, created_at, priority, status, id"),
+        ("order" = Option<String>, Query, description = "Sort direction: desc (default), asc"),
+    ),
+    responses(
+        (status = 200, description = "Paginated ticket list (cursor or offset mode)", body = CursorPage<TicketResponse>),
+        (status = 401, description = "Authentication required"),
+    ),
+    security(("session_cookie" = []))
+)]
 pub async fn list_tickets(
     State(state): State<AppState>,
     _user: AuthUser,
@@ -133,6 +149,15 @@ pub async fn list_tickets(
 }
 
 /// `GET /api/tickets/:id` — get a single ticket by ID.
+#[utoipa::path(
+    get, path = "/api/tickets/{id}", tag = "Tickets",
+    params(("id" = i64, Path, description = "Ticket ID")),
+    responses(
+        (status = 200, description = "Ticket details", body = TicketResponse),
+        (status = 404, description = "Ticket not found"),
+    ),
+    security(("session_cookie" = []))
+)]
 pub async fn get_ticket(
     State(state): State<AppState>,
     _user: AuthUser,
@@ -153,6 +178,15 @@ pub async fn get_ticket(
 }
 
 /// `POST /api/tickets` — create a new ticket.
+#[utoipa::path(
+    post, path = "/api/tickets", tag = "Tickets",
+    request_body = CreateTicketRequest,
+    responses(
+        (status = 201, description = "Ticket created", body = TicketResponse),
+        (status = 422, description = "Validation error"),
+    ),
+    security(("session_cookie" = []))
+)]
 pub async fn create_ticket(
     State(state): State<AppState>,
     user: AuthUser,
@@ -191,6 +225,18 @@ pub async fn create_ticket(
 }
 
 /// `PATCH /api/tickets/:id` — update a ticket.
+#[utoipa::path(
+    patch, path = "/api/tickets/{id}", tag = "Tickets",
+    params(("id" = i64, Path, description = "Ticket ID")),
+    request_body = UpdateTicketRequest,
+    responses(
+        (status = 200, description = "Ticket updated", body = TicketResponse),
+        (status = 403, description = "Forbidden (title change by non-creator)"),
+        (status = 404, description = "Ticket not found"),
+        (status = 422, description = "Validation error"),
+    ),
+    security(("session_cookie" = []))
+)]
 pub async fn update_ticket(
     State(state): State<AppState>,
     user: AuthUser,

@@ -8,7 +8,9 @@ use serde::Deserialize;
 use serde_json::json;
 
 use crate::auth::middleware::{AuthUser, RequireAdmin};
-use crate::models::{CreateMilestoneRequest, MilestoneStatus, UpdateMilestoneRequest};
+use crate::models::{
+    CreateMilestoneRequest, MilestoneResponse, MilestoneStatus, UpdateMilestoneRequest,
+};
 use crate::repos::{self, RepoError};
 
 use super::AppState;
@@ -20,6 +22,12 @@ pub struct ListQuery {
 }
 
 /// `GET /api/milestones` — list all milestones, optionally filtered by status.
+#[utoipa::path(
+    get, path = "/api/milestones", tag = "Milestones",
+    params(("status" = Option<MilestoneStatus>, Query, description = "Filter: open or closed")),
+    responses((status = 200, description = "List of milestones", body = Vec<MilestoneResponse>)),
+    security(("session_cookie" = []))
+)]
 pub async fn list_milestones(
     State(state): State<AppState>,
     _user: AuthUser,
@@ -39,6 +47,17 @@ pub async fn list_milestones(
 }
 
 /// `POST /api/milestones` — create a new milestone (admin only).
+#[utoipa::path(
+    post, path = "/api/milestones", tag = "Milestones",
+    request_body = CreateMilestoneRequest,
+    responses(
+        (status = 201, description = "Milestone created", body = MilestoneResponse),
+        (status = 403, description = "Admin only"),
+        (status = 409, description = "Duplicate name"),
+        (status = 422, description = "Validation error"),
+    ),
+    security(("session_cookie" = []))
+)]
 pub async fn create_milestone(
     State(state): State<AppState>,
     admin: RequireAdmin,
@@ -65,6 +84,18 @@ pub async fn create_milestone(
 }
 
 /// `PATCH /api/milestones/:id` — update a milestone (admin only).
+#[utoipa::path(
+    patch, path = "/api/milestones/{id}", tag = "Milestones",
+    params(("id" = i64, Path, description = "Milestone ID")),
+    request_body = UpdateMilestoneRequest,
+    responses(
+        (status = 200, description = "Milestone updated", body = MilestoneResponse),
+        (status = 403, description = "Admin only"),
+        (status = 404, description = "Milestone not found"),
+        (status = 409, description = "Duplicate name"),
+    ),
+    security(("session_cookie" = []))
+)]
 pub async fn update_milestone(
     State(state): State<AppState>,
     admin: RequireAdmin,
@@ -91,6 +122,17 @@ pub async fn update_milestone(
 /// `DELETE /api/milestones/:id` — delete a milestone (admin only).
 ///
 /// Rejects if the milestone has assigned tickets.
+#[utoipa::path(
+    delete, path = "/api/milestones/{id}", tag = "Milestones",
+    params(("id" = i64, Path, description = "Milestone ID")),
+    responses(
+        (status = 204, description = "Milestone deleted"),
+        (status = 403, description = "Admin only"),
+        (status = 404, description = "Milestone not found"),
+        (status = 409, description = "Has assigned tickets"),
+    ),
+    security(("session_cookie" = []))
+)]
 pub async fn delete_milestone(
     State(state): State<AppState>,
     admin: RequireAdmin,

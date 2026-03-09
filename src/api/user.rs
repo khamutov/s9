@@ -22,6 +22,15 @@ pub struct ListQuery {
 }
 
 /// `GET /api/users` — list all users (admin only).
+#[utoipa::path(
+    get, path = "/api/users", tag = "Users",
+    params(("include_inactive" = Option<bool>, Query, description = "Include deactivated users")),
+    responses(
+        (status = 200, description = "List of users", body = Vec<FullUser>),
+        (status = 403, description = "Admin only"),
+    ),
+    security(("session_cookie" = []))
+)]
 pub async fn list_users(
     State(state): State<AppState>,
     admin: RequireAdmin,
@@ -39,6 +48,17 @@ pub async fn list_users(
 }
 
 /// `POST /api/users` — create a new user (admin only).
+#[utoipa::path(
+    post, path = "/api/users", tag = "Users",
+    request_body = CreateUserRequest,
+    responses(
+        (status = 201, description = "User created", body = FullUser),
+        (status = 403, description = "Admin only"),
+        (status = 409, description = "Duplicate login"),
+        (status = 422, description = "Validation error"),
+    ),
+    security(("session_cookie" = []))
+)]
 pub async fn create_user(
     State(state): State<AppState>,
     admin: RequireAdmin,
@@ -82,6 +102,17 @@ pub async fn create_user(
 ///
 /// Admin can change: role, is_active, display_name, email.
 /// Self (non-admin) can change: display_name, email.
+#[utoipa::path(
+    patch, path = "/api/users/{id}", tag = "Users",
+    params(("id" = i64, Path, description = "User ID")),
+    request_body = UpdateUserRequest,
+    responses(
+        (status = 200, description = "User updated", body = FullUser),
+        (status = 403, description = "Insufficient permissions"),
+        (status = 404, description = "User not found"),
+    ),
+    security(("session_cookie" = []))
+)]
 pub async fn update_user(
     State(state): State<AppState>,
     user: AuthUser,
@@ -118,6 +149,18 @@ pub async fn update_user(
 /// `POST /api/users/:id/password` — set/change a user's password.
 ///
 /// Self: requires current_password. Admin: can set without current_password.
+#[utoipa::path(
+    post, path = "/api/users/{id}/password", tag = "Users",
+    params(("id" = i64, Path, description = "User ID")),
+    request_body = SetPasswordRequest,
+    responses(
+        (status = 204, description = "Password changed"),
+        (status = 401, description = "Incorrect current password"),
+        (status = 403, description = "Cannot change another user's password"),
+        (status = 422, description = "Password too short"),
+    ),
+    security(("session_cookie" = []))
+)]
 pub async fn set_password(
     State(state): State<AppState>,
     user: AuthUser,

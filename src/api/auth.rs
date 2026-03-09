@@ -5,6 +5,7 @@ use axum::http::header::{COOKIE, HeaderValue, SET_COOKIE};
 use axum::response::{IntoResponse, Response};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use utoipa::ToSchema;
 
 use crate::api::AppState;
 use crate::auth::middleware::AuthUser;
@@ -15,14 +16,15 @@ use crate::repos;
 /// Max-Age for a session cookie (30 days).
 const COOKIE_MAX_AGE: i64 = 30 * 24 * 60 * 60;
 
-#[derive(Deserialize)]
+/// Credentials for password login.
+#[derive(Deserialize, ToSchema)]
 pub struct LoginRequest {
     login: String,
     password: String,
 }
 
 /// Public user info returned from auth endpoints.
-#[derive(Serialize)]
+#[derive(Serialize, ToSchema)]
 pub struct AuthResponse {
     id: i64,
     login: String,
@@ -39,6 +41,14 @@ fn session_cookie(token: &str, max_age: i64) -> HeaderValue {
 }
 
 /// `POST /api/auth/login` — authenticate with login and password.
+#[utoipa::path(
+    post, path = "/api/auth/login", tag = "Auth",
+    request_body = LoginRequest,
+    responses(
+        (status = 200, description = "Login successful", body = AuthResponse),
+        (status = 401, description = "Invalid credentials"),
+    )
+)]
 pub async fn login(State(state): State<AppState>, Json(body): Json<LoginRequest>) -> Response {
     let user = match repos::user::get_by_login(&state.pool, &body.login).await {
         Ok(Some(u)) => u,
@@ -117,6 +127,11 @@ fn extract_session_token(headers: &axum::http::HeaderMap) -> Option<String> {
 }
 
 /// `POST /api/auth/logout` — clear the session cookie and delete the session.
+#[utoipa::path(
+    post, path = "/api/auth/logout", tag = "Auth",
+    responses((status = 204, description = "Session destroyed")),
+    security(("session_cookie" = []))
+)]
 pub async fn logout(State(state): State<AppState>, headers: axum::http::HeaderMap) -> Response {
     if let Some(token) = extract_session_token(&headers) {
         let _ = repos::session::delete(&state.pool, &token).await;
@@ -130,6 +145,11 @@ pub async fn logout(State(state): State<AppState>, headers: axum::http::HeaderMa
 }
 
 /// `GET /api/auth/me` — return the authenticated user's info.
+#[utoipa::path(
+    get, path = "/api/auth/me", tag = "Auth",
+    responses((status = 200, description = "Current user info", body = AuthResponse)),
+    security(("session_cookie" = []))
+)]
 pub async fn me(user: AuthUser) -> Json<AuthResponse> {
     Json(AuthResponse {
         id: user.id,

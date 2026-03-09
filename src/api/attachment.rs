@@ -28,6 +28,16 @@ pub struct DownloadQuery {
 ///
 /// Accepts `multipart/form-data` with a single `file` field. The file is
 /// stored content-addressed by SHA-256 and a metadata row is created.
+#[utoipa::path(
+    post, path = "/api/attachments", tag = "Attachments",
+    request_body(content_type = "multipart/form-data", content = String, description = "File upload"),
+    responses(
+        (status = 201, description = "Attachment uploaded", body = AttachmentResponse),
+        (status = 413, description = "File too large"),
+        (status = 422, description = "No file or blocked type"),
+    ),
+    security(("session_cookie" = []))
+)]
 pub async fn upload_attachment(
     State(state): State<AppState>,
     user: AuthUser,
@@ -135,6 +145,19 @@ pub async fn upload_attachment(
 ///
 /// Streams the file with appropriate headers for inline display (images)
 /// or download (other types). The `?download=1` query param forces download.
+#[utoipa::path(
+    get, path = "/api/attachments/{id}/{filename}", tag = "Attachments",
+    params(
+        ("id" = i64, Path, description = "Attachment ID"),
+        ("filename" = String, Path, description = "Original filename"),
+        ("download" = Option<String>, Query, description = "Set to 1 to force download"),
+    ),
+    responses(
+        (status = 200, description = "File contents", content_type = "application/octet-stream"),
+        (status = 404, description = "Attachment not found"),
+    ),
+    security(("session_cookie" = []))
+)]
 pub async fn download_attachment(
     State(state): State<AppState>,
     _user: AuthUser,

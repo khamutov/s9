@@ -22,7 +22,7 @@ pub struct OffsetPage<T: Serialize> {
 ///
 /// FTS queries use offset pagination (need total count for relevance ranking),
 /// while structured-only queries use cursor pagination (efficient for large sets).
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, ToSchema)]
 #[serde(untagged)]
 pub enum SearchResult<T: Serialize> {
     Cursor(CursorPage<T>),

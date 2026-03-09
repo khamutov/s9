@@ -15,6 +15,11 @@ use crate::repos::{self, RepoError};
 use super::AppState;
 
 /// `GET /api/components` — list all components as a flat list.
+#[utoipa::path(
+    get, path = "/api/components", tag = "Components",
+    responses((status = 200, description = "List of components", body = Vec<ComponentResponse>)),
+    security(("session_cookie" = []))
+)]
 pub async fn list_components(State(state): State<AppState>, _user: AuthUser) -> Response {
     let rows = match repos::component::list(&state.pool).await {
         Ok(r) => r,
@@ -54,6 +59,17 @@ pub async fn list_components(State(state): State<AppState>, _user: AuthUser) -> 
 }
 
 /// `POST /api/components` — create a new component (admin only).
+#[utoipa::path(
+    post, path = "/api/components", tag = "Components",
+    request_body = CreateComponentRequest,
+    responses(
+        (status = 201, description = "Component created", body = ComponentResponse),
+        (status = 403, description = "Admin only"),
+        (status = 409, description = "Duplicate name"),
+        (status = 422, description = "Validation error"),
+    ),
+    security(("session_cookie" = []))
+)]
 pub async fn create_component(
     State(state): State<AppState>,
     admin: RequireAdmin,
@@ -103,6 +119,18 @@ pub async fn create_component(
 }
 
 /// `PATCH /api/components/:id` — update a component (admin only).
+#[utoipa::path(
+    patch, path = "/api/components/{id}", tag = "Components",
+    params(("id" = i64, Path, description = "Component ID")),
+    request_body = UpdateComponentRequest,
+    responses(
+        (status = 200, description = "Component updated", body = ComponentResponse),
+        (status = 403, description = "Admin only"),
+        (status = 404, description = "Component not found"),
+        (status = 409, description = "Conflict"),
+    ),
+    security(("session_cookie" = []))
+)]
 pub async fn update_component(
     State(state): State<AppState>,
     admin: RequireAdmin,
@@ -154,6 +182,17 @@ pub async fn update_component(
 /// `DELETE /api/components/:id` — delete a component (admin only).
 ///
 /// Rejects if the component has child components or assigned tickets.
+#[utoipa::path(
+    delete, path = "/api/components/{id}", tag = "Components",
+    params(("id" = i64, Path, description = "Component ID")),
+    responses(
+        (status = 204, description = "Component deleted"),
+        (status = 403, description = "Admin only"),
+        (status = 404, description = "Component not found"),
+        (status = 409, description = "Has children or tickets"),
+    ),
+    security(("session_cookie" = []))
+)]
 pub async fn delete_component(
     State(state): State<AppState>,
     admin: RequireAdmin,

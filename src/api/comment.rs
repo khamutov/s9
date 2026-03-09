@@ -8,7 +8,7 @@ use serde::Deserialize;
 use serde_json::json;
 
 use crate::auth::middleware::{AuthUser, RequireAdmin};
-use crate::models::{CreateCommentRequest, EditCommentRequest, Role};
+use crate::models::{CommentResponse, CreateCommentRequest, EditCommentRequest, Role};
 use crate::repos::{self, RepoError};
 
 use super::AppState;
@@ -34,6 +34,18 @@ pub struct CommentPath {
 }
 
 /// `GET /api/tickets/:id/comments` — list all comments for a ticket.
+#[utoipa::path(
+    get, path = "/api/tickets/{id}/comments", tag = "Comments",
+    params(
+        ("id" = i64, Path, description = "Ticket ID"),
+        ("include_edits" = Option<bool>, Query, description = "Include edit history"),
+    ),
+    responses(
+        (status = 200, description = "List of comments", body = Vec<CommentResponse>),
+        (status = 404, description = "Ticket not found"),
+    ),
+    security(("session_cookie" = []))
+)]
 pub async fn list_comments(
     State(state): State<AppState>,
     _user: AuthUser,
@@ -62,6 +74,17 @@ pub async fn list_comments(
 }
 
 /// `POST /api/tickets/:id/comments` — create a new comment on a ticket.
+#[utoipa::path(
+    post, path = "/api/tickets/{id}/comments", tag = "Comments",
+    params(("id" = i64, Path, description = "Ticket ID")),
+    request_body = CreateCommentRequest,
+    responses(
+        (status = 201, description = "Comment created", body = CommentResponse),
+        (status = 404, description = "Ticket not found"),
+        (status = 422, description = "Validation error"),
+    ),
+    security(("session_cookie" = []))
+)]
 pub async fn create_comment(
     State(state): State<AppState>,
     user: AuthUser,
@@ -89,6 +112,20 @@ pub async fn create_comment(
 /// `PATCH /api/tickets/:id/comments/:num` — edit a comment.
 ///
 /// Only the comment author or an admin may edit.
+#[utoipa::path(
+    patch, path = "/api/tickets/{id}/comments/{num}", tag = "Comments",
+    params(
+        ("id" = i64, Path, description = "Ticket ID"),
+        ("num" = i64, Path, description = "Comment number"),
+    ),
+    request_body = EditCommentRequest,
+    responses(
+        (status = 200, description = "Comment updated", body = CommentResponse),
+        (status = 403, description = "Not the author or admin"),
+        (status = 404, description = "Comment not found"),
+    ),
+    security(("session_cookie" = []))
+)]
 pub async fn edit_comment(
     State(state): State<AppState>,
     user: AuthUser,
@@ -127,6 +164,20 @@ pub async fn edit_comment(
 /// `DELETE /api/tickets/:id/comments/:num` — delete a comment (admin only).
 ///
 /// Comment #0 (ticket description) cannot be deleted.
+#[utoipa::path(
+    delete, path = "/api/tickets/{id}/comments/{num}", tag = "Comments",
+    params(
+        ("id" = i64, Path, description = "Ticket ID"),
+        ("num" = i64, Path, description = "Comment number"),
+    ),
+    responses(
+        (status = 204, description = "Comment deleted"),
+        (status = 403, description = "Admin only"),
+        (status = 404, description = "Comment not found"),
+        (status = 422, description = "Cannot delete comment #0"),
+    ),
+    security(("session_cookie" = []))
+)]
 pub async fn delete_comment(
     State(state): State<AppState>,
     admin: RequireAdmin,

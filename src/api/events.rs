@@ -15,6 +15,11 @@ use crate::auth::middleware::AuthUser;
 /// Opens a persistent SSE connection. Authenticated via session cookie.
 /// Broadcasts all system events (ticket/comment CRUD) without server-side
 /// filtering — clients filter on their end per DD 0.4 §14.
+#[utoipa::path(
+    get, path = "/api/events", tag = "Events",
+    responses((status = 200, description = "SSE event stream", content_type = "text/event-stream")),
+    security(("session_cookie" = []))
+)]
 pub async fn event_stream(
     _user: AuthUser,
     State(state): State<AppState>,
