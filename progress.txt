@@ -160,3 +160,11 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Tests**: 10 new tests (6 event format lines, 2 email template builds, purge expired rows, delete by IDs)
 - **Issues**: Pre-existing clippy warnings unchanged; all 397 tests pass
 - **Timestamp**: 2026-03-09
+
+## Task 4.3: Notification batching (2-min delay)
+- **Fixed**: Critical bug in `process_pending` where `group_concat(payload)` used comma separator, corrupting JSON payloads containing commas when multiple events batched together
+- **Solution**: Changed to ASCII Record Separator (0x1E) via `group_concat(payload, char(30))` for both event_types and payloads columns
+- **Files**: src/email.rs
+- **Tests**: 4 new integration tests (batch grouping by user+ticket, separate tickets, send_after window respect, separate users); all 401 tests pass
+- **Issues**: Pre-existing clippy warnings and frontend test failure unchanged
+- **Timestamp**: 2026-03-09
