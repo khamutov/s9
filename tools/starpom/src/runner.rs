@@ -91,8 +91,8 @@ fn run_iteration(
         "claude",
         &[
             "--dangerously-skip-permissions",
-            "--print",
             "--chrome",
+            "--print",
             prompt,
         ],
     )
