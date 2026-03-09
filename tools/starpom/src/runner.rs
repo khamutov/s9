@@ -127,8 +127,24 @@ fn interruptible_sleep(duration_ms: u64, interrupted: &Arc<AtomicBool>) -> bool 
     false
 }
 
+/// Print a startup banner with version and config summary.
+fn print_banner(args: &Cli) {
+    let ver = env!("CARGO_PKG_VERSION");
+    let phase = match args.phase {
+        Some(p) => p.to_string(),
+        None => "all".to_string(),
+    };
+    println!("\x1b[31m★\x1b[0m  Starpom v{ver} \x1b[31m★\x1b[0m");
+    println!(
+        "   phase: {phase}  \u{00b7}  max-iterations: {}",
+        args.max_iterations
+    );
+    println!();
+}
+
 /// Main loop: pre-flight checks, iterate, summarize.
 pub fn run_loop(args: &Cli, interrupted: &Arc<AtomicBool>) -> anyhow::Result<()> {
+    print_banner(args);
     let root = repo_root()?;
     preflight(&root)?;
 
