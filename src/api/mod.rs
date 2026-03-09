@@ -1,11 +1,12 @@
 mod auth;
+mod comment;
 pub mod oidc;
 mod ticket;
 
 use std::sync::Arc;
 
 use axum::Router;
-use axum::routing::{get, post};
+use axum::routing::{delete, get, patch, post};
 use sqlx::SqlitePool;
 
 use crate::config::OidcConfig;
@@ -48,6 +49,14 @@ pub fn build_router_with_state(state: AppState) -> Router {
         .route(
             "/tickets/{id}",
             get(ticket::get_ticket).patch(ticket::update_ticket),
+        )
+        .route(
+            "/tickets/{id}/comments",
+            get(comment::list_comments).post(comment::create_comment),
+        )
+        .route(
+            "/tickets/{id}/comments/{num}",
+            patch(comment::edit_comment).delete(comment::delete_comment),
         );
 
     Router::new()
