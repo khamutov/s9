@@ -57,3 +57,13 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Tests**: 11 integration tests (CRUD, auth, status filter, duplicate name, not found, empty name validation)
 - **Issues**: None; pre-existing clippy warnings unchanged
 - **Timestamp**: 2026-03-09
+
+## Task 3.10: Attachment upload/download endpoints
+- **Implemented**: Two attachment endpoints per DD 0.4 §11 and DD 0.5:
+  - POST /api/attachments — multipart upload with MIME validation, size check, SHA-256 content-addressed storage, DB row creation
+  - GET /api/attachments/:id/:filename — streaming download with security headers (CSP sandbox, nosniff, immutable cache), inline for images, attachment for others, ?download=1 override
+- **Files**: src/api/attachment.rs (new), src/api/mod.rs, src/main.rs, Cargo.toml
+- **Infrastructure changes**: Added data_dir to AppState, storage::init_dirs on startup, axum multipart + tokio-util deps
+- **Tests**: 9 integration tests (upload success, no file 422, blocked extension 422, unauth 401, download file, image inline, force download, wrong filename 404, nonexistent 404, unauth download 401)
+- **Issues**: None; pre-existing clippy warnings and frontend test failure unchanged
+- **Timestamp**: 2026-03-09
