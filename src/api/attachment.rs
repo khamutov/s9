@@ -8,7 +8,6 @@ use axum::http::header::{
 };
 use axum::response::{IntoResponse, Response};
 use serde::Deserialize;
-use serde_json::json;
 use tokio_util::io::ReaderStream;
 
 use crate::auth::middleware::AuthUser;
@@ -17,6 +16,7 @@ use crate::repos;
 use crate::storage;
 
 use super::AppState;
+use super::error;
 
 /// Query parameters for `GET /api/attachments/:id/:filename`.
 #[derive(Debug, Deserialize)]
@@ -47,24 +47,10 @@ pub async fn upload_attachment(
     let field = match multipart.next_field().await {
         Ok(Some(f)) => f,
         Ok(None) => {
-            return (
-                StatusCode::UNPROCESSABLE_ENTITY,
-                axum::Json(json!({
-                    "error": "validation_error",
-                    "message": "No file in request."
-                })),
-            )
-                .into_response();
+            return error::validation_error_msg("No file in request.");
         }
         Err(_) => {
-            return (
-                StatusCode::BAD_REQUEST,
-                axum::Json(json!({
-                    "error": "bad_request",
-                    "message": "Invalid multipart request."
-                })),
-            )
-                .into_response();
+            return error::bad_request("Invalid multipart request.");
         }
     };
 
@@ -77,14 +63,7 @@ pub async fn upload_attachment(
     let data = match field.bytes().await {
         Ok(b) => b,
         Err(_) => {
-            return (
-                StatusCode::BAD_REQUEST,
-                axum::Json(json!({
-                    "error": "bad_request",
-                    "message": "Failed to read file data."
-                })),
-            )
-                .into_response();
+            return error::bad_request("Failed to read file data.");
         }
     };
 
@@ -100,26 +79,14 @@ pub async fn upload_attachment(
         Ok(r) => r,
         Err(storage::StorageError::TooLarge { limit, .. }) => {
             let limit_mb = limit / (1024 * 1024);
-            return (
-                StatusCode::PAYLOAD_TOO_LARGE,
-                axum::Json(json!({
-                    "error": "payload_too_large",
-                    "message": format!("File exceeds the {limit_mb} MB size limit.")
-                })),
-            )
-                .into_response();
+            return error::payload_too_large(&format!(
+                "File exceeds the {limit_mb} MB size limit."
+            ));
         }
         Err(storage::StorageError::MimeBlocked(mime)) => {
-            return (
-                StatusCode::UNPROCESSABLE_ENTITY,
-                axum::Json(json!({
-                    "error": "validation_error",
-                    "message": format!("File type not allowed: {mime}")
-                })),
-            )
-                .into_response();
+            return error::validation_error_msg(&format!("File type not allowed: {mime}"));
         }
-        Err(storage::StorageError::Io(_)) => return internal_error(),
+        Err(storage::StorageError::Io(_)) => return error::internal_error(),
     };
 
     // Insert DB row.
@@ -134,7 +101,7 @@ pub async fn upload_attachment(
     .await
     {
         Ok(r) => r,
-        Err(_) => return internal_error(),
+        Err(_) => return error::internal_error(),
     };
 
     let response = AttachmentResponse::from(&row);
@@ -167,13 +134,13 @@ pub async fn download_attachment(
     // Look up attachment row.
     let row = match repos::attachment::get_by_id(&state.pool, id).await {
         Ok(Some(r)) => r,
-        Ok(None) => return not_found(),
-        Err(_) => return internal_error(),
+        Ok(None) => return error::not_found("Attachment not found."),
+        Err(_) => return error::internal_error(),
     };
 
     // Verify filename matches original_name (prevents URL guessing).
     if row.original_name != filename {
-        return not_found();
+        return error::not_found("Attachment not found.");
     }
 
     // Open the file from content-addressed storage.
@@ -186,9 +153,9 @@ pub async fn download_attachment(
                 sha256 = %row.sha256,
                 "attachment file missing from disk"
             );
-            return not_found();
+            return error::not_found("Attachment not found.");
         }
-        Err(_) => return internal_error(),
+        Err(_) => return error::internal_error(),
     };
 
     // Determine Content-Disposition.
@@ -214,28 +181,6 @@ pub async fn download_attachment(
         .header(CACHE_CONTROL, "private, immutable, max-age=31536000")
         .body(body)
         .unwrap()
-        .into_response()
-}
-
-fn internal_error() -> Response {
-    (
-        StatusCode::INTERNAL_SERVER_ERROR,
-        axum::Json(json!({
-            "error": "internal_error",
-            "message": "An internal error occurred."
-        })),
-    )
-        .into_response()
-}
-
-fn not_found() -> Response {
-    (
-        StatusCode::NOT_FOUND,
-        axum::Json(json!({
-            "error": "not_found",
-            "message": "Attachment not found."
-        })),
-    )
         .into_response()
 }
 

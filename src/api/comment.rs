@@ -12,6 +12,7 @@ use crate::models::{CommentResponse, CreateCommentRequest, EditCommentRequest, R
 use crate::repos::{self, RepoError};
 
 use super::AppState;
+use super::error::{forbidden, internal_error, not_found, validation_error};
 
 /// Query parameters for `GET /api/tickets/:id/comments`.
 #[derive(Debug, Deserialize)]
@@ -187,14 +188,9 @@ pub async fn delete_comment(
     let _ = &admin;
 
     if path.num == 0 {
-        return (
-            StatusCode::UNPROCESSABLE_ENTITY,
-            Json(json!({
-                "error": "validation_error",
-                "message": "Cannot delete comment #0 (ticket description).",
-            })),
-        )
-            .into_response();
+        return super::error::validation_error_msg(
+            "Cannot delete comment #0 (ticket description).",
+        );
     }
 
     let comment =
@@ -208,55 +204,6 @@ pub async fn delete_comment(
         Ok(()) => StatusCode::NO_CONTENT.into_response(),
         Err(_) => internal_error(),
     }
-}
-
-// ---------------------------------------------------------------------------
-// Error responses (consistent JSON format per DD 0.4 §5.3)
-// ---------------------------------------------------------------------------
-
-fn not_found(message: &str) -> Response {
-    (
-        StatusCode::NOT_FOUND,
-        Json(json!({
-            "error": "not_found",
-            "message": message,
-        })),
-    )
-        .into_response()
-}
-
-fn forbidden(message: &str) -> Response {
-    (
-        StatusCode::FORBIDDEN,
-        Json(json!({
-            "error": "forbidden",
-            "message": message,
-        })),
-    )
-        .into_response()
-}
-
-fn validation_error(field: &str, message: &str) -> Response {
-    (
-        StatusCode::UNPROCESSABLE_ENTITY,
-        Json(json!({
-            "error": "validation_error",
-            "message": "Request validation failed.",
-            "details": { field: message },
-        })),
-    )
-        .into_response()
-}
-
-fn internal_error() -> Response {
-    (
-        StatusCode::INTERNAL_SERVER_ERROR,
-        Json(json!({
-            "error": "internal_error",
-            "message": "An internal error occurred.",
-        })),
-    )
-        .into_response()
 }
 
 #[cfg(test)]

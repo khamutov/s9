@@ -4,7 +4,6 @@ use axum::http::StatusCode;
 use axum::http::header::{COOKIE, HeaderValue, SET_COOKIE};
 use axum::response::{IntoResponse, Response};
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 use utoipa::ToSchema;
 
 use crate::api::AppState;
@@ -12,6 +11,8 @@ use crate::auth::middleware::AuthUser;
 use crate::auth::password::{dummy_verify, verify_password};
 use crate::models::Role;
 use crate::repos;
+
+use super::error;
 
 /// Max-Age for a session cookie (30 days).
 const COOKIE_MAX_AGE: i64 = 30 * 24 * 60 * 60;
@@ -58,9 +59,9 @@ pub async fn login(State(state): State<AppState>, Json(body): Json<LoginRequest>
             tokio::task::spawn_blocking(move || dummy_verify(&pw))
                 .await
                 .ok();
-            return invalid_credentials();
+            return error::unauthorized("Invalid login or password.");
         }
-        Err(_) => return internal_error(),
+        Err(_) => return error::internal_error(),
     };
 
     if user.is_active == 0 {
@@ -68,7 +69,7 @@ pub async fn login(State(state): State<AppState>, Json(body): Json<LoginRequest>
         tokio::task::spawn_blocking(move || dummy_verify(&pw))
             .await
             .ok();
-        return invalid_credentials();
+        return error::unauthorized("Invalid login or password.");
     }
 
     let hash = match &user.password_hash {
@@ -79,7 +80,7 @@ pub async fn login(State(state): State<AppState>, Json(body): Json<LoginRequest>
             tokio::task::spawn_blocking(move || dummy_verify(&pw))
                 .await
                 .ok();
-            return invalid_credentials();
+            return error::unauthorized("Invalid login or password.");
         }
     };
 
@@ -90,13 +91,13 @@ pub async fn login(State(state): State<AppState>, Json(body): Json<LoginRequest>
 
     match matched {
         Ok(true) => {}
-        Ok(false) => return invalid_credentials(),
-        Err(_) => return internal_error(),
+        Ok(false) => return error::unauthorized("Invalid login or password."),
+        Err(_) => return error::internal_error(),
     }
 
     let session = match repos::session::create(&state.pool, user.id).await {
         Ok(s) => s,
-        Err(_) => return internal_error(),
+        Err(_) => return error::internal_error(),
     };
 
     let resp = AuthResponse {
@@ -158,28 +159,6 @@ pub async fn me(user: AuthUser) -> Json<AuthResponse> {
         email: user.email,
         role: user.role,
     })
-}
-
-fn invalid_credentials() -> Response {
-    (
-        StatusCode::UNAUTHORIZED,
-        Json(json!({
-            "error": "invalid_credentials",
-            "message": "Invalid login or password."
-        })),
-    )
-        .into_response()
-}
-
-fn internal_error() -> Response {
-    (
-        StatusCode::INTERNAL_SERVER_ERROR,
-        Json(json!({
-            "error": "internal_error",
-            "message": "An internal error occurred."
-        })),
-    )
-        .into_response()
 }
 
 #[cfg(test)]
@@ -298,7 +277,7 @@ mod tests {
 
         assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
         let body = body_json(resp).await;
-        assert_eq!(body["error"], "invalid_credentials");
+        assert_eq!(body["error"], "unauthorized");
     }
 
     #[tokio::test]
@@ -319,7 +298,7 @@ mod tests {
 
         assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
         let body = body_json(resp).await;
-        assert_eq!(body["error"], "invalid_credentials");
+        assert_eq!(body["error"], "unauthorized");
     }
 
     #[tokio::test]
@@ -346,7 +325,7 @@ mod tests {
 
         assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
         let body = body_json(resp).await;
-        assert_eq!(body["error"], "invalid_credentials");
+        assert_eq!(body["error"], "unauthorized");
     }
 
     #[tokio::test]
@@ -368,7 +347,7 @@ mod tests {
 
         assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
         let body = body_json(resp).await;
-        assert_eq!(body["error"], "invalid_credentials");
+        assert_eq!(body["error"], "unauthorized");
     }
 
     // --- Logout tests ---

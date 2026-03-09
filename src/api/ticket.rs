@@ -1,20 +1,19 @@
 //! Ticket API endpoints: list/search, get, create, update.
 
-use axum::Json;
-use axum::extract::{Path, Query, State};
-use axum::http::StatusCode;
-use axum::response::{IntoResponse, Response};
-use serde::Deserialize;
-use serde_json::json;
-
 use crate::auth::middleware::AuthUser;
 use crate::models::{
     CreateTicketRequest, CursorPage, OffsetPage, SearchResult, TicketResponse, UpdateTicketRequest,
 };
 use crate::repos::{self, RepoError, cursor};
 use crate::search;
+use axum::Json;
+use axum::extract::{Path, Query, State};
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Response};
+use serde::Deserialize;
 
 use super::AppState;
+use super::error::{forbidden, internal_error, not_found, validation_error, validation_error_msg};
 
 /// Query parameters for `GET /api/tickets`.
 #[derive(Debug, Deserialize)]
@@ -360,66 +359,6 @@ async fn create_description_comment(
     .execute(&state.pool)
     .await?;
     Ok(())
-}
-
-// ---------------------------------------------------------------------------
-// Error responses (consistent JSON format per DD 0.4 §5.3)
-// ---------------------------------------------------------------------------
-
-fn not_found(message: &str) -> Response {
-    (
-        StatusCode::NOT_FOUND,
-        Json(json!({
-            "error": "not_found",
-            "message": message,
-        })),
-    )
-        .into_response()
-}
-
-fn forbidden(message: &str) -> Response {
-    (
-        StatusCode::FORBIDDEN,
-        Json(json!({
-            "error": "forbidden",
-            "message": message,
-        })),
-    )
-        .into_response()
-}
-
-fn validation_error(field: &str, message: &str) -> Response {
-    (
-        StatusCode::UNPROCESSABLE_ENTITY,
-        Json(json!({
-            "error": "validation_error",
-            "message": "Request validation failed.",
-            "details": { field: message },
-        })),
-    )
-        .into_response()
-}
-
-fn validation_error_msg(message: &str) -> Response {
-    (
-        StatusCode::UNPROCESSABLE_ENTITY,
-        Json(json!({
-            "error": "validation_error",
-            "message": message,
-        })),
-    )
-        .into_response()
-}
-
-fn internal_error() -> Response {
-    (
-        StatusCode::INTERNAL_SERVER_ERROR,
-        Json(json!({
-            "error": "internal_error",
-            "message": "An internal error occurred.",
-        })),
-    )
-        .into_response()
 }
 
 #[cfg(test)]

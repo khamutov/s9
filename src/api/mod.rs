@@ -2,6 +2,7 @@ mod attachment;
 mod auth;
 mod comment;
 mod component;
+pub mod error;
 mod events;
 mod milestone;
 pub mod oidc;

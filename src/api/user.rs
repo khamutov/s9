@@ -13,6 +13,7 @@ use crate::models::{CreateUserRequest, FullUser, Role, SetPasswordRequest, Updat
 use crate::repos::{self, RepoError};
 
 use super::AppState;
+use super::error::{conflict, forbidden, internal_error, not_found, validation_error};
 
 /// Query parameters for `GET /api/users`.
 #[derive(Debug, Deserialize)]
@@ -193,28 +194,14 @@ pub async fn set_password(
         let hash = match &target_user.password_hash {
             Some(h) => h,
             None => {
-                return (
-                    StatusCode::UNAUTHORIZED,
-                    Json(json!({
-                        "error": "unauthorized",
-                        "message": "Incorrect current password."
-                    })),
-                )
-                    .into_response();
+                return super::error::unauthorized("Incorrect current password.");
             }
         };
 
         match password::verify_password(current, hash) {
             Ok(true) => {}
             Ok(false) => {
-                return (
-                    StatusCode::UNAUTHORIZED,
-                    Json(json!({
-                        "error": "unauthorized",
-                        "message": "Incorrect current password."
-                    })),
-                )
-                    .into_response();
+                return super::error::unauthorized("Incorrect current password.");
             }
             Err(_) => return internal_error(),
         }
@@ -239,66 +226,6 @@ pub async fn set_password(
     let _ = repos::session::delete_others_for_user(&state.pool, id, &user.session_id).await;
 
     StatusCode::NO_CONTENT.into_response()
-}
-
-// ---------------------------------------------------------------------------
-// Error responses (consistent JSON format per DD 0.4 §5.3)
-// ---------------------------------------------------------------------------
-
-fn not_found(message: &str) -> Response {
-    (
-        StatusCode::NOT_FOUND,
-        Json(json!({
-            "error": "not_found",
-            "message": message,
-        })),
-    )
-        .into_response()
-}
-
-fn conflict(message: &str) -> Response {
-    (
-        StatusCode::CONFLICT,
-        Json(json!({
-            "error": "conflict",
-            "message": message,
-        })),
-    )
-        .into_response()
-}
-
-fn forbidden(message: &str) -> Response {
-    (
-        StatusCode::FORBIDDEN,
-        Json(json!({
-            "error": "forbidden",
-            "message": message,
-        })),
-    )
-        .into_response()
-}
-
-fn validation_error(field: &str, message: &str) -> Response {
-    (
-        StatusCode::UNPROCESSABLE_ENTITY,
-        Json(json!({
-            "error": "validation_error",
-            "message": "Request validation failed.",
-            "details": { field: message },
-        })),
-    )
-        .into_response()
-}
-
-fn internal_error() -> Response {
-    (
-        StatusCode::INTERNAL_SERVER_ERROR,
-        Json(json!({
-            "error": "internal_error",
-            "message": "An internal error occurred.",
-        })),
-    )
-        .into_response()
 }
 
 #[cfg(test)]

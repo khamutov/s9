@@ -1,14 +1,13 @@
 use std::ops::Deref;
 
 use axum::extract::{FromRequestParts, Request, State};
-use axum::http::StatusCode;
 use axum::http::header::COOKIE;
 use axum::http::request::Parts;
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
-use serde_json::json;
 
 use crate::api::AppState;
+use crate::api::error;
 use crate::models::Role;
 use crate::repos;
 
@@ -52,22 +51,8 @@ pub(crate) enum AuthError {
 impl IntoResponse for AuthError {
     fn into_response(self) -> Response {
         match self {
-            Self::Unauthorized => (
-                StatusCode::UNAUTHORIZED,
-                axum::Json(json!({
-                    "error": "unauthorized",
-                    "message": "Authentication required."
-                })),
-            )
-                .into_response(),
-            Self::Forbidden => (
-                StatusCode::FORBIDDEN,
-                axum::Json(json!({
-                    "error": "forbidden",
-                    "message": "Administrator access required."
-                })),
-            )
-                .into_response(),
+            Self::Unauthorized => error::unauthorized("Authentication required."),
+            Self::Forbidden => error::forbidden("Administrator access required."),
         }
     }
 }
@@ -199,7 +184,7 @@ mod tests {
     use super::*;
     use axum::body::Body;
     use axum::extract::FromRequestParts;
-    use axum::http::Request;
+    use axum::http::{Request, StatusCode};
     use chrono::{Duration, Utc};
     use sqlx::SqlitePool;
 
