@@ -78,13 +78,13 @@ Mark task <ID> complete
 
 ### Step 10: Signal Status
 
-If ALL tasks are completed, or all remaining tasks are blocked, output exactly:
+After completing a task, check if ALL tasks completed. If ALL task are complete and passing, reply with:
 
 ```
 <starpom>COMPLETE</starpom>
 ```
 
-Otherwise, stop here. The next iteration will pick up the next task.
+If there are still incomplete tasks, end your response normally (another iteration will pick up the next story).
 
 ## Rules
 
@@ -92,4 +92,3 @@ Otherwise, stop here. The next iteration will pick up the next task.
 - **Two commits per task**: one for implementation (Step 7), one for TASKS.md + progress.txt (Step 9). This enables crash recovery — if the agent dies between commits, the next iteration sees `[~]` and resumes.
 - **Never modify CLAUDE.md.**
 - **Never force-push.**
-- If stuck after 3 lint/test retries, leave the task as `[~]`, document the issue in progress.txt, and output `<starpom>COMPLETE</starpom>`.
