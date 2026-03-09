@@ -104,3 +104,14 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Tests**: 5 new integration tests (unauthenticated blocked, public allowed, admin blocked for non-admin, admin allowed for admin, extractor reuses middleware-injected user)
 - **Issues**: None; pre-existing clippy warnings unchanged
 - **Timestamp**: 2026-03-09
+
+## Task 3.14: OpenAPI spec generation
+- **Implemented**: Runtime OpenAPI spec served at `GET /api/openapi.json` (public, no auth):
+  - All 21 handler functions annotated with `#[utoipa::path]` macros
+  - Centralized `ApiDoc` struct in `api/mod.rs` with `#[derive(OpenApi)]` registering all paths, 30+ schemas, and 8 tags
+  - Session cookie security scheme defined via `Modify` pattern
+  - `ToSchema` added to `LoginRequest`, `AuthResponse`, `SearchResult`
+- **Files**: src/api/mod.rs, src/api/ticket.rs, src/api/comment.rs, src/api/component.rs, src/api/milestone.rs, src/api/attachment.rs, src/api/user.rs, src/api/auth.rs, src/api/events.rs, src/models/pagination.rs
+- **Tests**: 2 new tests (spec accessible without auth, all schemas present)
+- **Issues**: None; pre-existing clippy warnings unchanged
+- **Timestamp**: 2026-03-09
