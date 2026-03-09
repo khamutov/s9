@@ -1,5 +1,6 @@
 mod auth;
 mod comment;
+mod component;
 pub mod oidc;
 mod ticket;
 
@@ -57,6 +58,14 @@ pub fn build_router_with_state(state: AppState) -> Router {
         .route(
             "/tickets/{id}/comments/{num}",
             patch(comment::edit_comment).delete(comment::delete_comment),
+        )
+        .route(
+            "/components",
+            get(component::list_components).post(component::create_component),
+        )
+        .route(
+            "/components/{id}",
+            patch(component::update_component).delete(component::delete_component),
         );
 
     Router::new()

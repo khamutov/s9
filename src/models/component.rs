@@ -26,6 +26,8 @@ pub struct ComponentResponse {
     pub parent_id: Option<i64>,
     pub path: String,
     pub slug: Option<String>,
+    /// Resolved slug from inheritance (never null when slugs are configured).
+    pub effective_slug: Option<String>,
     pub owner: CompactUser,
     pub ticket_count: i64,
     pub created_at: DateTime<Utc>,
