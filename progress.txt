@@ -1,0 +1,14 @@
+# Starpom Progress Log
+
+Started: 2026-03-09T13:59:35.085477+00:00
+
+## Task 3.5: OIDC authentication flow
+- **Implemented**: Authorization code flow with two endpoints:
+  - GET /api/auth/oidc/authorize — generates state+nonce cookie, redirects to IdP
+  - GET /api/auth/oidc/callback — validates state, exchanges code, verifies ID token, provisions user, creates session
+- **Files**: src/api/oidc.rs (new), src/api/mod.rs, src/cli.rs, src/config.rs, src/main.rs, Cargo.toml
+- **Dependencies added**: openidconnect 4, reqwest (rustls-tls)
+- **Tests**: 9 new tests (cookie parsing, URL construction, user provisioning, 404 when disabled)
+- **Issues**: Had to work around openidconnect v4 type-state pattern for client construction; pre-existing cargo fmt issues fixed in same commit
+- **Timestamp**: 2026-03-09
+
