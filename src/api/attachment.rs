@@ -253,6 +253,7 @@ mod tests {
             oidc: None,
             slug_cache: Some(slug_cache),
             data_dir: tmp_dir.path().to_path_buf(),
+            event_bus: crate::events::EventBus::new(),
         };
 
         (state, sess.id, tmp_dir)

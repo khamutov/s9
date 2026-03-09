@@ -229,7 +229,13 @@ mod tests {
     async fn login_success() {
         let pool = test_pool().await;
         create_user(&pool, "alice", Some("correct_password")).await;
-        let app = build_router(pool, None, None, std::path::PathBuf::from("/tmp/test"));
+        let app = build_router(
+            pool,
+            None,
+            None,
+            std::path::PathBuf::from("/tmp/test"),
+            crate::events::EventBus::new(),
+        );
 
         let resp = app
             .oneshot(login_request("alice", "correct_password"))
@@ -257,7 +263,13 @@ mod tests {
     async fn login_wrong_password() {
         let pool = test_pool().await;
         create_user(&pool, "bob", Some("correct_password")).await;
-        let app = build_router(pool, None, None, std::path::PathBuf::from("/tmp/test"));
+        let app = build_router(
+            pool,
+            None,
+            None,
+            std::path::PathBuf::from("/tmp/test"),
+            crate::events::EventBus::new(),
+        );
 
         let resp = app
             .oneshot(login_request("bob", "wrong_password"))
@@ -272,7 +284,13 @@ mod tests {
     #[tokio::test]
     async fn login_unknown_user() {
         let pool = test_pool().await;
-        let app = build_router(pool, None, None, std::path::PathBuf::from("/tmp/test"));
+        let app = build_router(
+            pool,
+            None,
+            None,
+            std::path::PathBuf::from("/tmp/test"),
+            crate::events::EventBus::new(),
+        );
 
         let resp = app
             .oneshot(login_request("nonexistent", "password123"))
@@ -293,7 +311,13 @@ mod tests {
             .execute(&pool)
             .await
             .unwrap();
-        let app = build_router(pool, None, None, std::path::PathBuf::from("/tmp/test"));
+        let app = build_router(
+            pool,
+            None,
+            None,
+            std::path::PathBuf::from("/tmp/test"),
+            crate::events::EventBus::new(),
+        );
 
         let resp = app
             .oneshot(login_request("inactive", "password123"))
@@ -309,7 +333,13 @@ mod tests {
     async fn login_no_password_hash() {
         let pool = test_pool().await;
         create_user(&pool, "oidcuser", None).await;
-        let app = build_router(pool, None, None, std::path::PathBuf::from("/tmp/test"));
+        let app = build_router(
+            pool,
+            None,
+            None,
+            std::path::PathBuf::from("/tmp/test"),
+            crate::events::EventBus::new(),
+        );
 
         let resp = app
             .oneshot(login_request("oidcuser", "password123"))
@@ -328,7 +358,13 @@ mod tests {
         let pool = test_pool().await;
         let uid = create_user(&pool, "charlie", Some("password123")).await;
         let sess = session::create(&pool, uid).await.unwrap();
-        let app = build_router(pool.clone(), None, None, std::path::PathBuf::from("/tmp/test"));
+        let app = build_router(
+            pool.clone(),
+            None,
+            None,
+            std::path::PathBuf::from("/tmp/test"),
+            crate::events::EventBus::new(),
+        );
 
         let resp = app
             .oneshot(
@@ -355,7 +391,13 @@ mod tests {
     #[tokio::test]
     async fn logout_no_cookie() {
         let pool = test_pool().await;
-        let app = build_router(pool, None, None, std::path::PathBuf::from("/tmp/test"));
+        let app = build_router(
+            pool,
+            None,
+            None,
+            std::path::PathBuf::from("/tmp/test"),
+            crate::events::EventBus::new(),
+        );
 
         let resp = app
             .oneshot(
@@ -378,7 +420,13 @@ mod tests {
         let pool = test_pool().await;
         let uid = create_user(&pool, "diana", Some("password123")).await;
         let sess = session::create(&pool, uid).await.unwrap();
-        let app = build_router(pool, None, None, std::path::PathBuf::from("/tmp/test"));
+        let app = build_router(
+            pool,
+            None,
+            None,
+            std::path::PathBuf::from("/tmp/test"),
+            crate::events::EventBus::new(),
+        );
 
         let resp = app
             .oneshot(
@@ -402,7 +450,13 @@ mod tests {
     #[tokio::test]
     async fn me_unauthenticated() {
         let pool = test_pool().await;
-        let app = build_router(pool, None, None, std::path::PathBuf::from("/tmp/test"));
+        let app = build_router(
+            pool,
+            None,
+            None,
+            std::path::PathBuf::from("/tmp/test"),
+            crate::events::EventBus::new(),
+        );
 
         let resp = app
             .oneshot(

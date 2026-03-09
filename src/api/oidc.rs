@@ -440,7 +440,13 @@ mod tests {
         let pool = crate::db::init_memory_pool().await.unwrap();
         crate::db::run_migrations(&pool).await.unwrap();
 
-        let app = crate::api::build_router(pool, None, None, std::path::PathBuf::from("/tmp/test"));
+        let app = crate::api::build_router(
+            pool,
+            None,
+            None,
+            std::path::PathBuf::from("/tmp/test"),
+            crate::events::EventBus::new(),
+        );
 
         let resp = app
             .oneshot(
@@ -461,7 +467,13 @@ mod tests {
         let pool = crate::db::init_memory_pool().await.unwrap();
         crate::db::run_migrations(&pool).await.unwrap();
 
-        let app = crate::api::build_router(pool, None, None, std::path::PathBuf::from("/tmp/test"));
+        let app = crate::api::build_router(
+            pool,
+            None,
+            None,
+            std::path::PathBuf::from("/tmp/test"),
+            crate::events::EventBus::new(),
+        );
 
         let resp = app
             .oneshot(

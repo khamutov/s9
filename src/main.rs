@@ -4,6 +4,7 @@ mod cli;
 mod config;
 mod db;
 mod embed;
+pub(crate) mod events;
 mod models;
 mod repos;
 mod search;
@@ -65,7 +66,8 @@ async fn serve(config: Config) -> anyhow::Result<()> {
 
     storage::init_dirs(&config.data_dir).await?;
 
-    let app = api::build_router(pool, oidc, slug_cache, config.data_dir.clone());
+    let event_bus = events::EventBus::new();
+    let app = api::build_router(pool, oidc, slug_cache, config.data_dir.clone(), event_bus);
 
     let listener = tokio::net::TcpListener::bind(config.listen).await?;
     tracing::info!("listening on {}", config.listen);

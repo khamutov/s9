@@ -2,6 +2,7 @@ mod attachment;
 mod auth;
 mod comment;
 mod component;
+mod events;
 mod milestone;
 pub mod oidc;
 mod ticket;
@@ -15,6 +16,7 @@ use axum::routing::{delete, get, patch, post};
 use sqlx::SqlitePool;
 
 use crate::config::OidcConfig;
+use crate::events::EventBus;
 use crate::slug::SlugCache;
 
 /// Shared application state threaded into all handlers via Axum's state system.
@@ -24,6 +26,7 @@ pub struct AppState {
     pub oidc: Option<Arc<oidc::OidcProvider>>,
     pub slug_cache: Option<SlugCache>,
     pub data_dir: PathBuf,
+    pub event_bus: EventBus,
 }
 
 /// Build the application router with all API routes and static file fallback.
@@ -32,12 +35,14 @@ pub fn build_router(
     oidc: Option<Arc<oidc::OidcProvider>>,
     slug_cache: Option<SlugCache>,
     data_dir: PathBuf,
+    event_bus: EventBus,
 ) -> Router {
     let state = AppState {
         pool,
         oidc,
         slug_cache,
         data_dir,
+        event_bus,
     };
     build_router_with_state(state)
 }
@@ -89,7 +94,8 @@ pub fn build_router_with_state(state: AppState) -> Router {
         )
         .route("/users", get(user::list_users).post(user::create_user))
         .route("/users/{id}", patch(user::update_user))
-        .route("/users/{id}/password", post(user::set_password));
+        .route("/users/{id}/password", post(user::set_password))
+        .route("/events", get(events::event_stream));
 
     Router::new()
         .nest("/api", api)

@@ -304,6 +304,7 @@ mod tests {
             oidc: None,
             slug_cache: Some(slug_cache),
             data_dir: std::path::PathBuf::from("/tmp/test"),
+            event_bus: crate::events::EventBus::new(),
         };
 
         (state, admin_sess.id, regular_sess.id)
