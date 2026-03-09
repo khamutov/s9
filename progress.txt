@@ -215,6 +215,8 @@ Started: 2026-03-09T13:59:35.085477+00:00
   - `Lazy` wrapper component extracted to `components/Lazy.tsx` for react-refresh compatibility
 - **Files created**: 12 files (11 page stubs + Lazy.tsx)
 - **Files modified**: frontend/src/router.tsx
+- **Browser verified**: All routes render correctly — tickets, ticket detail (breadcrumb + param), admin/users, components, milestones
+- **Bug fix**: Page stubs initially missing required `breadcrumb` field in usePageHeader calls, causing runtime TypeError. Fixed by adding breadcrumb arrays with parent context.
 - **Issues**: Pre-existing prettier warnings on 5 files, pre-existing backend clippy and frontend test failures unchanged
 - **Timestamp**: 2026-03-09
 
@@ -228,6 +230,7 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - Pre-existing failures: backend clippy warns on dead_code in references.rs; frontend has no test files yet (vitest exits 1); prettier warns on 5 pre-existing files
 - Page components go in `features/<domain>/` with `*Page.tsx` naming; lazy-loaded via React.lazy() in router.tsx
 - Helper components used in router.tsx must be in separate files (react-refresh rule: files exporting non-components can't contain component definitions)
+- usePageHeader requires `breadcrumb: string[]` — use `[]` for top-level pages, `['Parent']` for sub-pages
 
 ## Task 4.6: Micro-syntax reference parsing (#ID, #PREFIX-ID, comment#N)
 - **Implemented**: Reference parser module per PRD §4.1 and DD 0.17 §7.5:
