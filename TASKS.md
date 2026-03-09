@@ -67,7 +67,7 @@ Status legend: `[ ]` pending | `[~]` in progress | `[x]` completed
 - [x] **3.10** Attachment upload/download endpoints [blocked by: 0.4, 2.12, 3.3]
 - [x] **3.11** User management endpoints (admin) [blocked by: 0.4, 2.5, 3.3]
 - [x] **3.12** SSE event stream [blocked by: 0.4, 3.3]
-- [ ] **3.13** Role-based authorization middleware [blocked by: 3.3]
+- [x] **3.13** Role-based authorization middleware [blocked by: 3.3]
 - [ ] **3.14** OpenAPI spec generation [blocked by: 3.6, 3.7, 3.8, 3.9, 3.10, 3.11]
 - [ ] **3.15** Unified error handling [blocked by: 1.1]
 

@@ -92,3 +92,15 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Tests**: 7 unit tests (event types, bus send/receive, multiple receivers) + 2 integration tests (auth required, SSE stream response)
 - **Issues**: None; pre-existing clippy warnings unchanged
 - **Timestamp**: 2026-03-09
+
+## Task 3.13: Role-based authorization middleware
+- **Implemented**: Route-level middleware layers for defense-in-depth authorization:
+  - `require_auth` middleware: validates session cookie and injects `AuthUser` into request extensions, applied as `route_layer` to all protected API routes
+  - `require_admin` middleware: checks admin role from extensions, applied to admin-only route groups (component mutations, milestone mutations, user management)
+  - `AuthUser` extractor now checks request extensions first, avoiding double DB lookup when middleware has already validated the session
+  - `validate_session` helper extracted to share logic between middleware and extractor
+  - Router reorganized into three groups: public (login/logout/OIDC), admin-only, authenticated (merges admin_only + applies require_auth)
+- **Files**: src/auth/middleware.rs, src/api/mod.rs
+- **Tests**: 5 new integration tests (unauthenticated blocked, public allowed, admin blocked for non-admin, admin allowed for admin, extractor reuses middleware-injected user)
+- **Issues**: None; pre-existing clippy warnings unchanged
+- **Timestamp**: 2026-03-09
