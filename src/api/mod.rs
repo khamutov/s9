@@ -5,6 +5,7 @@ mod component;
 pub mod error;
 mod events;
 mod milestone;
+mod mute;
 pub mod oidc;
 mod ticket;
 mod user;
@@ -78,6 +79,10 @@ pub struct AppState {
         user::create_user,
         user::update_user,
         user::set_password,
+        // Mute
+        mute::mute_ticket,
+        mute::unmute_ticket,
+        mute::get_mute_status,
         // Events
         events::event_stream,
     ),
@@ -121,6 +126,8 @@ pub struct AppState {
         crate::models::UpdateMilestoneRequest,
         // Attachments
         crate::models::AttachmentResponse,
+        // Mute
+        mute::MuteStatusResponse,
     )),
     tags(
         (name = "Auth", description = "Authentication and session management"),
@@ -226,6 +233,12 @@ pub fn build_router_with_state(state: AppState) -> Router {
         )
         .route("/users/{id}", patch(user::update_user))
         .route("/users/{id}/password", post(user::set_password))
+        .route(
+            "/tickets/{id}/mute",
+            post(mute::mute_ticket)
+                .delete(mute::unmute_ticket)
+                .get(mute::get_mute_status),
+        )
         .route("/events", get(events::event_stream))
         .merge(admin_only)
         .route_layer(middleware::from_fn_with_state(state.clone(), require_auth));
