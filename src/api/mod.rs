@@ -1,6 +1,7 @@
 mod auth;
 mod comment;
 mod component;
+mod milestone;
 pub mod oidc;
 mod ticket;
 
@@ -66,6 +67,14 @@ pub fn build_router_with_state(state: AppState) -> Router {
         .route(
             "/components/{id}",
             patch(component::update_component).delete(component::delete_component),
+        )
+        .route(
+            "/milestones",
+            get(milestone::list_milestones).post(milestone::create_milestone),
+        )
+        .route(
+            "/milestones/{id}",
+            patch(milestone::update_milestone).delete(milestone::delete_milestone),
         );
 
     Router::new()
