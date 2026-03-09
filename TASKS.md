@@ -61,7 +61,7 @@ Status legend: `[ ]` pending | `[~]` in progress | `[x]` completed
 - [x] **3.4** Login/logout endpoints [blocked by: 0.4, 3.1, 3.2]
 - [x] **3.5** OIDC authentication flow [blocked by: 0.3, 3.2]
 - [x] **3.6** Ticket API endpoints + OpenAPI [blocked by: 0.4, 0.17, 2.7, 2.14, 3.3]
-- [ ] **3.7** Comment API endpoints [blocked by: 0.4, 2.8, 3.3]
+- [x] **3.7** Comment API endpoints [blocked by: 0.4, 2.8, 3.3]
 - [ ] **3.8** Component API endpoints [blocked by: 0.4, 0.17, 2.6, 2.13, 3.3]
 - [ ] **3.9** Milestone API endpoints [blocked by: 0.4, 2.9, 3.3]
 - [ ] **3.10** Attachment upload/download endpoints [blocked by: 0.4, 2.12, 3.3]

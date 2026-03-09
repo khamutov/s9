@@ -23,3 +23,14 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Tests**: 8 integration tests (CRUD, auth, pagination, authorization)
 - **Issues**: Cursor timestamp precision mismatch between search builder (text binds) and sqlx (microsecond precision) — fixed by using Micros precision in cursor re-encoding
 - **Timestamp**: 2026-03-09
+
+## Task 3.7: Comment API endpoints
+- **Implemented**: Four comment endpoints per DD 0.4 §8:
+  - GET /api/tickets/:id/comments — list all comments with optional edit history via `include_edits` query param
+  - POST /api/tickets/:id/comments — create comment with body validation and auto-assigned number
+  - PATCH /api/tickets/:id/comments/:num — edit comment (author or admin only), saves edit history
+  - DELETE /api/tickets/:id/comments/:num — delete comment (admin only), comment #0 protected
+- **Files**: src/api/comment.rs (new), src/api/mod.rs
+- **Tests**: 9 integration tests (CRUD, auth, edit history, forbidden/admin checks, validation)
+- **Issues**: None
+- **Timestamp**: 2026-03-09
