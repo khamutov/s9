@@ -168,3 +168,14 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Tests**: 4 new integration tests (batch grouping by user+ticket, separate tickets, send_after window respect, separate users); all 401 tests pass
 - **Issues**: Pre-existing clippy warnings and frontend test failure unchanged
 - **Timestamp**: 2026-03-09
+
+## Task 4.4: Per-ticket mute preferences
+- **Implemented**: Mute/unmute endpoints per DD 0.4 §13:
+  - POST /api/tickets/:id/mute — idempotent mute via INSERT OR IGNORE on notification_mutes table
+  - DELETE /api/tickets/:id/mute — idempotent unmute
+  - GET /api/tickets/:id/mute — returns {muted: bool} status check
+- **All endpoints**: ticket existence check (404), auth required (401), OpenAPI annotated
+- **Files**: src/api/mute.rs (new), src/api/mod.rs (routes + OpenAPI registration)
+- **Tests**: 8 integration tests (mute 204, idempotent mute, unmute 204, idempotent unmute, not found, auth required, status false, status true after mute)
+- **Issues**: Pre-existing clippy warnings unchanged; all 409 tests pass
+- **Timestamp**: 2026-03-09
