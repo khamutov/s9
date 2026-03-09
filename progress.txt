@@ -12,3 +12,14 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Issues**: Had to work around openidconnect v4 type-state pattern for client construction; pre-existing cargo fmt issues fixed in same commit
 - **Timestamp**: 2026-03-09
 
+## Task 3.6: Ticket API endpoints + OpenAPI
+- **Implemented**: Four ticket CRUD endpoints per DD 0.4 §7:
+  - GET /api/tickets — list/search with dual-mode pagination (cursor for structured queries, offset for FTS)
+  - GET /api/tickets/:id — get single ticket by ID
+  - POST /api/tickets — create ticket with optional description as comment #0
+  - PATCH /api/tickets/:id — update ticket (title restricted to creator/admin per DD)
+- **Slug support**: Added `slug` field to TicketResponse and `effective_slug` to CompactComponent. SlugCache wired into AppState for computed ticket slugs (e.g. "PLAT-42").
+- **Files**: src/api/ticket.rs (new), src/api/mod.rs, src/main.rs, src/models/ticket.rs, src/models/component.rs, src/repos/ticket.rs, src/auth/middleware.rs, src/api/auth.rs, src/api/oidc.rs
+- **Tests**: 8 integration tests (CRUD, auth, pagination, authorization)
+- **Issues**: Cursor timestamp precision mismatch between search builder (text binds) and sqlx (microsecond precision) — fixed by using Micros precision in cursor re-encoding
+- **Timestamp**: 2026-03-09
