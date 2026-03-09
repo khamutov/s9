@@ -86,9 +86,60 @@ After completing a task, check if ALL tasks completed. If ALL task are complete 
 
 If there are still incomplete tasks, end your response normally (another iteration will pick up the next story).
 
+## Consolidate Patterns
+
+If you discover a **reusable pattern** that future iterations should know, add it to the `## Codebase Patterns` section at the TOP of progress.txt (create it if it doesn't exist). This section should consolidate the most important learnings:
+
+```
+## Codebase Patterns
+- Example: Use `sql<number>` template for aggregations
+- Example: Always use `IF NOT EXISTS` for migrations
+- Example: Export types from actions.ts for UI components
+```
+
+Only add patterns that are **general and reusable**, not story-specific details.
+
+## Update CLAUDE.md Files
+
+Before committing, check if any edited files have learnings worth preserving in nearby AGENTS.md files:
+
+1. **Identify directories with edited files** - Look at which directories you modified
+2. **Check for existing CLAUDE.md** - Look for CLAUDE.md in those directories or parent directories
+3. **Add valuable learnings** - If you discovered something future developers/agents should know:
+   - API patterns or conventions specific to that module
+   - Gotchas or non-obvious requirements
+   - Dependencies between files
+   - Testing approaches for that area
+   - Configuration or environment requirements
+
+**Examples of good CLAUDE.md additions:**
+- "When modifying X, also update Y to keep them in sync"
+- "This module uses pattern Z for all API calls"
+- "Tests require the dev server running on PORT 3000"
+- "Field names must match the template exactly"
+
+**Do NOT add:**
+- Story-specific implementation details
+- Temporary debugging notes
+- Information already in progress.txt
+
+Only update CLAUDE.md if you have **genuinely reusable knowledge** that would help future work in that directory.
+
+## Browser Testing (Required for Frontend tasks)
+
+For any story that changes UI, you MUST verify it works in the browser:
+
+1. Load the `chrome` skill
+2. Navigate to the relevant page
+3. Verify the UI changes work as expected
+4. Take a screenshot if helpful for the progress log
+
+A frontend story is NOT complete until browser verification passes.
+
 ## Rules
 
 - **One task per iteration.** Do not attempt multiple tasks.
 - **Two commits per task**: one for implementation (Step 7), one for TASKS.md + progress.txt (Step 9). This enables crash recovery — if the agent dies between commits, the next iteration sees `[~]` and resumes.
-- **Never modify CLAUDE.md.**
 - **Never force-push.**
+- Read the Codebase Patterns section in progress.txt before starting
+
