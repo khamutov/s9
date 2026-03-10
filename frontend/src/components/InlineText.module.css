@@ -1,0 +1,38 @@
+/* Inline-editable text field */
+.wrapper {
+  position: relative;
+}
+
+.display {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  min-height: 24px;
+}
+
+.display:hover {
+  background: var(--bg-raised);
+}
+
+.placeholder {
+  color: var(--text-tertiary);
+  font-style: italic;
+  font-size: var(--text-xs);
+}
+
+.input {
+  width: 100%;
+  padding: 2px 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--bg-raised);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(232, 180, 58, 0.15);
+}

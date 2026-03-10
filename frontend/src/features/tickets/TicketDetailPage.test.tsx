@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { vi } from 'vitest';
@@ -7,13 +7,14 @@ import { PageHeaderContext } from '../../components/layout/pageHeaderState';
 
 vi.mock('../../api/tickets', () => ({
   getTicket: vi.fn(),
+  updateTicket: vi.fn(),
 }));
 
 vi.mock('../../api/comments', () => ({
   listComments: vi.fn(),
 }));
 
-import { getTicket } from '../../api/tickets';
+import { getTicket, updateTicket } from '../../api/tickets';
 import { listComments } from '../../api/comments';
 import TicketDetailPage from './TicketDetailPage';
 
@@ -87,9 +88,7 @@ describe('TicketDetailPage', () => {
     vi.mocked(getTicket).mockRejectedValue(new Error('Not found'));
     vi.mocked(listComments).mockRejectedValue(new Error('Not found'));
     renderPage();
-    expect(
-      await screen.findByText('Failed to load ticket. Please try again.'),
-    ).toBeInTheDocument();
+    expect(await screen.findByText('Failed to load ticket. Please try again.')).toBeInTheDocument();
   });
 
   it('renders ticket title and slug', async () => {
@@ -97,9 +96,9 @@ describe('TicketDetailPage', () => {
     vi.mocked(listComments).mockResolvedValue({ items: [] });
     renderPage();
 
-    expect(
-      await screen.findByRole('heading', { level: 1 }),
-    ).toHaveTextContent('Crash on startup when config is missing');
+    expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent(
+      'Crash on startup when config is missing',
+    );
     expect(screen.getAllByText('S9-42').length).toBeGreaterThanOrEqual(1);
   });
 
@@ -109,7 +108,7 @@ describe('TicketDetailPage', () => {
     renderPage();
 
     await screen.findByText('Crash on startup when config is missing');
-    // Status badge + metadata panel
+    // Status badge + metadata panel (inline select display)
     expect(screen.getAllByText('In Progress').length).toBeGreaterThanOrEqual(1);
     // Priority badge + metadata panel
     expect(screen.getAllByText('P1').length).toBeGreaterThanOrEqual(1);
@@ -158,16 +157,12 @@ describe('TicketDetailPage', () => {
   it('renders description from comment #0', async () => {
     vi.mocked(getTicket).mockResolvedValue(mockTicket());
     const comments: ListResponse<Comment> = {
-      items: [
-        mockComment({ number: 0, body: 'This is the ticket description.' }),
-      ],
+      items: [mockComment({ number: 0, body: 'This is the ticket description.' })],
     };
     vi.mocked(listComments).mockResolvedValue(comments);
     renderPage();
 
-    expect(
-      await screen.findByText('This is the ticket description.'),
-    ).toBeInTheDocument();
+    expect(await screen.findByText('This is the ticket description.')).toBeInTheDocument();
   });
 
   it('renders activity comments (excluding #0)', async () => {
@@ -192,9 +187,7 @@ describe('TicketDetailPage', () => {
     vi.mocked(listComments).mockResolvedValue(comments);
     renderPage();
 
-    expect(
-      await screen.findByText('I can reproduce this consistently.'),
-    ).toBeInTheDocument();
+    expect(await screen.findByText('I can reproduce this consistently.')).toBeInTheDocument();
     expect(screen.getByText('That approach looks good.')).toBeInTheDocument();
     // Activity count shows 2 (excluding description)
     expect(screen.getByText('2')).toBeInTheDocument();
@@ -226,5 +219,84 @@ describe('TicketDetailPage', () => {
     await screen.findByText('Crash on startup when config is missing');
     expect(screen.getByText('Mar 4, 2026')).toBeInTheDocument();
     expect(screen.getByText('Mar 6, 2026')).toBeInTheDocument();
+  });
+
+  // --- Inline editing tests ---
+
+  it('opens status dropdown and changes status', async () => {
+    const ticket = mockTicket();
+    vi.mocked(getTicket).mockResolvedValue(ticket);
+    vi.mocked(listComments).mockResolvedValue({ items: [] });
+    vi.mocked(updateTicket).mockResolvedValue({
+      ...ticket,
+      status: 'done',
+    });
+    renderPage();
+
+    await screen.findByText('Crash on startup when config is missing');
+
+    // Click the status InlineSelect trigger in the metadata panel
+    const statusBtn = screen.getByRole('button', { name: 'Status' });
+    fireEvent.click(statusBtn);
+
+    // Dropdown should appear with all status options
+    expect(screen.getByRole('listbox')).toBeInTheDocument();
+
+    // Select 'Done'
+    fireEvent.click(screen.getByRole('option', { name: 'Done' }));
+
+    await waitFor(() => {
+      expect(updateTicket).toHaveBeenCalledWith(42, { status: 'done' });
+    });
+  });
+
+  it('opens priority dropdown and changes priority', async () => {
+    const ticket = mockTicket();
+    vi.mocked(getTicket).mockResolvedValue(ticket);
+    vi.mocked(listComments).mockResolvedValue({ items: [] });
+    vi.mocked(updateTicket).mockResolvedValue({
+      ...ticket,
+      priority: 'P0',
+    });
+    renderPage();
+
+    await screen.findByText('Crash on startup when config is missing');
+
+    const priorityBtn = screen.getByRole('button', { name: 'Priority' });
+    fireEvent.click(priorityBtn);
+    // Pick P0 from dropdown — there are multiple P0 elements (option + display of other options)
+    const p0Option = screen
+      .getAllByRole('option')
+      .find((el) => el.getAttribute('aria-selected') === 'false' && el.textContent?.includes('P0'));
+    fireEvent.click(p0Option!);
+
+    await waitFor(() => {
+      expect(updateTicket).toHaveBeenCalledWith(42, { priority: 'P0' });
+    });
+  });
+
+  it('edits estimation via inline text input', async () => {
+    const ticket = mockTicket();
+    vi.mocked(getTicket).mockResolvedValue(ticket);
+    vi.mocked(listComments).mockResolvedValue({ items: [] });
+    vi.mocked(updateTicket).mockResolvedValue({
+      ...ticket,
+      estimation_display: '4d',
+    });
+    renderPage();
+
+    await screen.findByText('Crash on startup when config is missing');
+
+    // Click the estimation display to enter edit mode
+    const estimateBtn = screen.getByRole('button', { name: 'Edit Estimate' });
+    fireEvent.click(estimateBtn);
+
+    const input = screen.getByRole('textbox');
+    fireEvent.change(input, { target: { value: '4d' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    await waitFor(() => {
+      expect(updateTicket).toHaveBeenCalledWith(42, { estimation: '4d' });
+    });
   });
 });

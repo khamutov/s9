@@ -8,6 +8,8 @@ interface MockApi {
   get(path: string, body: unknown, status?: number): Promise<void>;
   /** Mock a POST endpoint. */
   post(path: string, body: unknown, status?: number): Promise<void>;
+  /** Mock a PATCH endpoint. */
+  patch(path: string, body: unknown, status?: number): Promise<void>;
   /** Mock an endpoint for a specific HTTP method. */
   route(method: string, path: string, body: unknown, status?: number): Promise<void>;
   /** Shortcut: mock GET /api/auth/me to return the given user. */
@@ -22,6 +24,10 @@ function createMockApi(page: Page): MockApi {
 
     async post(path, body, status = 200) {
       await api.route('POST', path, body, status);
+    },
+
+    async patch(path, body, status = 200) {
+      await api.route('PATCH', path, body, status);
     },
 
     async route(method, path, body, status = 200) {

@@ -4,10 +4,36 @@ import StatusBadge from '../../components/StatusBadge';
 import PriorityBadge from '../../components/PriorityBadge';
 import TypeBadge from '../../components/TypeBadge';
 import UserPill from '../../components/UserPill';
+import InlineSelect, { type SelectOption } from '../../components/InlineSelect';
+import InlineText from '../../components/InlineText';
 import { useTicket } from './useTicket';
 import { useComments } from './useComments';
-import type { Comment, Ticket } from '../../api/types';
+import { useUpdateTicket } from './useUpdateTicket';
+import type { Comment, Ticket, TicketStatus, Priority, TicketType } from '../../api/types';
 import styles from './TicketDetailPage.module.css';
+
+const STATUS_OPTIONS: SelectOption<TicketStatus>[] = [
+  { value: 'new', label: 'New' },
+  { value: 'in_progress', label: 'In Progress' },
+  { value: 'verify', label: 'Verify' },
+  { value: 'done', label: 'Done' },
+];
+
+const PRIORITY_OPTIONS: SelectOption<Priority>[] = [
+  { value: 'P0', label: 'P0' },
+  { value: 'P1', label: 'P1' },
+  { value: 'P2', label: 'P2' },
+  { value: 'P3', label: 'P3' },
+  { value: 'P4', label: 'P4' },
+  { value: 'P5', label: 'P5' },
+];
+
+const TYPE_OPTIONS: SelectOption<TicketType>[] = [
+  { value: 'bug', label: 'Bug' },
+  { value: 'feature', label: 'Feature' },
+  { value: 'task', label: 'Task' },
+  { value: 'improvement', label: 'Improvement' },
+];
 
 /** Formats a UTC ISO date string as a human-readable relative time. */
 function formatRelativeTime(iso: string): string {
@@ -32,8 +58,14 @@ function formatDate(iso: string): string {
   });
 }
 
-/** Metadata sidebar panel displaying ticket details. */
-function MetadataPanel({ ticket }: { ticket: Ticket }) {
+/** Metadata sidebar panel with inline-editable fields. */
+function MetadataPanel({
+  ticket,
+  onUpdate,
+}: {
+  ticket: Ticket;
+  onUpdate: (field: string, value: unknown) => void;
+}) {
   return (
     <div className={styles.metaPanel}>
       <div className={styles.metaPanelHeader}>Details</div>
@@ -41,21 +73,42 @@ function MetadataPanel({ ticket }: { ticket: Ticket }) {
       <div className={styles.metaField}>
         <span className={styles.metaFieldLabel}>Status</span>
         <span className={styles.metaFieldValue}>
-          <StatusBadge status={ticket.status} />
+          <InlineSelect
+            value={ticket.status}
+            options={STATUS_OPTIONS}
+            onChange={(v) => onUpdate('status', v)}
+            renderValue={(v) => <StatusBadge status={v} />}
+            renderOption={(v) => <StatusBadge status={v} />}
+            aria-label="Status"
+          />
         </span>
       </div>
 
       <div className={styles.metaField}>
         <span className={styles.metaFieldLabel}>Priority</span>
         <span className={styles.metaFieldValue}>
-          <PriorityBadge priority={ticket.priority} />
+          <InlineSelect
+            value={ticket.priority}
+            options={PRIORITY_OPTIONS}
+            onChange={(v) => onUpdate('priority', v)}
+            renderValue={(v) => <PriorityBadge priority={v} />}
+            renderOption={(v) => <PriorityBadge priority={v} />}
+            aria-label="Priority"
+          />
         </span>
       </div>
 
       <div className={styles.metaField}>
         <span className={styles.metaFieldLabel}>Type</span>
         <span className={styles.metaFieldValue}>
-          <TypeBadge type={ticket.type} />
+          <InlineSelect
+            value={ticket.type}
+            options={TYPE_OPTIONS}
+            onChange={(v) => onUpdate('type', v)}
+            renderValue={(v) => <TypeBadge type={v} />}
+            renderOption={(v) => <TypeBadge type={v} />}
+            aria-label="Type"
+          />
         </span>
       </div>
 
@@ -106,29 +159,30 @@ function MetadataPanel({ ticket }: { ticket: Ticket }) {
         </div>
       )}
 
-      {ticket.estimation_display && (
-        <div className={styles.metaField}>
-          <span className={styles.metaFieldLabel}>Estimate</span>
-          <span className={styles.metaFieldValue}>
-            <span className={styles.estimateValue}>
-              {ticket.estimation_display}
-            </span>
-          </span>
-        </div>
-      )}
+      <div className={styles.metaField}>
+        <span className={styles.metaFieldLabel}>Estimate</span>
+        <span className={styles.metaFieldValue}>
+          <InlineText
+            value={ticket.estimation_display ?? ''}
+            onSave={(v) => onUpdate('estimation', v || null)}
+            aria-label="Estimate"
+            placeholder="None"
+          >
+            {ticket.estimation_display ? (
+              <span className={styles.estimateValue}>{ticket.estimation_display}</span>
+            ) : undefined}
+          </InlineText>
+        </span>
+      </div>
 
       <div className={styles.metaDates}>
         <div className={styles.metaDate}>
           <span>Created</span>
-          <span className={styles.metaDateValue}>
-            {formatDate(ticket.created_at)}
-          </span>
+          <span className={styles.metaDateValue}>{formatDate(ticket.created_at)}</span>
         </div>
         <div className={styles.metaDate}>
           <span>Updated</span>
-          <span className={styles.metaDateValue}>
-            {formatDate(ticket.updated_at)}
-          </span>
+          <span className={styles.metaDateValue}>{formatDate(ticket.updated_at)}</span>
         </div>
       </div>
     </div>
@@ -145,9 +199,7 @@ function CommentCard({ comment }: { comment: Comment }) {
           <a className={styles.commentAnchor} href={`#comment-${comment.number}`}>
             #{comment.number}
           </a>
-          <span className={styles.commentTime}>
-            {formatRelativeTime(comment.created_at)}
-          </span>
+          <span className={styles.commentTime}>{formatRelativeTime(comment.created_at)}</span>
         </div>
         <div className={styles.prose}>
           {comment.body.split('\n').map((line, i) => (
@@ -164,10 +216,8 @@ export default function TicketDetailPage() {
   const { id } = useParams<{ id: string }>();
   const ticketId = Number(id);
   const { data: ticket, isLoading, error } = useTicket(ticketId);
-  const {
-    data: commentsData,
-    isLoading: commentsLoading,
-  } = useComments(ticketId);
+  const { data: commentsData, isLoading: commentsLoading } = useComments(ticketId);
+  const mutation = useUpdateTicket(ticketId);
 
   const displaySlug = ticket?.slug ?? `#${id}`;
   usePageHeader({
@@ -180,17 +230,17 @@ export default function TicketDetailPage() {
   }
 
   if (error || !ticket) {
-    return (
-      <div className={styles.error}>
-        Failed to load ticket. Please try again.
-      </div>
-    );
+    return <div className={styles.error}>Failed to load ticket. Please try again.</div>;
   }
 
   const comments = commentsData?.items ?? [];
   // Comment #0 is the description; remaining are activity
   const description = comments.find((c) => c.number === 0);
   const activityComments = comments.filter((c) => c.number > 0);
+
+  const handleUpdate = (field: string, value: unknown) => {
+    mutation.mutate({ [field]: value });
+  };
 
   return (
     <div>
@@ -240,9 +290,7 @@ export default function TicketDetailPage() {
             <div className={styles.activityHeader}>
               <h2>Activity</h2>
               {!commentsLoading && (
-                <span className={styles.activityCount}>
-                  {activityComments.length}
-                </span>
+                <span className={styles.activityCount}>{activityComments.length}</span>
               )}
             </div>
 
@@ -261,7 +309,7 @@ export default function TicketDetailPage() {
         </div>
 
         {/* Right column: Metadata */}
-        <MetadataPanel ticket={ticket} />
+        <MetadataPanel ticket={ticket} onUpdate={handleUpdate} />
       </div>
     </div>
   );

@@ -105,4 +105,37 @@ test.describe('Ticket Detail Page', () => {
     await expect(page.getByText('v2.4')).toBeVisible();
     await expect(page.getByText('2d')).toBeVisible();
   });
+
+  test('inline-edit status via dropdown', async ({ page, mockApi }) => {
+    const updatedTicket = { ...MOCK_TICKET, status: 'done' };
+    await mockApi.patch('/api/tickets/42', updatedTicket);
+    await page.goto('/tickets/42');
+
+    // Click the status trigger in the metadata panel
+    const statusBtn = page.getByRole('button', { name: 'Status' });
+    await statusBtn.click();
+
+    // Select 'Done' from the dropdown
+    await page.getByRole('option', { name: 'Done' }).click();
+
+    // Dropdown should close
+    await expect(page.getByRole('listbox')).not.toBeVisible();
+  });
+
+  test('inline-edit estimation via text input', async ({ page, mockApi }) => {
+    const updatedTicket = { ...MOCK_TICKET, estimation_display: '4d' };
+    await mockApi.patch('/api/tickets/42', updatedTicket);
+    await page.goto('/tickets/42');
+
+    // Click the estimate value to enter edit mode
+    await page.getByRole('button', { name: 'Edit Estimate' }).click();
+
+    // Fill in and save
+    const input = page.getByRole('textbox', { name: 'Estimate' });
+    await input.fill('4d');
+    await input.press('Enter');
+
+    // Should return to display mode
+    await expect(page.getByRole('textbox', { name: 'Estimate' })).not.toBeVisible();
+  });
 });
