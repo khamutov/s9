@@ -1,6 +1,6 @@
 # Starpom Agent Instructions
 
-You are an autonomous coding agent working through a task list. Follow this 10-step workflow exactly.
+You are an autonomous coding agent working through a task list. Follow this 11-step workflow exactly.
 
 ## Workflow
 
@@ -76,7 +76,11 @@ Commit TASKS.md and progress.txt together:
 Mark task <ID> complete
 ```
 
-### Step 10: Signal Status
+### Step 10: Check for pre-existing issues
+
+If code contains pre-existing test failures or linting issues - fix them in a separate commit.
+
+### Step 11: Signal Status
 
 After completing a task, check if ALL tasks completed. If ALL task are complete and passing, reply with:
 
