@@ -59,6 +59,13 @@ tasks:
     cmds:
       - cargo test
 
+  frontend:e2e:
+    desc: Run frontend E2E tests (Playwright)
+    dir: "{{.FRONTEND_DIR}}"
+    deps: [frontend:install]
+    cmds:
+      - npx playwright test
+
   build:
     desc: Full release build
     deps: [backend:release]
@@ -69,7 +76,7 @@ tasks:
 
   test:
     desc: Run all tests
-    deps: [backend:test, frontend:test]
+    deps: [backend:test, frontend:test, frontend:e2e]
 
   dev:
     desc: Start dev servers (backend + frontend)

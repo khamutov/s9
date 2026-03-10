@@ -23,6 +23,17 @@ docs/dd - Design documents (DD)
 - write good designed tests, prefer tesing contracts, avoid testing internals/implementation-specifics except when it has a reason for that (e.g., to cover bug in implementation)
 - check code with linters
 
+# E2E testing
+
+Playwright is set up in `frontend/e2e/`. Config: `frontend/playwright.config.ts`.
+
+- Run: `cd frontend && npm run e2e` or `task frontend:e2e`
+- Debug: `npm run e2e:ui` for interactive UI mode
+- Add E2E tests for each user-facing feature that involves navigation, form submission, or data display — not for purely visual/styling work
+- Place tests in `frontend/e2e/<feature>.spec.ts` (e.g., `ticket-list.spec.ts`)
+- Use role-based and text-based locators (`getByRole`, `getByText`) over CSS selectors
+- Tests run against the Vite dev server (auto-started by Playwright config)
+
 # Task tracking
 
 Active tasks are tracked in `TASKS.md` at the repository root.
