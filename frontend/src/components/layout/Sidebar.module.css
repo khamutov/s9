@@ -44,8 +44,15 @@
 }
 
 @keyframes pulse-dot {
-  0%, 100% { opacity: 1; box-shadow: 0 0 4px var(--accent); }
-  50% { opacity: 0.4; box-shadow: none; }
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 4px var(--accent);
+  }
+  50% {
+    opacity: 0.4;
+    box-shadow: none;
+  }
 }
 
 /* Notification bell */
@@ -84,8 +91,13 @@
 }
 
 @keyframes pulse-notification {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.4); }
-  50% { box-shadow: 0 0 0 3px rgba(248, 113, 113, 0); }
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 3px rgba(248, 113, 113, 0);
+  }
 }
 
 /* Navigation area */

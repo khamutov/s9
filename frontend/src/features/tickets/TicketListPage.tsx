@@ -78,9 +78,7 @@ export default function TicketListPage() {
     return () => clearTimeout(timer);
   }, [filterText, setSearchParams]);
 
-  const { data, isLoading, error } = useTickets(
-    debouncedQ ? { q: debouncedQ } : {},
-  );
+  const { data, isLoading, error } = useTickets(debouncedQ ? { q: debouncedQ } : {});
 
   const tickets = data?.items ?? [];
   const totalCount = data ? (isOffsetPage(data) ? data.total : tickets.length) : 0;
@@ -91,10 +89,7 @@ export default function TicketListPage() {
       <div className={styles.header}>
         <div className={styles.headerLeft}>
           <div className={styles.breadcrumb}>All tickets</div>
-          <h1>
-            Tickets{' '}
-            {!isLoading && <span className={styles.pageCount}>{totalCount}</span>}
-          </h1>
+          <h1>Tickets {!isLoading && <span className={styles.pageCount}>{totalCount}</span>}</h1>
         </div>
         <Link to="/tickets/new" className={styles.createBtn}>
           <svg
@@ -118,9 +113,7 @@ export default function TicketListPage() {
         {isLoading ? (
           <div className={styles.emptyState}>Loading tickets…</div>
         ) : error ? (
-          <div className={styles.errorState}>
-            Failed to load tickets. Please try again.
-          </div>
+          <div className={styles.errorState}>Failed to load tickets. Please try again.</div>
         ) : tickets.length === 0 ? (
           <div className={styles.emptyState}>No tickets found.</div>
         ) : (
@@ -149,9 +142,7 @@ export default function TicketListPage() {
                       if (e.key === 'Enter') navigate(`/tickets/${ticket.id}`);
                     }}
                   >
-                    <td className={styles.colId}>
-                      {ticket.slug ?? `#${ticket.id}`}
-                    </td>
+                    <td className={styles.colId}>{ticket.slug ?? `#${ticket.id}`}</td>
                     <td className={styles.colTitle}>{ticket.title}</td>
                     <td className={styles.colStatus}>
                       <StatusBadge status={ticket.status} />
@@ -162,29 +153,19 @@ export default function TicketListPage() {
                     <td className={styles.colOwner}>
                       <UserPill user={ticket.owner} small />
                     </td>
-                    <td
-                      className={`${styles.colComponent} ${styles.textSecondary}`}
-                    >
+                    <td className={`${styles.colComponent} ${styles.textSecondary}`}>
                       {ticket.component.name}
                     </td>
-                    <td className={styles.colUpdated}>
-                      {formatRelativeTime(ticket.updated_at)}
-                    </td>
+                    <td className={styles.colUpdated}>{formatRelativeTime(ticket.updated_at)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
             <div className={styles.summaryBar}>
-              {(
-                ['new', 'in_progress', 'verify', 'done'] as TicketStatus[]
-              ).map((status) => (
+              {(['new', 'in_progress', 'verify', 'done'] as TicketStatus[]).map((status) => (
                 <span key={status} className={styles.stat}>
-                  <span
-                    className={styles.statDot}
-                    style={{ background: STATUS_COLORS[status] }}
-                  />
-                  <span className={styles.statValue}>{counts[status]}</span>{' '}
-                  {STATUS_LABELS[status]}
+                  <span className={styles.statDot} style={{ background: STATUS_COLORS[status] }} />
+                  <span className={styles.statValue}>{counts[status]}</span> {STATUS_LABELS[status]}
                 </span>
               ))}
             </div>

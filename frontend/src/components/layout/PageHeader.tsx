@@ -20,9 +20,7 @@ export default function PageHeader() {
           ))}
         </div>
         <h1 className={styles.title}>{config.title}</h1>
-        {config.subtitle && (
-          <div className={styles.subtitle}>{config.subtitle}</div>
-        )}
+        {config.subtitle && <div className={styles.subtitle}>{config.subtitle}</div>}
       </div>
     </div>
   );

@@ -14,19 +14,10 @@ function getAvatarColor(id: number): string {
 }
 
 /** User display with colored avatar initials. */
-export default function UserPill({
-  user,
-  small,
-}: {
-  user: CompactUser;
-  small?: boolean;
-}) {
+export default function UserPill({ user, small }: { user: CompactUser; small?: boolean }) {
   return (
     <span className={`${styles.pill} ${small ? styles.small : ''}`}>
-      <span
-        className={styles.avatar}
-        style={{ background: getAvatarColor(user.id) }}
-      >
+      <span className={styles.avatar} style={{ background: getAvatarColor(user.id) }}>
         {getInitials(user.display_name)}
       </span>
       {user.display_name}

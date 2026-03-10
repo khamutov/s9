@@ -237,8 +237,6 @@ function getSuggestions(value: string): Suggestion[] {
 
   // Partial key match (e.g. "sta" → "status:")
   const lower = lastToken.toLowerCase();
-  const matches = FILTER_KEYS.filter((s) =>
-    s.label.toLowerCase().startsWith(lower),
-  );
+  const matches = FILTER_KEYS.filter((s) => s.label.toLowerCase().startsWith(lower));
   return matches;
 }

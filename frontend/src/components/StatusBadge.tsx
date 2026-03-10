@@ -17,9 +17,5 @@ const STATUS_LABEL: Record<TicketStatus, string> = {
 
 /** Colored status badge with dot indicator. */
 export default function StatusBadge({ status }: { status: TicketStatus }) {
-  return (
-    <span className={`${styles.badge} ${STATUS_CLASS[status]}`}>
-      {STATUS_LABEL[status]}
-    </span>
-  );
+  return <span className={`${styles.badge} ${STATUS_CLASS[status]}`}>{STATUS_LABEL[status]}</span>;
 }

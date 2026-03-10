@@ -49,13 +49,17 @@
   border: none;
   cursor: pointer;
   white-space: nowrap;
-  box-shadow: 0 1px 3px rgba(232, 180, 58, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  box-shadow:
+    0 1px 3px rgba(232, 180, 58, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
   transition: all 150ms ease-out;
 }
 
 .createBtn:hover {
   background: var(--accent-hover);
-  box-shadow: 0 2px 12px rgba(232, 180, 58, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  box-shadow:
+    0 2px 12px rgba(232, 180, 58, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
   transform: translateY(-1px);
 }
 
@@ -105,12 +109,24 @@
   height: 46px;
 }
 
-.colId { width: 80px; }
-.colStatus { width: 120px; }
-.colPriority { width: 75px; }
-.colOwner { width: 130px; }
-.colComponent { width: 120px; }
-.colUpdated { width: 85px; }
+.colId {
+  width: 80px;
+}
+.colStatus {
+  width: 120px;
+}
+.colPriority {
+  width: 75px;
+}
+.colOwner {
+  width: 130px;
+}
+.colComponent {
+  width: 120px;
+}
+.colUpdated {
+  width: 85px;
+}
 
 /* Row styles */
 .row {
@@ -137,16 +153,36 @@
   animation: row-reveal 0.4s var(--ease-out) both;
 }
 
-.row:nth-child(1)  { animation-delay: 0.12s; }
-.row:nth-child(2)  { animation-delay: 0.16s; }
-.row:nth-child(3)  { animation-delay: 0.20s; }
-.row:nth-child(4)  { animation-delay: 0.24s; }
-.row:nth-child(5)  { animation-delay: 0.28s; }
-.row:nth-child(6)  { animation-delay: 0.32s; }
-.row:nth-child(7)  { animation-delay: 0.36s; }
-.row:nth-child(8)  { animation-delay: 0.40s; }
-.row:nth-child(9)  { animation-delay: 0.44s; }
-.row:nth-child(10) { animation-delay: 0.48s; }
+.row:nth-child(1) {
+  animation-delay: 0.12s;
+}
+.row:nth-child(2) {
+  animation-delay: 0.16s;
+}
+.row:nth-child(3) {
+  animation-delay: 0.2s;
+}
+.row:nth-child(4) {
+  animation-delay: 0.24s;
+}
+.row:nth-child(5) {
+  animation-delay: 0.28s;
+}
+.row:nth-child(6) {
+  animation-delay: 0.32s;
+}
+.row:nth-child(7) {
+  animation-delay: 0.36s;
+}
+.row:nth-child(8) {
+  animation-delay: 0.4s;
+}
+.row:nth-child(9) {
+  animation-delay: 0.44s;
+}
+.row:nth-child(10) {
+  animation-delay: 0.48s;
+}
 
 /* ID column */
 .colId {

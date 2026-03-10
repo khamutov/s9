@@ -17,9 +17,5 @@ const TYPE_LABEL: Record<TicketType, string> = {
 
 /** Colored type badge with dot indicator. */
 export default function TypeBadge({ type }: { type: TicketType }) {
-  return (
-    <span className={`${styles.badge} ${TYPE_CLASS[type]}`}>
-      {TYPE_LABEL[type]}
-    </span>
-  );
+  return <span className={`${styles.badge} ${TYPE_CLASS[type]}`}>{TYPE_LABEL[type]}</span>;
 }

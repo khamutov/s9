@@ -5,9 +5,7 @@ import { MarkdownEditor } from './MarkdownEditor';
 
 vi.mock('../api/attachments', () => ({
   uploadAttachment: vi.fn(),
-  attachmentUrl: vi.fn(
-    (id: number, name: string) => `/api/attachments/${id}/${name}`,
-  ),
+  attachmentUrl: vi.fn((id: number, name: string) => `/api/attachments/${id}/${name}`),
 }));
 
 describe('MarkdownEditor', () => {
@@ -19,9 +17,7 @@ describe('MarkdownEditor', () => {
 
   it('renders textarea with placeholder', () => {
     render(<MarkdownEditor value="" onChange={onChange} />);
-    expect(
-      screen.getByPlaceholderText(/Write a comment/),
-    ).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Write a comment/)).toBeInTheDocument();
   });
 
   it('renders toolbar buttons', () => {
@@ -135,9 +131,7 @@ describe('MarkdownEditor', () => {
 
   it('code button wraps multiline selection in code fence', () => {
     const multiline = 'line1\nline2';
-    render(
-      <MarkdownEditor value={multiline} onChange={onChange} />,
-    );
+    render(<MarkdownEditor value={multiline} onChange={onChange} />);
     const textarea = screen.getByRole('textbox', {
       name: 'Markdown editor',
     }) as HTMLTextAreaElement;
@@ -242,17 +236,13 @@ describe('MarkdownEditor', () => {
     });
 
     await vi.waitFor(() => {
-      expect(onChange).toHaveBeenCalledWith(
-        '[report.pdf](/api/attachments/2/report.pdf)\n',
-      );
+      expect(onChange).toHaveBeenCalledWith('[report.pdf](/api/attachments/2/report.pdf)\n');
     });
   });
 
   it('shows footer hint text', () => {
     render(<MarkdownEditor value="" onChange={onChange} />);
-    expect(
-      screen.getByText('Markdown supported · Drop files to attach'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('Markdown supported · Drop files to attach')).toBeInTheDocument();
   });
 
   it('disables textarea and buttons when disabled', () => {
@@ -262,11 +252,7 @@ describe('MarkdownEditor', () => {
   });
 
   it('custom placeholder text', () => {
-    render(
-      <MarkdownEditor value="" onChange={onChange} placeholder="Enter description" />,
-    );
-    expect(
-      screen.getByPlaceholderText('Enter description'),
-    ).toBeInTheDocument();
+    render(<MarkdownEditor value="" onChange={onChange} placeholder="Enter description" />);
+    expect(screen.getByPlaceholderText('Enter description')).toBeInTheDocument();
   });
 });

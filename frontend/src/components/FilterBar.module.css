@@ -41,7 +41,9 @@
 .input:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-subtle), var(--shadow-glow);
+  box-shadow:
+    0 0 0 3px var(--accent-subtle),
+    var(--shadow-glow);
   background: var(--bg-raised);
 }
 

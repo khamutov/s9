@@ -11,7 +11,8 @@ export default function Sidebar() {
       {/* Logo + notification bell */}
       <div className={styles.header}>
         <span className={styles.logo}>
-          S9<span className={styles.logoDot} />
+          S9
+          <span className={styles.logoDot} />
         </span>
         <button className={styles.bell} title="Notifications">
           <svg

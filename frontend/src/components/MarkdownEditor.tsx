@@ -224,7 +224,14 @@ export function MarkdownEditor({
           disabled={disabled}
           aria-label="Bold"
         >
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <path d="M4 2.5h5a3 3 0 0 1 0 6H4zM4 8.5h6a3 3 0 0 1 0 6H4z" />
           </svg>
         </button>
@@ -236,7 +243,14 @@ export function MarkdownEditor({
           disabled={disabled}
           aria-label="Italic"
         >
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <path d="M10 2.5H6M10 13.5H6M9.5 2.5L6.5 13.5" />
           </svg>
         </button>
@@ -248,7 +262,14 @@ export function MarkdownEditor({
           disabled={disabled}
           aria-label="Code"
         >
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <path d="M5 4L1.5 8L5 12M11 4l3.5 4L11 12" />
           </svg>
         </button>
@@ -260,7 +281,14 @@ export function MarkdownEditor({
           disabled={disabled}
           aria-label="Link"
         >
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <path d="M6.5 9.5a3.5 3.5 0 0 0 5 0l2-2a3.5 3.5 0 0 0-5-5l-1 1M9.5 6.5a3.5 3.5 0 0 0-5 0l-2 2a3.5 3.5 0 0 0 5 5l1-1" />
           </svg>
         </button>
@@ -272,7 +300,13 @@ export function MarkdownEditor({
           disabled={disabled}
           aria-label="List"
         >
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+          <svg
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          >
             <path d="M5.5 4h8M5.5 8h8M5.5 12h8" />
             <circle cx="2.5" cy="4" r="0.75" fill="currentColor" stroke="none" />
             <circle cx="2.5" cy="8" r="0.75" fill="currentColor" stroke="none" />

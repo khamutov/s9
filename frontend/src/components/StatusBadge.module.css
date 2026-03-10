@@ -40,6 +40,6 @@
 }
 
 .done {
-  background: rgba(74, 222, 128, 0.10);
+  background: rgba(74, 222, 128, 0.1);
   color: var(--status-done);
 }

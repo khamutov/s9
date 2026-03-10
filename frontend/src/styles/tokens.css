@@ -8,7 +8,7 @@
   /* Accent — golden */
   --accent: #e8b43a;
   --accent-hover: #d4a230;
-  --accent-subtle: rgba(232, 180, 58, 0.10);
+  --accent-subtle: rgba(232, 180, 58, 0.1);
 
   /* Text hierarchy */
   --text-primary: #ede9dd;
