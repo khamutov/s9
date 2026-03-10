@@ -295,6 +295,9 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - Mentions in remark plugin: use link nodes with `mention:` scheme prefix, then render as `<span>` in custom MdLink component (react-markdown doesn't support custom node types well)
 - Internal links (starting with `/`) use React Router `<Link>`, hash links use plain `<a>`, external links get `target="_blank"`
 - When MarkdownRenderer is used inside a component, tests need `<MemoryRouter>` wrapper
+- MarkdownEditor is a named export (`{ MarkdownEditor }`), not a default export
+- E2E: "Comment" submit button conflicts with "Edit comment #N" aria-labels — use `{ exact: true }` for the submit button locator
+- Comment mutations: useCreateComment/useEditComment/useDeleteComment invalidate `['tickets', ticketId, 'comments']` query key
 
 ## Task 4.6: Micro-syntax reference parsing (#ID, #PREFIX-ID, comment#N)
 - **Implemented**: Reference parser module per PRD §4.1 and DD 0.17 §7.5:
@@ -395,4 +398,18 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Dependencies added**: react-markdown, remark-gfm
 - **Tests**: 9 remark plugin + 16 renderer component + 23 editor (updated) = 100 vitest; 28 E2E all pass
 - **Browser verified**: Ticket detail page renders markdown correctly at localhost:5173/tickets/1
+- **Timestamp**: 2026-03-10
+
+## Task 5.13: Comment thread component
+- **Implemented**: Interactive comment thread on ticket detail page:
+  - `CommentForm` — MarkdownEditor + "Comment" submit button below activity thread
+  - `CommentCard` — enhanced with edit/delete actions (edit for author/admin, delete for admin only)
+  - "edited" tag shown on comments with `edit_count > 0`
+  - Edit mode: inline MarkdownEditor with Save/Cancel, disabled during mutation
+  - `useCreateComment` — TanStack Query mutation, invalidates comments + ticket cache
+  - `useEditComment` / `useDeleteComment` — mutation hooks with cache invalidation
+- **Files created**: useCreateComment.ts, useEditComment.ts, e2e/comment-thread.spec.ts
+- **Files modified**: TicketDetailPage.tsx, TicketDetailPage.module.css, TicketDetailPage.test.tsx
+- **Tests**: 25 component tests (10 new) + 35 E2E (7 new); 109 vitest + 35 E2E all pass
+- **Issues**: Pre-existing backend clippy warnings unchanged
 - **Timestamp**: 2026-03-10
