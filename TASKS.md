@@ -102,7 +102,7 @@ Status legend: `[ ]` pending | `[~]` in progress | `[x]` completed
 - [x] **5.16** Milestone view [blocked by: 5.2, 5.4, 0.15]
 - [x] **5.17** Admin panel [blocked by: 5.2, 5.4]
 - [x] **5.18** Keyboard navigation (j/k, Enter, c) [blocked by: 5.7]
-- [ ] **5.19** Attachment upload (drag-drop, paste) [blocked by: 5.11]
+- [x] **5.19** Attachment upload (drag-drop, paste) [blocked by: 5.11]
 
 ## Phase 6: Integration & Deployment
 

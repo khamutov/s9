@@ -499,3 +499,17 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Tests**: 9 hook unit tests + 3 page component tests + 5 E2E tests; 187 vitest + 68 E2E all pass
 - **Issues**: None
 - **Timestamp**: 2026-03-10
+
+## Task 5.19: Attachment upload (drag-drop, paste)
+- **Implemented**: End-to-end attachment upload integration on ticket detail page:
+  - `MarkdownEditor` gains `onAttachmentUploaded` callback prop — reports uploaded attachment IDs to parent
+  - `AttachmentList` component — renders image thumbnails (clickable, opens in new tab) and file download links (with file icon, name, size)
+  - `CommentForm` tracks uploaded attachment IDs via ref, sends `attachment_ids` array in `CreateCommentRequest`
+  - Description (comment #0) and activity comments render `AttachmentList` when attachments are present
+  - SVG treated as file (not inline image) for security
+  - File download links use `?download=1` parameter
+- **Files created**: AttachmentList.tsx, AttachmentList.module.css, AttachmentList.test.tsx, e2e/attachment-upload.spec.ts
+- **Files modified**: MarkdownEditor.tsx, TicketDetailPage.tsx, TicketDetailPage.test.tsx
+- **Tests**: 6 AttachmentList + 2 new TicketDetailPage + 5 E2E; 195 vitest + 73 E2E all pass
+- **Browser verified**: Ticket detail page renders correctly, no attachment section shown when no attachments, drop hint visible
+- **Timestamp**: 2026-03-10
