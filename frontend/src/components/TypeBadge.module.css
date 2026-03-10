@@ -1,0 +1,56 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 22px;
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
+.badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.bug {
+  background: rgba(248, 113, 113, 0.12);
+  color: #f87171;
+}
+
+.bug::before {
+  background: #f87171;
+}
+
+.feature {
+  background: rgba(232, 180, 58, 0.12);
+  color: var(--accent);
+}
+
+.feature::before {
+  background: var(--accent);
+}
+
+.task {
+  background: rgba(124, 184, 247, 0.12);
+  color: #7cb8f7;
+}
+
+.task::before {
+  background: #7cb8f7;
+}
+
+.improvement {
+  background: rgba(94, 202, 126, 0.12);
+  color: #5eca7e;
+}
+
+.improvement::before {
+  background: #5eca7e;
+}
