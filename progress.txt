@@ -298,6 +298,9 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - MarkdownEditor is a named export (`{ MarkdownEditor }`), not a default export
 - E2E: "Comment" submit button conflicts with "Edit comment #N" aria-labels — use `{ exact: true }` for the submit button locator
 - Comment mutations: useCreateComment/useEditComment/useDeleteComment invalidate `['tickets', ticketId, 'comments']` query key
+- Strict lint: cannot call setState in useMemo or useEffect. Derive initial state during render using `const effective = userState ?? computedDefault` pattern
+- Import `react-router` (not `react-router-dom`) for Link, useNavigate, MemoryRouter, etc.
+- E2E: when text appears in both tree and detail panel, use `.first()` on locators to avoid strict mode violations
 
 ## Task 4.6: Micro-syntax reference parsing (#ID, #PREFIX-ID, comment#N)
 - **Implemented**: Reference parser module per PRD §4.1 and DD 0.17 §7.5:
@@ -428,5 +431,19 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Files created**: CreateTicketPage.module.css, CreateTicketPage.test.tsx, useCreateTicket.ts, useComponents.ts, useMilestones.ts, useUsers.ts, e2e/create-ticket.spec.ts
 - **Files modified**: CreateTicketPage.tsx
 - **Tests**: 11 component tests + 6 E2E tests; 120 vitest + 41 E2E all pass
+- **Issues**: Pre-existing backend clippy warnings unchanged
+- **Timestamp**: 2026-03-10
+
+## Task 5.15: Component tree view
+- **Implemented**: Two-column component explorer matching prototype 03-component-tree.html:
+  - Left panel: filterable tree with expand/collapse, nested nodes, ticket counts per component
+  - Right panel: selected component detail — name, path, owner (UserPill), slug, children chips, ticket count, View Tickets link
+  - Tree auto-expands root nodes and auto-selects first component on load
+  - Filter input narrows tree by name (matches descendants keep parent visible)
+  - Clicking child chips navigates selection and auto-expands parent chain
+  - State derived during render (no setState in useMemo/useEffect) to satisfy strict react-hooks lint rules
+- **Files created**: ComponentTreePage.module.css, ComponentTreePage.test.tsx, e2e/component-tree.spec.ts
+- **Files modified**: ComponentTreePage.tsx
+- **Tests**: 11 component tests + 6 E2E tests; 131 vitest + 47 E2E all pass
 - **Issues**: Pre-existing backend clippy warnings unchanged
 - **Timestamp**: 2026-03-10
