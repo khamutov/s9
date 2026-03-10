@@ -283,6 +283,9 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - TanStack Query hooks go in `features/<domain>/use*.ts`; queryKey convention: `['tickets', params]`
 - E2E tests: CSS Module class names are hashed, so use role/text locators not CSS selectors; use `{ exact: true }` for ambiguous text matches
 - E2E tests: "New"/"In Progress" etc. appear in both status badges and summary bar — use `.first()` or count assertions to avoid strict mode violations
+- E2E tests: PageHeader renders an h1 with the title, so detail pages have 2 h1s — use `.first()` or `{ name: '...' }` to disambiguate
+- Shared UI components: TypeBadge (bug/feature/task/improvement) added in `src/components/TypeBadge.tsx`
+- Ticket detail: description is comment #0, activity is comments #1+; fetch separately via useComments hook
 
 ## Task 4.6: Micro-syntax reference parsing (#ID, #PREFIX-ID, comment#N)
 - **Implemented**: Reference parser module per PRD §4.1 and DD 0.17 §7.5:
@@ -319,4 +322,21 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Files created**: frontend/src/api/ (types.ts, tickets.ts, comments.ts, components.ts, milestones.ts, users.ts, auth.ts, attachments.ts, index.ts)
 - **Files modified**: frontend/src/api/client.ts
 - **Issues**: Pre-existing backend clippy and frontend prettier warnings unchanged; TypeScript compiles cleanly
+- **Timestamp**: 2026-03-10
+
+## Task 5.9: Ticket detail page
+- **Implemented**: Full ticket detail view matching prototype 02-ticket-detail.html:
+  - `TicketDetailPage.tsx` — two-column layout: left (description + activity), right (metadata panel)
+  - Header with breadcrumb (Tickets / slug), title, slug, type/status/priority badges
+  - Description rendered from comment #0 with author and relative time
+  - Activity thread rendering comments #1+ with anchors and timestamps
+  - Metadata panel: status, priority, type, owner, reporter, CC, component, milestones, estimation, created/updated dates
+  - `useTicket.ts` — TanStack Query hook for single ticket fetch
+  - `useComments.ts` — TanStack Query hook for comments list
+  - `TypeBadge.tsx` — new shared component for bug/feature/task/improvement badges
+- **Files created**: TicketDetailPage.module.css, TicketDetailPage.test.tsx, useTicket.ts, useComments.ts, TypeBadge.tsx, TypeBadge.module.css, e2e/ticket-detail.spec.ts
+- **Files modified**: TicketDetailPage.tsx
+- **Tests**: 12 component tests + 7 E2E tests; all 33 vitest + 20 E2E pass
+- **Browser verified**: Page renders correctly with real data at localhost:5173/tickets/1
+- **Issues**: None
 - **Timestamp**: 2026-03-10
