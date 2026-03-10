@@ -1,4 +1,4 @@
-/// Error returned by the S9 API.
+/** Error returned by the S9 API (matches DD 0.4 §5.3 error envelope). */
 export class ApiError extends Error {
   constructor(
     public status: number,
@@ -6,10 +6,11 @@ export class ApiError extends Error {
     public details?: Record<string, string>,
   ) {
     super(`API error ${status}: ${code}`);
+    this.name = 'ApiError';
   }
 }
 
-/// Typed fetch wrapper for API requests.
+/** Typed fetch wrapper for JSON API requests. */
 export async function apiRequest<T>(method: string, path: string, body?: unknown): Promise<T> {
   const res = await fetch(path, {
     method,
