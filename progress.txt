@@ -447,3 +447,18 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Tests**: 11 component tests + 6 E2E tests; 131 vitest + 47 E2E all pass
 - **Issues**: Pre-existing backend clippy warnings unchanged
 - **Timestamp**: 2026-03-10
+
+## Task 5.16: Milestone view
+- **Implemented**: Milestone list page matching prototype 06-milestone-view.html:
+  - Card-based layout with milestone name, open/closed status badge, due date (with overdue styling)
+  - Stacked progress bar with done/verify/in-progress/new segments and percentage
+  - Stats row showing per-status ticket counts with colored dots
+  - Client-side filter by name and description
+  - View Tickets link navigates to filtered ticket list (`/tickets?q=milestone:name`)
+  - Updated useMilestones hook to support optional status filter parameter
+  - Warm Midnight styling with row-reveal animations
+- **Files created**: MilestoneListPage.module.css, MilestoneListPage.test.tsx, e2e/milestone-list.spec.ts
+- **Files modified**: MilestoneListPage.tsx, useMilestones.ts
+- **Tests**: 14 component tests + 6 E2E tests; 145 vitest + 52 E2E all pass (1 pre-existing create-ticket E2E failure unchanged)
+- **Issues**: Pre-existing backend clippy warnings and create-ticket E2E test failure unchanged
+- **Timestamp**: 2026-03-10
