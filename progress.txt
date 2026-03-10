@@ -232,6 +232,22 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Issues**: Pre-existing backend clippy and frontend prettier warnings unchanged; TypeScript and ESLint clean
 - **Timestamp**: 2026-03-10
 
+## Task 5.6: Auth pages (login, OIDC redirect)
+- **Implemented**: Frontend authentication layer per DD 0.3 §9-10 and DD 0.7 §10:
+  - `authState.ts` — AuthState interface (user, isLoading, login, logout)
+  - `AuthContext.tsx` — React context creation (separate file for react-refresh)
+  - `AuthProvider.tsx` — Provider component: checks session via GET /api/auth/me on mount, exposes login/logout actions, clears TanStack Query cache on logout
+  - `useAuth.ts` — Context consumer hook
+  - `AuthGuard.tsx` — Route wrapper redirecting unauthenticated users to /login
+  - `LoginPage.tsx` — Username/password form with error display + "Sign in with SSO" link to /api/auth/oidc/authorize
+  - `LoginPage.module.css` — Warm Midnight styled login card with golden accent, mono labels, focus rings
+  - Router restructured: login is public, all other routes wrapped in AuthGuard → RootLayout
+- **Files created**: frontend/src/features/auth/ (authState.ts, AuthContext.tsx, AuthProvider.tsx, useAuth.ts, AuthGuard.tsx, LoginPage.module.css)
+- **Files modified**: frontend/src/features/auth/LoginPage.tsx, frontend/src/main.tsx, frontend/src/router.tsx, frontend/e2e/smoke.spec.ts
+- **E2E tests updated**: Smoke tests now verify auth redirect to /login and login page form rendering
+- **Issues**: Pre-existing backend clippy, vitest, and prettier warnings unchanged
+- **Timestamp**: 2026-03-10
+
 ## Codebase Patterns
 - Frontend CSS uses CSS Modules for components + global styles in `src/styles/` (tokens.css, reset.css, typography.css, globals.css)
 - Design token names use short form without `color-` prefix: `--bg-root`, `--accent`, `--text-primary`
@@ -243,6 +259,8 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - Page components go in `features/<domain>/` with `*Page.tsx` naming; lazy-loaded via React.lazy() in router.tsx
 - Helper components used in router.tsx must be in separate files (react-refresh rule: files exporting non-components can't contain component definitions)
 - usePageHeader requires `breadcrumb: string[]` — use `[]` for top-level pages, `['Parent']` for sub-pages
+- Auth: AuthProvider wraps RouterProvider in main.tsx; AuthGuard wraps RootLayout in router.tsx; useAuth() for auth state anywhere
+- Login page is outside RootLayout (no sidebar/header); does NOT use usePageHeader
 
 ## Task 4.6: Micro-syntax reference parsing (#ID, #PREFIX-ID, comment#N)
 - **Implemented**: Reference parser module per PRD §4.1 and DD 0.17 §7.5:
