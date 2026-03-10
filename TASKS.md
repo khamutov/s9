@@ -109,7 +109,6 @@ Status legend: `[ ]` pending | `[~]` in progress | `[x]` completed
 - [ ] **6.5** Dockerfile [blocked by: 0.8]
 - [ ] **6.6** Deployment documentation [blocked by: Phase 4]
 - [ ] **6.7** Initial admin user seeding [blocked by: 3.1, 2.5]
-- [ ] **6.8** Performance testing (10k tickets) [blocked by: 3.6]
 
 ## Critical Path
 
