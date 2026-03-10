@@ -12,10 +12,45 @@ vi.mock('../../api/tickets', () => ({
 
 vi.mock('../../api/comments', () => ({
   listComments: vi.fn(),
+  createComment: vi.fn(),
+  editComment: vi.fn(),
+  deleteComment: vi.fn(),
+}));
+
+vi.mock('../auth/useAuth', () => ({
+  useAuth: vi.fn(() => ({
+    user: { id: 1, login: 'alex', display_name: 'Alex Kim', role: 'user' },
+    isLoading: false,
+    login: vi.fn(),
+    logout: vi.fn(),
+  })),
+}));
+
+vi.mock('../../components/MarkdownEditor', () => ({
+  MarkdownEditor: ({
+    value,
+    onChange,
+    placeholder,
+    disabled,
+  }: {
+    value: string;
+    onChange: (v: string) => void;
+    placeholder?: string;
+    disabled?: boolean;
+  }) => (
+    <textarea
+      data-testid="markdown-editor"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      disabled={disabled}
+    />
+  ),
 }));
 
 import { getTicket, updateTicket } from '../../api/tickets';
-import { listComments } from '../../api/comments';
+import { listComments, createComment, editComment, deleteComment } from '../../api/comments';
+import { useAuth } from '../auth/useAuth';
 import TicketDetailPage from './TicketDetailPage';
 
 const mockTicket = (overrides: Partial<Ticket> = {}): Ticket => ({
@@ -75,6 +110,12 @@ function renderPage(ticketId = '42') {
 describe('TicketDetailPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(useAuth).mockReturnValue({
+      user: { id: 1, login: 'alex', display_name: 'Alex Kim', email: 'alex@s9.dev', role: 'user' },
+      isLoading: false,
+      login: vi.fn(),
+      logout: vi.fn(),
+    });
   });
 
   it('shows loading state while fetching', () => {
@@ -291,12 +332,227 @@ describe('TicketDetailPage', () => {
     const estimateBtn = screen.getByRole('button', { name: 'Edit Estimate' });
     fireEvent.click(estimateBtn);
 
-    const input = screen.getByRole('textbox');
+    const input = screen.getByRole('textbox', { name: 'Estimate' });
     fireEvent.change(input, { target: { value: '4d' } });
     fireEvent.keyDown(input, { key: 'Enter' });
 
     await waitFor(() => {
       expect(updateTicket).toHaveBeenCalledWith(42, { estimation: '4d' });
+    });
+  });
+
+  // --- Comment thread tests ---
+
+  it('renders comment form with editor and submit button', async () => {
+    vi.mocked(getTicket).mockResolvedValue(mockTicket());
+    vi.mocked(listComments).mockResolvedValue({ items: [] });
+    renderPage();
+
+    await screen.findByText('Crash on startup when config is missing');
+    expect(screen.getByText('Add comment')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Comment' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Comment' })).toBeDisabled();
+  });
+
+  it('submits a new comment and clears form', async () => {
+    vi.mocked(getTicket).mockResolvedValue(mockTicket());
+    vi.mocked(listComments).mockResolvedValue({ items: [] });
+    vi.mocked(createComment).mockResolvedValue(
+      mockComment({ id: 10, number: 1, body: 'New comment' }),
+    );
+    renderPage();
+
+    await screen.findByText('Crash on startup when config is missing');
+
+    // Type in the editor
+    const editor = screen.getByTestId('markdown-editor');
+    fireEvent.change(editor, { target: { value: 'New comment' } });
+
+    // Submit button should be enabled
+    const submitBtn = screen.getByRole('button', { name: 'Comment' });
+    expect(submitBtn).not.toBeDisabled();
+    fireEvent.click(submitBtn);
+
+    await waitFor(() => {
+      expect(createComment).toHaveBeenCalledWith(42, { body: 'New comment' });
+    });
+  });
+
+  it('shows edit button on own comments', async () => {
+    vi.mocked(getTicket).mockResolvedValue(mockTicket());
+    vi.mocked(listComments).mockResolvedValue({
+      items: [
+        mockComment({ number: 0, body: 'Description' }),
+        mockComment({
+          id: 2,
+          number: 1,
+          author: { id: 1, login: 'alex', display_name: 'Alex Kim' },
+          body: 'My comment',
+        }),
+      ],
+    });
+    renderPage();
+
+    await screen.findByText('My comment');
+    expect(screen.getByRole('button', { name: 'Edit comment #1' })).toBeInTheDocument();
+  });
+
+  it('does not show edit button on other users comments', async () => {
+    vi.mocked(getTicket).mockResolvedValue(mockTicket());
+    vi.mocked(listComments).mockResolvedValue({
+      items: [
+        mockComment({ number: 0, body: 'Description' }),
+        mockComment({
+          id: 2,
+          number: 1,
+          author: { id: 99, login: 'other', display_name: 'Other User' },
+          body: 'Their comment',
+        }),
+      ],
+    });
+    renderPage();
+
+    await screen.findByText('Their comment');
+    expect(screen.queryByRole('button', { name: 'Edit comment #1' })).not.toBeInTheDocument();
+  });
+
+  it('opens edit form and saves edited comment', async () => {
+    vi.mocked(getTicket).mockResolvedValue(mockTicket());
+    vi.mocked(listComments).mockResolvedValue({
+      items: [
+        mockComment({ number: 0, body: 'Description' }),
+        mockComment({
+          id: 2,
+          number: 1,
+          author: { id: 1, login: 'alex', display_name: 'Alex Kim' },
+          body: 'Original text',
+        }),
+      ],
+    });
+    vi.mocked(editComment).mockResolvedValue(
+      mockComment({ id: 2, number: 1, body: 'Updated text', edit_count: 1 }),
+    );
+    renderPage();
+
+    await screen.findByText('Original text');
+
+    // Click edit
+    fireEvent.click(screen.getByRole('button', { name: 'Edit comment #1' }));
+
+    // Editor should appear with original text
+    const editors = screen.getAllByTestId('markdown-editor');
+    // Find the edit editor (not the comment form editor)
+    const editEditor = editors.find((e) => (e as HTMLTextAreaElement).value === 'Original text')!;
+    expect(editEditor).toBeInTheDocument();
+
+    // Change the text
+    fireEvent.change(editEditor, { target: { value: 'Updated text' } });
+
+    // Save
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => {
+      expect(editComment).toHaveBeenCalledWith(42, 1, { body: 'Updated text' });
+    });
+  });
+
+  it('cancels edit and restores original text', async () => {
+    vi.mocked(getTicket).mockResolvedValue(mockTicket());
+    vi.mocked(listComments).mockResolvedValue({
+      items: [
+        mockComment({ number: 0, body: 'Description' }),
+        mockComment({
+          id: 2,
+          number: 1,
+          author: { id: 1, login: 'alex', display_name: 'Alex Kim' },
+          body: 'Original text',
+        }),
+      ],
+    });
+    renderPage();
+
+    await screen.findByText('Original text');
+    fireEvent.click(screen.getByRole('button', { name: 'Edit comment #1' }));
+
+    // Cancel editing
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    // Original text should be visible again (not in editor)
+    expect(screen.getByText('Original text')).toBeInTheDocument();
+  });
+
+  it('shows edited tag on comments with edit_count > 0', async () => {
+    vi.mocked(getTicket).mockResolvedValue(mockTicket());
+    vi.mocked(listComments).mockResolvedValue({
+      items: [
+        mockComment({ number: 0, body: 'Description' }),
+        mockComment({
+          id: 2,
+          number: 1,
+          author: { id: 1, login: 'alex', display_name: 'Alex Kim' },
+          body: 'Edited comment',
+          edit_count: 2,
+        }),
+      ],
+    });
+    renderPage();
+
+    await screen.findByText('Edited comment');
+    expect(screen.getByText('edited')).toBeInTheDocument();
+  });
+
+  it('shows delete button for admin users', async () => {
+    vi.mocked(useAuth).mockReturnValue({
+      user: { id: 1, login: 'admin', display_name: 'Admin', email: 'admin@s9.dev', role: 'admin' },
+      isLoading: false,
+      login: vi.fn(),
+      logout: vi.fn(),
+    });
+    vi.mocked(getTicket).mockResolvedValue(mockTicket());
+    vi.mocked(listComments).mockResolvedValue({
+      items: [
+        mockComment({ number: 0, body: 'Description' }),
+        mockComment({
+          id: 2,
+          number: 1,
+          author: { id: 99, login: 'other', display_name: 'Other User' },
+          body: 'Some comment',
+        }),
+      ],
+    });
+    renderPage();
+
+    await screen.findByText('Some comment');
+    expect(screen.getByRole('button', { name: 'Delete comment #1' })).toBeInTheDocument();
+  });
+
+  it('calls deleteComment when delete is clicked', async () => {
+    vi.mocked(useAuth).mockReturnValue({
+      user: { id: 1, login: 'admin', display_name: 'Admin', email: 'admin@s9.dev', role: 'admin' },
+      isLoading: false,
+      login: vi.fn(),
+      logout: vi.fn(),
+    });
+    vi.mocked(getTicket).mockResolvedValue(mockTicket());
+    vi.mocked(listComments).mockResolvedValue({
+      items: [
+        mockComment({ number: 0, body: 'Description' }),
+        mockComment({
+          id: 2,
+          number: 1,
+          author: { id: 99, login: 'other', display_name: 'Other User' },
+          body: 'To delete',
+        }),
+      ],
+    });
+    vi.mocked(deleteComment).mockResolvedValue(undefined);
+    renderPage();
+
+    await screen.findByText('To delete');
+    fireEvent.click(screen.getByRole('button', { name: 'Delete comment #1' }));
+
+    await waitFor(() => {
+      expect(deleteComment).toHaveBeenCalledWith(42, 1);
     });
   });
 });

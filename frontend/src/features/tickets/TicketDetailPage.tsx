@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router';
 import { usePageHeader } from '../../components/layout/usePageHeader';
 import StatusBadge from '../../components/StatusBadge';
@@ -7,9 +8,13 @@ import UserPill from '../../components/UserPill';
 import InlineSelect, { type SelectOption } from '../../components/InlineSelect';
 import InlineText from '../../components/InlineText';
 import MarkdownRenderer from '../../components/MarkdownRenderer';
+import { MarkdownEditor } from '../../components/MarkdownEditor';
+import { useAuth } from '../auth/useAuth';
 import { useTicket } from './useTicket';
 import { useComments } from './useComments';
 import { useUpdateTicket } from './useUpdateTicket';
+import { useCreateComment } from './useCreateComment';
+import { useEditComment, useDeleteComment } from './useEditComment';
 import type { Comment, Ticket, TicketStatus, Priority, TicketType } from '../../api/types';
 import styles from './TicketDetailPage.module.css';
 
@@ -190,19 +195,158 @@ function MetadataPanel({
   );
 }
 
-/** Single comment card in the activity thread. */
-function CommentCard({ comment }: { comment: Comment }) {
+/** Single comment card in the activity thread with edit/delete support. */
+function CommentCard({
+  comment,
+  ticketId,
+  currentUserId,
+  isAdmin,
+}: {
+  comment: Comment;
+  ticketId: number;
+  currentUserId: number | null;
+  isAdmin: boolean;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [editBody, setEditBody] = useState(comment.body);
+  const editMutation = useEditComment(ticketId);
+  const deleteMutation = useDeleteComment(ticketId);
+
+  const canEdit = currentUserId === comment.author.id || isAdmin;
+  const canDelete = isAdmin && comment.number > 0;
+
+  const handleSaveEdit = () => {
+    const trimmed = editBody.trim();
+    if (!trimmed || trimmed === comment.body) {
+      setEditing(false);
+      setEditBody(comment.body);
+      return;
+    }
+    editMutation.mutate(
+      { commentNum: comment.number, req: { body: trimmed } },
+      {
+        onSuccess: () => setEditing(false),
+      },
+    );
+  };
+
+  const handleCancelEdit = () => {
+    setEditing(false);
+    setEditBody(comment.body);
+  };
+
+  const handleDelete = () => {
+    deleteMutation.mutate(comment.number);
+  };
+
   return (
-    <div className={styles.comment}>
+    <div className={styles.comment} id={`comment-${comment.number}`}>
       <div className={styles.commentCard}>
         <div className={styles.commentHeader}>
           <UserPill user={comment.author} small />
           <a className={styles.commentAnchor} href={`#comment-${comment.number}`}>
             #{comment.number}
           </a>
+          {comment.edit_count > 0 && <span className={styles.editedTag}>edited</span>}
           <span className={styles.commentTime}>{formatRelativeTime(comment.created_at)}</span>
+          {(canEdit || canDelete) && !editing && (
+            <div className={styles.commentActions}>
+              {canEdit && (
+                <button
+                  className={styles.commentActionBtn}
+                  onClick={() => setEditing(true)}
+                  aria-label={`Edit comment #${comment.number}`}
+                >
+                  Edit
+                </button>
+              )}
+              {canDelete && (
+                <button
+                  className={styles.commentActionBtn}
+                  onClick={handleDelete}
+                  disabled={deleteMutation.isPending}
+                  aria-label={`Delete comment #${comment.number}`}
+                >
+                  {deleteMutation.isPending ? 'Deleting…' : 'Delete'}
+                </button>
+              )}
+            </div>
+          )}
         </div>
-        <MarkdownRenderer>{comment.body}</MarkdownRenderer>
+        {editing ? (
+          <div className={styles.editForm}>
+            <MarkdownEditor
+              value={editBody}
+              onChange={setEditBody}
+              placeholder="Edit comment…"
+              minHeight={80}
+              disabled={editMutation.isPending}
+            />
+            <div className={styles.editFormActions}>
+              <button
+                className={styles.cancelBtn}
+                onClick={handleCancelEdit}
+                disabled={editMutation.isPending}
+              >
+                Cancel
+              </button>
+              <button
+                className={styles.submitBtn}
+                onClick={handleSaveEdit}
+                disabled={editMutation.isPending || !editBody.trim()}
+              >
+                {editMutation.isPending ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+            {editMutation.isError && (
+              <p className={styles.formError}>Failed to save edit. Please try again.</p>
+            )}
+          </div>
+        ) : (
+          <MarkdownRenderer>{comment.body}</MarkdownRenderer>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** Form for adding a new comment to the ticket. */
+function CommentForm({ ticketId }: { ticketId: number }) {
+  const [body, setBody] = useState('');
+  const mutation = useCreateComment(ticketId);
+
+  const handleSubmit = () => {
+    const trimmed = body.trim();
+    if (!trimmed) return;
+    mutation.mutate(
+      { body: trimmed },
+      {
+        onSuccess: () => setBody(''),
+      },
+    );
+  };
+
+  return (
+    <div className={styles.commentForm}>
+      <div className={styles.commentFormLabel}>Add comment</div>
+      <MarkdownEditor
+        value={body}
+        onChange={setBody}
+        placeholder="Write a comment… Use @mentions and #references"
+        minHeight={100}
+        disabled={mutation.isPending}
+      />
+      <div className={styles.commentFormFooter}>
+        {mutation.isError && (
+          <p className={styles.formError}>Failed to post comment. Please try again.</p>
+        )}
+        <button
+          className={styles.submitBtn}
+          onClick={handleSubmit}
+          disabled={mutation.isPending || !body.trim()}
+        >
+          {mutation.isPending ? 'Posting…' : 'Comment'}
+        </button>
       </div>
     </div>
   );
@@ -212,9 +356,11 @@ function CommentCard({ comment }: { comment: Comment }) {
 export default function TicketDetailPage() {
   const { id } = useParams<{ id: string }>();
   const ticketId = Number(id);
+  const { user } = useAuth();
   const { data: ticket, isLoading, error } = useTicket(ticketId);
   const { data: commentsData, isLoading: commentsLoading } = useComments(ticketId);
   const mutation = useUpdateTicket(ticketId);
+  const isAdmin = user?.role === 'admin';
 
   const displaySlug = ticket?.slug ?? `#${id}`;
   usePageHeader({
@@ -294,10 +440,18 @@ export default function TicketDetailPage() {
             ) : (
               <div className={styles.commentThread}>
                 {activityComments.map((comment) => (
-                  <CommentCard key={comment.number} comment={comment} />
+                  <CommentCard
+                    key={comment.number}
+                    comment={comment}
+                    ticketId={ticketId}
+                    currentUserId={user?.id ?? null}
+                    isAdmin={isAdmin}
+                  />
                 ))}
               </div>
             )}
+
+            <CommentForm ticketId={ticketId} />
           </div>
         </div>
 

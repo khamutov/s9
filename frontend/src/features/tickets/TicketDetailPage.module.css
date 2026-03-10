@@ -408,3 +408,154 @@
   font-size: var(--text-sm);
   font-style: italic;
 }
+
+/* Comment actions (edit / delete) */
+.commentActions {
+  display: flex;
+  gap: var(--space-2);
+  margin-left: var(--space-2);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.commentCard:hover .commentActions {
+  opacity: 1;
+}
+
+.commentActionBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-secondary);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  transition:
+    color var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.commentActionBtn:hover {
+  color: var(--accent);
+  background: var(--bg-hover);
+}
+
+.commentActionBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.editedTag {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* Edit form inside comment card */
+.editForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.editFormActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+/* Comment form */
+.commentForm {
+  margin-top: var(--space-6);
+  animation: row-reveal 0.4s var(--ease-out) 0.5s both;
+}
+
+.commentFormLabel {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-label);
+  margin-bottom: var(--space-3);
+}
+
+.commentFormFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.submitBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 16px;
+  background: var(--accent);
+  color: var(--bg-root);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    0 0 8px rgba(232, 180, 58, 0.15);
+}
+
+.submitBtn:hover:not(:disabled) {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    0 0 12px rgba(232, 180, 58, 0.25);
+}
+
+.submitBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cancelBtn {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 16px;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.cancelBtn:hover:not(:disabled) {
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
+}
+
+.cancelBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.formError {
+  color: var(--priority-p0);
+  font-size: var(--text-xs);
+  margin: 0;
+}
