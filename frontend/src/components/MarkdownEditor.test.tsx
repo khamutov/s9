@@ -1,12 +1,18 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { MemoryRouter } from 'react-router';
 import { MarkdownEditor } from './MarkdownEditor';
 
 vi.mock('../api/attachments', () => ({
   uploadAttachment: vi.fn(),
   attachmentUrl: vi.fn((id: number, name: string) => `/api/attachments/${id}/${name}`),
 }));
+
+/** Wraps render with MemoryRouter for MarkdownRenderer's Link component. */
+function renderEditor(ui: React.ReactElement) {
+  return render(<MemoryRouter>{ui}</MemoryRouter>);
+}
 
 describe('MarkdownEditor', () => {
   let onChange: ReturnType<typeof vi.fn>;
@@ -16,12 +22,12 @@ describe('MarkdownEditor', () => {
   });
 
   it('renders textarea with placeholder', () => {
-    render(<MarkdownEditor value="" onChange={onChange} />);
+    renderEditor(<MarkdownEditor value="" onChange={onChange} />);
     expect(screen.getByPlaceholderText(/Write a comment/)).toBeInTheDocument();
   });
 
   it('renders toolbar buttons', () => {
-    render(<MarkdownEditor value="" onChange={onChange} />);
+    renderEditor(<MarkdownEditor value="" onChange={onChange} />);
     expect(screen.getByRole('button', { name: 'Bold' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Italic' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Code' })).toBeInTheDocument();
@@ -30,40 +36,41 @@ describe('MarkdownEditor', () => {
   });
 
   it('calls onChange when typing', async () => {
-    render(<MarkdownEditor value="" onChange={onChange} />);
+    renderEditor(<MarkdownEditor value="" onChange={onChange} />);
     const textarea = screen.getByRole('textbox', { name: 'Markdown editor' });
     await userEvent.type(textarea, 'hello');
     expect(onChange).toHaveBeenCalled();
   });
 
   it('shows write/preview tabs', () => {
-    render(<MarkdownEditor value="" onChange={onChange} />);
+    renderEditor(<MarkdownEditor value="" onChange={onChange} />);
     expect(screen.getByRole('button', { name: 'Write' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Preview' })).toBeInTheDocument();
   });
 
   it('switches to preview mode and shows content', async () => {
-    render(<MarkdownEditor value="Hello **world**" onChange={onChange} />);
+    renderEditor(<MarkdownEditor value="Hello **world**" onChange={onChange} />);
     await userEvent.click(screen.getByRole('button', { name: 'Preview' }));
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
-    expect(screen.getByText(/Hello \*\*world\*\*/)).toBeInTheDocument();
+    // MarkdownRenderer renders **world** as <strong>
+    expect(screen.getByText('world').tagName).toBe('STRONG');
   });
 
   it('shows empty preview message when value is empty', async () => {
-    render(<MarkdownEditor value="" onChange={onChange} />);
+    renderEditor(<MarkdownEditor value="" onChange={onChange} />);
     await userEvent.click(screen.getByRole('button', { name: 'Preview' }));
     expect(screen.getByText('Nothing to preview')).toBeInTheDocument();
   });
 
   it('switches back to write mode', async () => {
-    render(<MarkdownEditor value="text" onChange={onChange} />);
+    renderEditor(<MarkdownEditor value="text" onChange={onChange} />);
     await userEvent.click(screen.getByRole('button', { name: 'Preview' }));
     await userEvent.click(screen.getByRole('button', { name: 'Write' }));
     expect(screen.getByRole('textbox', { name: 'Markdown editor' })).toBeInTheDocument();
   });
 
   it('bold button wraps selection with **', () => {
-    render(<MarkdownEditor value="hello world" onChange={onChange} />);
+    renderEditor(<MarkdownEditor value="hello world" onChange={onChange} />);
     const textarea = screen.getByRole('textbox', {
       name: 'Markdown editor',
     }) as HTMLTextAreaElement;
@@ -75,7 +82,7 @@ describe('MarkdownEditor', () => {
   });
 
   it('italic button wraps selection with *', () => {
-    render(<MarkdownEditor value="hello world" onChange={onChange} />);
+    renderEditor(<MarkdownEditor value="hello world" onChange={onChange} />);
     const textarea = screen.getByRole('textbox', {
       name: 'Markdown editor',
     }) as HTMLTextAreaElement;
@@ -86,7 +93,7 @@ describe('MarkdownEditor', () => {
   });
 
   it('link button wraps selection in link syntax', () => {
-    render(<MarkdownEditor value="hello world" onChange={onChange} />);
+    renderEditor(<MarkdownEditor value="hello world" onChange={onChange} />);
     const textarea = screen.getByRole('textbox', {
       name: 'Markdown editor',
     }) as HTMLTextAreaElement;
@@ -97,7 +104,7 @@ describe('MarkdownEditor', () => {
   });
 
   it('link button inserts template when nothing selected', () => {
-    render(<MarkdownEditor value="hello " onChange={onChange} />);
+    renderEditor(<MarkdownEditor value="hello " onChange={onChange} />);
     const textarea = screen.getByRole('textbox', {
       name: 'Markdown editor',
     }) as HTMLTextAreaElement;
@@ -108,7 +115,7 @@ describe('MarkdownEditor', () => {
   });
 
   it('list button inserts dash prefix', () => {
-    render(<MarkdownEditor value="" onChange={onChange} />);
+    renderEditor(<MarkdownEditor value="" onChange={onChange} />);
     const textarea = screen.getByRole('textbox', {
       name: 'Markdown editor',
     }) as HTMLTextAreaElement;
@@ -119,7 +126,7 @@ describe('MarkdownEditor', () => {
   });
 
   it('code button wraps single-line selection in backticks', () => {
-    render(<MarkdownEditor value="hello code" onChange={onChange} />);
+    renderEditor(<MarkdownEditor value="hello code" onChange={onChange} />);
     const textarea = screen.getByRole('textbox', {
       name: 'Markdown editor',
     }) as HTMLTextAreaElement;
@@ -131,7 +138,7 @@ describe('MarkdownEditor', () => {
 
   it('code button wraps multiline selection in code fence', () => {
     const multiline = 'line1\nline2';
-    render(<MarkdownEditor value={multiline} onChange={onChange} />);
+    renderEditor(<MarkdownEditor value={multiline} onChange={onChange} />);
     const textarea = screen.getByRole('textbox', {
       name: 'Markdown editor',
     }) as HTMLTextAreaElement;
@@ -142,7 +149,7 @@ describe('MarkdownEditor', () => {
   });
 
   it('Ctrl+B keyboard shortcut applies bold', () => {
-    render(<MarkdownEditor value="text" onChange={onChange} />);
+    renderEditor(<MarkdownEditor value="text" onChange={onChange} />);
     const textarea = screen.getByRole('textbox', {
       name: 'Markdown editor',
     }) as HTMLTextAreaElement;
@@ -153,7 +160,7 @@ describe('MarkdownEditor', () => {
   });
 
   it('Ctrl+I keyboard shortcut applies italic', () => {
-    render(<MarkdownEditor value="text" onChange={onChange} />);
+    renderEditor(<MarkdownEditor value="text" onChange={onChange} />);
     const textarea = screen.getByRole('textbox', {
       name: 'Markdown editor',
     }) as HTMLTextAreaElement;
@@ -164,7 +171,7 @@ describe('MarkdownEditor', () => {
   });
 
   it('Ctrl+K keyboard shortcut inserts link', () => {
-    render(<MarkdownEditor value="text" onChange={onChange} />);
+    renderEditor(<MarkdownEditor value="text" onChange={onChange} />);
     const textarea = screen.getByRole('textbox', {
       name: 'Markdown editor',
     }) as HTMLTextAreaElement;
@@ -175,7 +182,7 @@ describe('MarkdownEditor', () => {
   });
 
   it('shows drag overlay when files are dragged over', () => {
-    const { container } = render(<MarkdownEditor value="" onChange={onChange} />);
+    const { container } = renderEditor(<MarkdownEditor value="" onChange={onChange} />);
     const wrap = container.firstElementChild!;
 
     fireEvent.dragEnter(wrap, { dataTransfer: { files: [] } });
@@ -197,7 +204,7 @@ describe('MarkdownEditor', () => {
       url: '/api/attachments/1/screenshot.png',
     });
 
-    const { container } = render(<MarkdownEditor value="" onChange={onChange} />);
+    const { container } = renderEditor(<MarkdownEditor value="" onChange={onChange} />);
     const wrap = container.firstElementChild!;
 
     const file = new File(['bytes'], 'screenshot.png', { type: 'image/png' });
@@ -227,7 +234,7 @@ describe('MarkdownEditor', () => {
       url: '/api/attachments/2/report.pdf',
     });
 
-    const { container } = render(<MarkdownEditor value="" onChange={onChange} />);
+    const { container } = renderEditor(<MarkdownEditor value="" onChange={onChange} />);
     const wrap = container.firstElementChild!;
 
     const file = new File(['bytes'], 'report.pdf', { type: 'application/pdf' });
@@ -241,18 +248,18 @@ describe('MarkdownEditor', () => {
   });
 
   it('shows footer hint text', () => {
-    render(<MarkdownEditor value="" onChange={onChange} />);
+    renderEditor(<MarkdownEditor value="" onChange={onChange} />);
     expect(screen.getByText('Markdown supported · Drop files to attach')).toBeInTheDocument();
   });
 
   it('disables textarea and buttons when disabled', () => {
-    render(<MarkdownEditor value="" onChange={onChange} disabled />);
+    renderEditor(<MarkdownEditor value="" onChange={onChange} disabled />);
     expect(screen.getByRole('textbox', { name: 'Markdown editor' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Bold' })).toBeDisabled();
   });
 
   it('custom placeholder text', () => {
-    render(<MarkdownEditor value="" onChange={onChange} placeholder="Enter description" />);
+    renderEditor(<MarkdownEditor value="" onChange={onChange} placeholder="Enter description" />);
     expect(screen.getByPlaceholderText('Enter description')).toBeInTheDocument();
   });
 });

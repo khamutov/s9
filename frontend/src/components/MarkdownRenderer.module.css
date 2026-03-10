@@ -1,0 +1,171 @@
+/* MarkdownRenderer — Warm Midnight prose styles */
+
+.prose {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  line-height: 1.7;
+  color: var(--text-primary);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Headings */
+.prose h1,
+.prose h2,
+.prose h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  margin: 1.5em 0 0.5em;
+  color: var(--text-primary);
+}
+
+.prose h1 {
+  font-size: 1.5em;
+}
+.prose h2 {
+  font-size: 1.25em;
+}
+.prose h3 {
+  font-size: 1.1em;
+}
+
+/* Paragraphs */
+.prose p {
+  margin: 0.5em 0;
+}
+
+.prose p:first-child {
+  margin-top: 0;
+}
+
+.prose p:last-child {
+  margin-bottom: 0;
+}
+
+/* Links */
+.prose a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.prose a:hover {
+  text-decoration: underline;
+}
+
+/* S9 reference links (ticket/comment references) */
+.reference {
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.reference:hover {
+  text-decoration: underline;
+}
+
+/* @mentions */
+.mention {
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  font-weight: 600;
+  font-style: normal;
+}
+
+/* Inline code */
+.prose code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  padding: 0.15em 0.4em;
+  background: var(--bg-raised);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+}
+
+/* Code blocks */
+.prose pre {
+  background: var(--bg-raised);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius);
+  padding: var(--space-3) var(--space-4);
+  overflow-x: auto;
+  margin: 0.75em 0;
+}
+
+.prose pre code {
+  padding: 0;
+  background: none;
+  border-radius: 0;
+  font-size: 0.85em;
+  line-height: 1.5;
+}
+
+/* Lists */
+.prose ul,
+.prose ol {
+  padding-left: 1.5em;
+  margin: 0.5em 0;
+}
+
+.prose li {
+  margin: 0.25em 0;
+}
+
+/* Blockquotes */
+.prose blockquote {
+  border-left: 3px solid var(--accent);
+  padding-left: var(--space-3);
+  margin: 0.75em 0;
+  color: var(--text-secondary);
+}
+
+/* Tables (GFM) */
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.75em 0;
+  font-size: 0.9em;
+}
+
+.prose th,
+.prose td {
+  border: 1px solid var(--border-primary);
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+}
+
+.prose th {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-label);
+  background: var(--bg-raised);
+}
+
+/* Horizontal rule */
+.prose hr {
+  border: none;
+  border-top: 1px solid var(--border-primary);
+  margin: 1.5em 0;
+}
+
+/* Images */
+.prose img {
+  max-width: 100%;
+  border-radius: var(--radius);
+}
+
+/* Strikethrough (GFM) */
+.prose del {
+  color: var(--text-secondary);
+}
+
+/* Task lists (GFM) */
+.prose input[type='checkbox'] {
+  margin-right: 0.5em;
+}

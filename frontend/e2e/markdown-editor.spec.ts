@@ -55,8 +55,8 @@ test.describe('MarkdownEditor context', () => {
     await expect(
       page.getByRole('heading', { name: 'Editor integration test' }).first(),
     ).toBeVisible();
-    await expect(
-      page.getByText('Description with **markdown** content'),
-    ).toBeVisible();
+    // Markdown is now rendered: **markdown** becomes <strong>
+    await expect(page.getByText('Description with')).toBeVisible();
+    await expect(page.getByText('markdown').first()).toBeVisible();
   });
 });

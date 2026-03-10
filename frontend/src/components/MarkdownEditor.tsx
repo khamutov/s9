@@ -8,6 +8,7 @@ import {
 } from 'react';
 import { uploadAttachment } from '../api/attachments';
 import { attachmentUrl } from '../api/attachments';
+import MarkdownRenderer from './MarkdownRenderer';
 import styles from './MarkdownEditor.module.css';
 
 /** Props for the MarkdownEditor component. */
@@ -352,7 +353,7 @@ export function MarkdownEditor({
       ) : (
         <div className={styles.preview}>
           {value ? (
-            <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}>{value}</pre>
+            <MarkdownRenderer>{value}</MarkdownRenderer>
           ) : (
             <span className={styles.previewEmpty}>Nothing to preview</span>
           )}

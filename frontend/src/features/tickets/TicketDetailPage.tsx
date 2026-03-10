@@ -6,6 +6,7 @@ import TypeBadge from '../../components/TypeBadge';
 import UserPill from '../../components/UserPill';
 import InlineSelect, { type SelectOption } from '../../components/InlineSelect';
 import InlineText from '../../components/InlineText';
+import MarkdownRenderer from '../../components/MarkdownRenderer';
 import { useTicket } from './useTicket';
 import { useComments } from './useComments';
 import { useUpdateTicket } from './useUpdateTicket';
@@ -201,11 +202,7 @@ function CommentCard({ comment }: { comment: Comment }) {
           </a>
           <span className={styles.commentTime}>{formatRelativeTime(comment.created_at)}</span>
         </div>
-        <div className={styles.prose}>
-          {comment.body.split('\n').map((line, i) => (
-            <p key={i}>{line || '\u00A0'}</p>
-          ))}
-        </div>
+        <MarkdownRenderer>{comment.body}</MarkdownRenderer>
       </div>
     </div>
   );
@@ -276,11 +273,7 @@ export default function TicketDetailPage() {
                     opened {formatRelativeTime(description.created_at)}
                   </span>
                 </div>
-                <div className={styles.prose}>
-                  {description.body.split('\n').map((line, i) => (
-                    <p key={i}>{line || '\u00A0'}</p>
-                  ))}
-                </div>
+                <MarkdownRenderer>{description.body}</MarkdownRenderer>
               </div>
             </div>
           )}
