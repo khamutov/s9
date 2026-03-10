@@ -290,6 +290,11 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - useUpdateTicket mutation hook uses optimistic updates: immediately sets cache, rolls back on error, invalidates on settle
 - E2E mockApi fixture supports .patch() method for mocking PATCH endpoints
 - Strict React linting: don't use setState in effects (use render-phase sync or startEditing callback), don't access refs during render, jsx-a11y rules not available (use `role="presentation"` for backdrop instead of eslint-disable)
+- MarkdownRenderer: uses react-markdown + remark-gfm + custom remarkS9References plugin; lives in `src/components/`
+- react-markdown custom URL schemes (e.g. `mention:`) need a custom `urlTransform` prop to bypass the default sanitizer
+- Mentions in remark plugin: use link nodes with `mention:` scheme prefix, then render as `<span>` in custom MdLink component (react-markdown doesn't support custom node types well)
+- Internal links (starting with `/`) use React Router `<Link>`, hash links use plain `<a>`, external links get `target="_blank"`
+- When MarkdownRenderer is used inside a component, tests need `<MemoryRouter>` wrapper
 
 ## Task 4.6: Micro-syntax reference parsing (#ID, #PREFIX-ID, comment#N)
 - **Implemented**: Reference parser module per PRD §4.1 and DD 0.17 §7.5:
@@ -374,4 +379,20 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Files created**: MarkdownEditor.tsx, MarkdownEditor.module.css, MarkdownEditor.test.tsx, e2e/markdown-editor.spec.ts
 - **Tests**: 23 component tests (toolbar, shortcuts, tabs, drag/drop, paste upload, disabled state) + 1 E2E smoke test; 75 vitest + 23 E2E all pass
 - **Issues**: Pre-existing FilterBar lint error unchanged
+- **Timestamp**: 2026-03-10
+
+## Task 5.12: Markdown renderer (CommonMark, micro-syntax links)
+- **Implemented**: MarkdownRenderer component per DD 0.7 §12:
+  - `remarkS9References.ts` — custom remark plugin that transforms S9 micro-syntax in text nodes into link nodes
+  - Supports: `#42` (ticket), `#MAP-23` (slug-ticket), `comment#3` (anchor), `#42/comment#3` and `#MAP-23/comment#1` (ticket+comment), `@alex` (mention)
+  - `MarkdownRenderer.tsx` — wraps react-markdown with remark-gfm + remarkS9References + custom link component
+  - Internal links use React Router `<Link>`, hash links use plain `<a>`, external links get `target="_blank"`, mentions render as `<span>`
+  - `MarkdownRenderer.module.css` — Warm Midnight prose styles (headings, code blocks, blockquotes, tables, lists)
+  - Custom `urlTransform` allows `mention:` scheme URLs through react-markdown's sanitizer
+  - Wired into MarkdownEditor preview (replacing raw text) and TicketDetailPage description/comments
+- **Files created**: remarkS9References.ts, remarkS9References.test.ts, MarkdownRenderer.tsx, MarkdownRenderer.module.css, MarkdownRenderer.test.tsx, e2e/markdown-renderer.spec.ts
+- **Files modified**: MarkdownEditor.tsx, MarkdownEditor.test.tsx, TicketDetailPage.tsx, markdown-editor.spec.ts, package.json
+- **Dependencies added**: react-markdown, remark-gfm
+- **Tests**: 9 remark plugin + 16 renderer component + 23 editor (updated) = 100 vitest; 28 E2E all pass
+- **Browser verified**: Ticket detail page renders markdown correctly at localhost:5173/tickets/1
 - **Timestamp**: 2026-03-10
