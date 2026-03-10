@@ -220,6 +220,18 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Issues**: Pre-existing prettier warnings on 5 files, pre-existing backend clippy and frontend test failures unchanged
 - **Timestamp**: 2026-03-09
 
+## Task 5.5: SSE client
+- **Implemented**: `useSSE` hook per DD §9 for real-time TanStack Query cache invalidation:
+  - Connects to `GET /api/events` via native `EventSource` when `enabled=true`
+  - Listens for all 5 SSE event types: ticket_created/updated, comment_created/updated/deleted
+  - Static invalidation via `EVENT_KEY_MAP` (invalidates `['tickets']` list queries)
+  - Dynamic invalidation: parses payload for `ticket_id` or `id` to invalidate detail queries `['tickets', id]`
+  - Disconnects on `enabled=false` (logout) or component unmount
+  - Native `EventSource` reconnection; error handler detects closed connections
+- **Files created**: frontend/src/hooks/useSSE.ts
+- **Issues**: Pre-existing backend clippy and frontend prettier warnings unchanged; TypeScript and ESLint clean
+- **Timestamp**: 2026-03-10
+
 ## Codebase Patterns
 - Frontend CSS uses CSS Modules for components + global styles in `src/styles/` (tokens.css, reset.css, typography.css, globals.css)
 - Design token names use short form without `color-` prefix: `--bg-root`, `--accent`, `--text-primary`
