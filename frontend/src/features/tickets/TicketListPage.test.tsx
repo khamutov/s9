@@ -172,6 +172,64 @@ describe('TicketListPage', () => {
     expect(link).toHaveAttribute('href', '/tickets/new');
   });
 
+  it('selects rows with j/k keyboard shortcuts', async () => {
+    vi.mocked(listTickets).mockResolvedValue({
+      items: [
+        mockTicket({ id: 1, title: 'First ticket' }),
+        mockTicket({ id: 2, title: 'Second ticket' }),
+        mockTicket({ id: 3, title: 'Third ticket' }),
+      ],
+      has_more: false,
+    });
+    const user = userEvent.setup();
+    renderPage();
+
+    await screen.findByText('First ticket');
+
+    // Press j to select first row
+    await user.keyboard('j');
+    const rows = screen.getByText('First ticket').closest('tr')!;
+    expect(rows.className).toContain('rowSelected');
+
+    // Press j again to select second row
+    await user.keyboard('j');
+    const row2 = screen.getByText('Second ticket').closest('tr')!;
+    expect(row2.className).toContain('rowSelected');
+    expect(rows.className).not.toContain('rowSelected');
+
+    // Press k to go back up
+    await user.keyboard('k');
+    expect(rows.className).toContain('rowSelected');
+  });
+
+  it('navigates to ticket detail with Enter on selected row', async () => {
+    vi.mocked(listTickets).mockResolvedValue({
+      items: [mockTicket({ id: 42, title: 'Enter ticket' })],
+      has_more: false,
+    });
+    const user = userEvent.setup();
+    renderPage();
+
+    await screen.findByText('Enter ticket');
+
+    // Select first row and press Enter
+    await user.keyboard('j');
+    await user.keyboard('{Enter}');
+
+    expect(screen.getByText('Detail page')).toBeInTheDocument();
+  });
+
+  it('navigates to create page with c shortcut', async () => {
+    vi.mocked(listTickets).mockResolvedValue({ items: [], has_more: false });
+    const user = userEvent.setup();
+    renderPage();
+
+    await screen.findByText('No tickets found.');
+
+    await user.keyboard('c');
+    expect(screen.getByText('Create page')).toBeInTheDocument();
+  });
+
   it('shows ticket count in header', async () => {
     vi.mocked(listTickets).mockResolvedValue({
       items: [

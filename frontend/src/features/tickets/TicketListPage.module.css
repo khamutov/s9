@@ -140,12 +140,18 @@
   border-bottom: none;
 }
 
-.row:hover {
+.row:hover,
+.rowSelected {
   background: var(--bg-hover);
 }
 
-.row:hover .colId {
+.row:hover .colId,
+.rowSelected .colId {
   color: var(--accent);
+}
+
+.rowSelected {
+  box-shadow: inset 3px 0 0 var(--accent);
 }
 
 /* Staggered row animation */

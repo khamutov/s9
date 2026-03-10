@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router';
 import { usePageHeader } from '../../components/layout/usePageHeader';
 import StatusBadge from '../../components/StatusBadge';
 import PriorityBadge from '../../components/PriorityBadge';
 import UserPill from '../../components/UserPill';
 import FilterBar from '../../components/FilterBar';
+import { useKeyboardNavigation } from '../../hooks/useKeyboardNavigation';
 import { useTickets } from './useTickets';
 import { isOffsetPage } from '../../api/types';
 import type { Ticket, TicketStatus } from '../../api/types';
@@ -80,9 +81,16 @@ export default function TicketListPage() {
 
   const { data, isLoading, error } = useTickets(debouncedQ ? { q: debouncedQ } : {});
 
-  const tickets = data?.items ?? [];
+  const tickets = useMemo(() => data?.items ?? [], [data]);
   const totalCount = data ? (isOffsetPage(data) ? data.total : tickets.length) : 0;
   const counts = countStatuses(tickets);
+
+  const getItemHref = useCallback((index: number) => `/tickets/${tickets[index]?.id}`, [tickets]);
+  const { selectedIndex, setSelectedIndex } = useKeyboardNavigation({
+    itemCount: tickets.length,
+    getItemHref,
+    enabled: !isLoading && tickets.length > 0,
+  });
 
   return (
     <div>
@@ -131,11 +139,12 @@ export default function TicketListPage() {
                 </tr>
               </thead>
               <tbody>
-                {tickets.map((ticket) => (
+                {tickets.map((ticket, index) => (
                   <tr
                     key={ticket.id}
-                    className={styles.row}
+                    className={`${styles.row} ${index === selectedIndex ? styles.rowSelected : ''}`}
                     onClick={() => navigate(`/tickets/${ticket.id}`)}
+                    onMouseEnter={() => setSelectedIndex(index)}
                     role="link"
                     tabIndex={0}
                     onKeyDown={(e) => {
