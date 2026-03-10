@@ -1,0 +1,123 @@
+.filterBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+  position: relative;
+  animation: fade-down 0.5s var(--ease-out) 0.08s both;
+}
+
+.icon {
+  position: absolute;
+  left: 14px;
+  width: 14px;
+  height: 14px;
+  color: var(--text-tertiary);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.input {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  padding: var(--space-2) var(--space-4);
+  padding-left: 36px;
+  padding-right: 40px;
+  height: 40px;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  flex: 1;
+  min-width: 200px;
+  transition: all var(--transition-fast);
+}
+
+.input::placeholder {
+  color: var(--text-ghost);
+  font-weight: 400;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-subtle), var(--shadow-glow);
+  background: var(--bg-raised);
+}
+
+.kbd {
+  position: absolute;
+  right: 12px;
+  pointer-events: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  min-width: 22px;
+  padding: 0 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-ghost);
+  background: var(--bg-raised);
+  border: 1px solid var(--border-primary);
+  border-radius: 4px;
+  z-index: 1;
+}
+
+/* Hide kbd hint when input is focused */
+.input:focus ~ .kbd {
+  display: none;
+}
+
+/* Autocomplete dropdown */
+.dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: var(--space-1);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  z-index: 10;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  padding-left: 14px;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+
+.dropdownItem:first-child {
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+
+.dropdownItem:last-child {
+  border-radius: 0 0 var(--radius) var(--radius);
+}
+
+.dropdownItem:hover,
+.dropdownItemActive {
+  background: var(--bg-hover);
+}
+
+.dropdownKey {
+  color: var(--accent);
+  font-weight: 600;
+  min-width: 100px;
+}
+
+.dropdownHint {
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+}

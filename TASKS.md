@@ -91,7 +91,7 @@ Status legend: `[ ]` pending | `[~]` in progress | `[x]` completed
 - [x] **5.5** SSE client [blocked by: 5.4]
 - [x] **5.6** Auth pages (login, OIDC redirect) [blocked by: 5.2, 5.4]
 - [x] **5.7** Ticket list page [blocked by: 5.2, 5.4, 0.10]
-- [ ] **5.8** Filter bar with autocomplete [blocked by: 5.7]
+- [x] **5.8** Filter bar with autocomplete [blocked by: 5.7]
 - [ ] **5.9** Ticket detail page [blocked by: 5.2, 5.4, 0.11]
 - [ ] **5.10** Inline-editable metadata fields [blocked by: 5.9]
 - [ ] **5.11** Markdown editor (textarea, preview, attachment drop) [blocked by: 5.1]

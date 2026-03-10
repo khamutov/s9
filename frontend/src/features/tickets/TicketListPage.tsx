@@ -1,8 +1,10 @@
-import { useNavigate, Link } from 'react-router';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link, useSearchParams } from 'react-router';
 import { usePageHeader } from '../../components/layout/usePageHeader';
 import StatusBadge from '../../components/StatusBadge';
 import PriorityBadge from '../../components/PriorityBadge';
 import UserPill from '../../components/UserPill';
+import FilterBar from '../../components/FilterBar';
 import { useTickets } from './useTickets';
 import { isOffsetPage } from '../../api/types';
 import type { Ticket, TicketStatus } from '../../api/types';
@@ -51,10 +53,34 @@ const STATUS_LABELS: Record<TicketStatus, string> = {
 };
 
 /** Paginated ticket list with table, status summary, and navigation. */
+/** Debounce delay in ms before sending filter query to the API. */
+const DEBOUNCE_MS = 300;
+
 export default function TicketListPage() {
   usePageHeader({ title: 'Tickets', breadcrumb: [] });
   const navigate = useNavigate();
-  const { data, isLoading, error } = useTickets();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Filter input is controlled; debounced value is sent to API
+  const [filterText, setFilterText] = useState(searchParams.get('q') ?? '');
+  const [debouncedQ, setDebouncedQ] = useState(filterText);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQ(filterText);
+      // Sync query param with URL for shareability
+      if (filterText) {
+        setSearchParams({ q: filterText }, { replace: true });
+      } else {
+        setSearchParams({}, { replace: true });
+      }
+    }, DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [filterText, setSearchParams]);
+
+  const { data, isLoading, error } = useTickets(
+    debouncedQ ? { q: debouncedQ } : {},
+  );
 
   const tickets = data?.items ?? [];
   const totalCount = data ? (isOffsetPage(data) ? data.total : tickets.length) : 0;
@@ -85,6 +111,8 @@ export default function TicketListPage() {
           Create Ticket
         </Link>
       </div>
+
+      <FilterBar value={filterText} onChange={setFilterText} />
 
       <div className={styles.tableWrap}>
         {isLoading ? (

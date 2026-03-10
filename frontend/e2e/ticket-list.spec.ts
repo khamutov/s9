@@ -113,6 +113,74 @@ test.describe('Ticket List Page', () => {
     await expect(createLink).toHaveAttribute('href', '/tickets/new');
   });
 
+  test('filter bar filters tickets via query param', async ({ page, mockApi }) => {
+    await mockApi.loginAs();
+
+    // Default: return all tickets
+    await mockApi.get('/api/tickets', MOCK_TICKETS);
+
+    // Filtered: return only the P1 ticket when q param is present
+    const filteredResults: CursorPage<Ticket> = {
+      items: [MOCK_TICKETS.items[0]],
+      has_more: false,
+    };
+
+    await page.goto('/tickets');
+    await expect(page.getByText('Crash on startup')).toBeVisible();
+    await expect(page.getByText('Add bulk edit')).toBeVisible();
+
+    // Mock the filtered request before typing
+    // Route with query params will match the glob
+    await page.route('**/api/tickets?*', async (route) => {
+      const url = new URL(route.request().url());
+      if (url.searchParams.get('q')?.includes('priority:P1')) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(filteredResults),
+        });
+      } else {
+        await route.fallback();
+      }
+    });
+
+    const filterInput = page.getByRole('textbox', { name: /filter tickets/i });
+    await filterInput.fill('priority:P1');
+
+    // Should show only the P1 ticket
+    await expect(page.getByText('Crash on startup')).toBeVisible();
+    await expect(page.getByText('Add bulk edit')).not.toBeVisible();
+  });
+
+  test('filter bar shows autocomplete on focus', async ({ page, mockApi }) => {
+    await mockApi.loginAs();
+    await mockApi.get('/api/tickets', { items: [], has_more: false });
+
+    await page.goto('/tickets');
+
+    const filterInput = page.getByRole('textbox', { name: /filter tickets/i });
+    await filterInput.click();
+
+    // Should show filter key suggestions
+    await expect(page.getByText('status:')).toBeVisible();
+    await expect(page.getByText('priority:')).toBeVisible();
+    await expect(page.getByText('owner:')).toBeVisible();
+  });
+
+  test('filter bar supports "/" keyboard shortcut to focus', async ({ page, mockApi }) => {
+    await mockApi.loginAs();
+    await mockApi.get('/api/tickets', { items: [], has_more: false });
+
+    await page.goto('/tickets');
+
+    const filterInput = page.getByRole('textbox', { name: /filter tickets/i });
+    await expect(filterInput).not.toBeFocused();
+
+    // Press "/" to focus
+    await page.keyboard.press('/');
+    await expect(filterInput).toBeFocused();
+  });
+
   test('renders table headers', async ({ page, mockApi }) => {
     await mockApi.loginAs();
     await mockApi.get('/api/tickets', MOCK_TICKETS);
