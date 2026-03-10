@@ -1,0 +1,120 @@
+/* System Settings — read-only configuration display */
+
+.header {
+  margin-bottom: var(--space-8);
+  animation: fade-down 0.5s var(--ease-out) both;
+}
+
+.breadcrumb {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-label);
+  margin-bottom: var(--space-2);
+}
+
+.card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius);
+  padding: var(--space-6);
+  margin-bottom: var(--space-5);
+  animation: fade-down 0.5s var(--ease-out) 0.08s both;
+}
+
+.sectionTitle {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-label);
+  margin-bottom: var(--space-5);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.settingRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.settingRow:last-child {
+  border-bottom: none;
+}
+
+.settingLabel {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.settingValue {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+}
+
+.versionTag {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  background: var(--bg-raised);
+  color: var(--text-label);
+  border-radius: var(--radius-sm);
+}
+
+.enabledBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 20px;
+  padding: 0 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  background: rgba(94, 202, 126, 0.1);
+  color: #5eca7e;
+  border-radius: var(--radius-sm);
+}
+
+.enabledBadge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.infoText {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-label);
+}
+
+.monoValue {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-primary);
+}
+
+.helpText {
+  padding: var(--space-4) 0;
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  line-height: 1.5;
+  animation: fade-down 0.5s var(--ease-out) 0.16s both;
+}
+
+.accessDenied {
+  padding: var(--space-10) var(--space-6);
+  text-align: center;
+  color: #f87171;
+  font-size: var(--text-sm);
+}

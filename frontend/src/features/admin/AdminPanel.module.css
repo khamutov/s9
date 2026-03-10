@@ -1,0 +1,100 @@
+/* Admin Panel — dashboard with navigation cards */
+
+.header {
+  margin-bottom: var(--space-8);
+  animation: fade-down 0.5s var(--ease-out) both;
+}
+
+.breadcrumb {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-label);
+  margin-bottom: var(--space-2);
+}
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-5);
+  animation: fade-down 0.5s var(--ease-out) 0.08s both;
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius);
+  padding: var(--space-6);
+  text-decoration: none;
+  transition:
+    transform var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.card:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 245, 220, 0.12);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.card:hover .cardTitle {
+  color: var(--accent);
+}
+
+.card:hover .cardArrow {
+  color: var(--accent);
+  transform: translateX(2px);
+}
+
+.cardIcon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-raised);
+  border-radius: var(--radius-sm);
+  color: var(--text-label);
+}
+
+.cardContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.cardTitle {
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  transition: color var(--transition-fast);
+}
+
+.cardDescription {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.cardArrow {
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+  transition:
+    color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.accessDenied {
+  padding: var(--space-10) var(--space-6);
+  text-align: center;
+  color: #f87171;
+  font-size: var(--text-sm);
+}
