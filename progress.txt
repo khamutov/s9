@@ -481,3 +481,21 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Browser verified**: All four pages render correctly at localhost:5173/admin/*
 - **Issues**: Pre-existing backend clippy warnings and 1 pre-existing component-tree E2E failure unchanged
 - **Timestamp**: 2026-03-10
+
+## Task 5.18: Keyboard navigation (j/k, Enter, c)
+- **Implemented**: `useKeyboardNavigation` hook per DD §15 for list-page keyboard shortcuts:
+  - `j` / `ArrowDown` — move selection down through ticket rows
+  - `k` / `ArrowUp` — move selection up through ticket rows
+  - `Enter` — navigate to selected ticket detail page
+  - `c` — navigate to create ticket page (works globally, even with empty list)
+  - `/` — focus filter bar (already implemented in FilterBar component)
+  - All shortcuts disabled when focus is inside input, textarea, select, or contenteditable
+  - Selected row gets golden left bar (`box-shadow: inset 3px 0 0 var(--accent)`) and hover background
+  - Mouse hover on rows syncs with keyboard selection state
+  - Render-phase sync pattern for resetting selection on data changes (avoids setState-in-effect lint error)
+  - `scrollIntoView({ block: 'nearest' })` keeps selected row visible
+- **Files created**: useKeyboardNavigation.ts, useKeyboardNavigation.test.ts, keyboard-navigation.spec.ts
+- **Files modified**: TicketListPage.tsx, TicketListPage.module.css, TicketListPage.test.tsx
+- **Tests**: 9 hook unit tests + 3 page component tests + 5 E2E tests; 187 vitest + 68 E2E all pass
+- **Issues**: None
+- **Timestamp**: 2026-03-10
