@@ -83,10 +83,8 @@ export default function FilterBar({
   const suggestions = getSuggestions(value);
   const showDropdown = focused && suggestions.length > 0;
 
-  // Reset active index when suggestions change
-  useEffect(() => {
-    setActiveIndex(-1);
-  }, [suggestions.length]);
+  // Clamp activeIndex if it exceeds available suggestions
+  const clampedIndex = activeIndex >= suggestions.length ? -1 : activeIndex;
 
   // Global "/" shortcut to focus filter
   useEffect(() => {
@@ -140,9 +138,9 @@ export default function FilterBar({
         break;
       case 'Enter':
       case 'Tab':
-        if (activeIndex >= 0) {
+        if (clampedIndex >= 0) {
           e.preventDefault();
-          applySuggestion(suggestions[activeIndex]);
+          applySuggestion(suggestions[clampedIndex]);
         }
         break;
       case 'Escape':
@@ -170,7 +168,10 @@ export default function FilterBar({
         className={styles.input}
         type="text"
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => {
+          onChange(e.target.value);
+          setActiveIndex(-1);
+        }}
         onFocus={() => setFocused(true)}
         onBlur={() => {
           // Delay to allow click on dropdown item
@@ -188,9 +189,9 @@ export default function FilterBar({
           {suggestions.map((s, i) => (
             <div
               key={s.insert}
-              className={`${styles.dropdownItem} ${i === activeIndex ? styles.dropdownItemActive : ''}`}
+              className={`${styles.dropdownItem} ${i === clampedIndex ? styles.dropdownItemActive : ''}`}
               role="option"
-              aria-selected={i === activeIndex}
+              aria-selected={i === clampedIndex}
               onMouseDown={(e) => {
                 e.preventDefault();
                 applySuggestion(s);
