@@ -40,7 +40,7 @@ export default function CreateTicketPage() {
   const navigate = useNavigate();
   const mutation = useCreateTicket();
   const { data: componentsData } = useComponents();
-  const { data: milestonesData } = useMilestones();
+  const { data: milestonesData } = useMilestones('open');
   const { data: usersData } = useUsers();
 
   const [title, setTitle] = useState('');
