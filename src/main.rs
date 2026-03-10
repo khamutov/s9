@@ -134,8 +134,19 @@ async fn migrate(config: Config) -> anyhow::Result<()> {
     Ok(())
 }
 
-async fn create_admin(_config: Config, _login: String, _password: String) -> anyhow::Result<()> {
-    // Implementation deferred to Phase 2 (auth + user tables required).
-    tracing::warn!("create-admin is not yet implemented");
+async fn create_admin(config: Config, login: String, password: String) -> anyhow::Result<()> {
+    let pool = db::init_pool(&config.db_path).await?;
+    db::run_migrations(&pool).await?;
+
+    let password_hash = auth::password::hash_password(&password)?;
+    let req = models::CreateUserRequest {
+        login: login.clone(),
+        display_name: login.clone(),
+        email: format!("{login}@localhost"),
+        password: Some(password.clone()),
+        role: Some(models::Role::Admin),
+    };
+    let user = repos::user::create(&pool, &req, Some(&password_hash)).await?;
+    tracing::info!("admin user created: id={}, login={}", user.id, user.login);
     Ok(())
 }
