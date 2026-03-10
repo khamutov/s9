@@ -34,6 +34,16 @@ Playwright is set up in `frontend/e2e/`. Config: `frontend/playwright.config.ts`
 - Use role-based and text-based locators (`getByRole`, `getByText`) over CSS selectors
 - Tests run against the Vite dev server (auto-started by Playwright config)
 
+# Component & unit testing
+
+Vitest + Testing Library is set up in the frontend.
+
+- Run: `cd frontend && npm run test` or `task frontend:test`
+- Co-locate tests: `Component.test.tsx` beside `Component.tsx`
+- Use role/text-based queries (`getByRole`, `getByText`), `vi.mock()` for API calls
+- Test contracts not implementation details
+- **Every feature task includes relevant tests as part of definition of done**
+
 # Task tracking
 
 Active tasks are tracked in `TASKS.md` at the repository root.

@@ -82,6 +82,8 @@ Status legend: `[ ]` pending | `[~]` in progress | `[x]` completed
 
 ## Phase 5: Frontend
 
+> **Testing policy**: each feature task includes component tests + E2E tests as part of definition of done.
+
 - [x] **5.1** Design tokens + global CSS (from prototype) [blocked by: 0.7, 0.9, 1.2]
 - [x] **5.2** Layout shell component [blocked by: 5.1, 0.14]
 - [x] **5.3** Routing setup [blocked by: 0.7, 1.2]
@@ -104,14 +106,10 @@ Status legend: `[ ]` pending | `[~]` in progress | `[x]` completed
 
 ## Phase 6: Integration & Deployment
 
-- [ ] **6.1** Backend integration tests (API contract tests) [blocked by: Phase 3]
-- [ ] **6.2** Unit tests for parsers (search, mentions, references) [blocked by: 2.10, 4.5, 4.6]
-- [ ] **6.3** Frontend component tests [blocked by: Phase 5]
-- [ ] **6.4** E2E tests (Playwright) [blocked by: Phase 3, Phase 5]
 - [ ] **6.5** Dockerfile [blocked by: 0.8]
 - [ ] **6.6** Deployment documentation [blocked by: Phase 4]
 - [ ] **6.7** Initial admin user seeding [blocked by: 3.1, 2.5]
-- [ ] **6.8** Performance testing (10k tickets) [blocked by: 6.1]
+- [ ] **6.8** Performance testing (10k tickets) [blocked by: 3.6]
 
 ## Critical Path
 
