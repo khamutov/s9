@@ -301,6 +301,9 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - Strict lint: cannot call setState in useMemo or useEffect. Derive initial state during render using `const effective = userState ?? computedDefault` pattern
 - Import `react-router` (not `react-router-dom`) for Link, useNavigate, MemoryRouter, etc.
 - E2E: when text appears in both tree and detail panel, use `.first()` on locators to avoid strict mode violations
+- Admin pages: check `useAuth().user?.role !== 'admin'` and show access denied fallback
+- Modal pattern: heading + submit button with same text — use `getByRole('heading', { name })` or `getByRole('button', { name })` to disambiguate in tests
+- E2E admin tests: sidebar nav has "Components"/"Settings" links — use card descriptions or `.first()` to avoid strict mode violations
 
 ## Task 4.6: Micro-syntax reference parsing (#ID, #PREFIX-ID, comment#N)
 - **Implemented**: Reference parser module per PRD §4.1 and DD 0.17 §7.5:
@@ -461,4 +464,20 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Files modified**: MilestoneListPage.tsx, useMilestones.ts
 - **Tests**: 14 component tests + 6 E2E tests; 145 vitest + 52 E2E all pass (1 pre-existing create-ticket E2E failure unchanged)
 - **Issues**: Pre-existing backend clippy warnings and create-ticket E2E test failure unchanged
+- **Timestamp**: 2026-03-10
+
+## Task 5.17: Admin panel
+- **Implemented**: Four admin pages with full CRUD functionality:
+  - `AdminPanel.tsx` — Dashboard with navigation cards (Users, Components, Settings) linking to sub-pages, with icons and descriptions
+  - `UserManagement.tsx` — User table with create/edit/set-password modals, role badges (admin/user), status badges (active/inactive), auth tags (password/oidc), activate/deactivate toggle, show inactive filter
+  - `ComponentManagement.tsx` — Component table with create/edit/delete modals, slug display, parent select (excluding self to prevent circular refs), delete protection for components with assigned tickets
+  - `SystemSettings.tsx` — Read-only configuration display with General, Authentication, and Notifications sections
+  - All pages enforce admin role with access denied fallback via `useAuth().user?.role`
+  - Modal pattern: overlay + animated card, form validation, server error handling via ApiError.details
+  - TanStack Query mutations with `queryClient.invalidateQueries` on success
+- **Files created**: AdminPanel.module.css, AdminPanel.test.tsx, UserManagement.module.css, UserManagement.test.tsx, ComponentManagement.module.css, ComponentManagement.test.tsx, SystemSettings.module.css, SystemSettings.test.tsx, e2e/admin-panel.spec.ts
+- **Files modified**: AdminPanel.tsx, UserManagement.tsx, ComponentManagement.tsx, SystemSettings.tsx
+- **Tests**: 30 component tests + 10 E2E tests; 175 vitest + 62 E2E all pass
+- **Browser verified**: All four pages render correctly at localhost:5173/admin/*
+- **Issues**: Pre-existing backend clippy warnings and 1 pre-existing component-tree E2E failure unchanged
 - **Timestamp**: 2026-03-10
