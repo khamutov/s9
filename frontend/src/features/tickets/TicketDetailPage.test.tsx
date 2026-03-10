@@ -526,6 +526,61 @@ describe('TicketDetailPage', () => {
     expect(screen.getByRole('button', { name: 'Delete comment #1' })).toBeInTheDocument();
   });
 
+  it('renders attachments on comment', async () => {
+    vi.mocked(getTicket).mockResolvedValue(mockTicket());
+    vi.mocked(listComments).mockResolvedValue({
+      items: [
+        mockComment({ number: 0, body: 'Description' }),
+        mockComment({
+          id: 2,
+          number: 1,
+          author: { id: 1, login: 'alex', display_name: 'Alex Kim' },
+          body: 'See attached file.',
+          attachments: [
+            {
+              id: 10,
+              original_name: 'debug.log',
+              mime_type: 'text/plain',
+              size_bytes: 4096,
+              url: '/api/attachments/10/debug.log',
+            },
+          ],
+        }),
+      ],
+    });
+    renderPage();
+
+    await screen.findByText('See attached file.');
+    expect(screen.getByText('Attachments')).toBeInTheDocument();
+    expect(screen.getByText('debug.log')).toBeInTheDocument();
+    expect(screen.getByText('4.0 KB')).toBeInTheDocument();
+  });
+
+  it('renders image attachments on description', async () => {
+    vi.mocked(getTicket).mockResolvedValue(mockTicket());
+    vi.mocked(listComments).mockResolvedValue({
+      items: [
+        mockComment({
+          number: 0,
+          body: 'Description with screenshot.',
+          attachments: [
+            {
+              id: 5,
+              original_name: 'screenshot.png',
+              mime_type: 'image/png',
+              size_bytes: 245760,
+              url: '/api/attachments/5/screenshot.png',
+            },
+          ],
+        }),
+      ],
+    });
+    renderPage();
+
+    await screen.findByText('Description with screenshot.');
+    expect(screen.getByAltText('screenshot.png')).toBeInTheDocument();
+  });
+
   it('calls deleteComment when delete is clicked', async () => {
     vi.mocked(useAuth).mockReturnValue({
       user: { id: 1, login: 'admin', display_name: 'Admin', email: 'admin@s9.dev', role: 'admin' },

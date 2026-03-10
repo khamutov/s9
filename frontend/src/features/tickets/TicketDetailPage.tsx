@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router';
 import { usePageHeader } from '../../components/layout/usePageHeader';
 import StatusBadge from '../../components/StatusBadge';
@@ -9,6 +9,7 @@ import InlineSelect, { type SelectOption } from '../../components/InlineSelect';
 import InlineText from '../../components/InlineText';
 import MarkdownRenderer from '../../components/MarkdownRenderer';
 import { MarkdownEditor } from '../../components/MarkdownEditor';
+import AttachmentList from '../../components/AttachmentList';
 import { useAuth } from '../auth/useAuth';
 import { useTicket } from './useTicket';
 import { useComments } from './useComments';
@@ -303,7 +304,10 @@ function CommentCard({
             )}
           </div>
         ) : (
-          <MarkdownRenderer>{comment.body}</MarkdownRenderer>
+          <>
+            <MarkdownRenderer>{comment.body}</MarkdownRenderer>
+            <AttachmentList attachments={comment.attachments} />
+          </>
         )}
       </div>
     </div>
@@ -313,17 +317,24 @@ function CommentCard({
 /** Form for adding a new comment to the ticket. */
 function CommentForm({ ticketId }: { ticketId: number }) {
   const [body, setBody] = useState('');
+  const attachmentIdsRef = useRef<number[]>([]);
   const mutation = useCreateComment(ticketId);
+
+  const handleAttachmentUploaded = useCallback((id: number) => {
+    attachmentIdsRef.current.push(id);
+  }, []);
 
   const handleSubmit = () => {
     const trimmed = body.trim();
     if (!trimmed) return;
-    mutation.mutate(
-      { body: trimmed },
-      {
-        onSuccess: () => setBody(''),
+    const ids = attachmentIdsRef.current;
+    const req = ids.length > 0 ? { body: trimmed, attachment_ids: ids } : { body: trimmed };
+    mutation.mutate(req, {
+      onSuccess: () => {
+        setBody('');
+        attachmentIdsRef.current = [];
       },
-    );
+    });
   };
 
   return (
@@ -335,6 +346,7 @@ function CommentForm({ ticketId }: { ticketId: number }) {
         placeholder="Write a comment… Use @mentions and #references"
         minHeight={100}
         disabled={mutation.isPending}
+        onAttachmentUploaded={handleAttachmentUploaded}
       />
       <div className={styles.commentFormFooter}>
         {mutation.isError && (
@@ -420,6 +432,7 @@ export default function TicketDetailPage() {
                   </span>
                 </div>
                 <MarkdownRenderer>{description.body}</MarkdownRenderer>
+                <AttachmentList attachments={description.attachments} />
               </div>
             </div>
           )}

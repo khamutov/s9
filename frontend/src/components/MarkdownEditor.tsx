@@ -23,6 +23,8 @@ export interface MarkdownEditorProps {
   minHeight?: number;
   /** Whether the editor is disabled. */
   disabled?: boolean;
+  /** Called when an attachment is successfully uploaded, with the attachment ID. */
+  onAttachmentUploaded?: (attachmentId: number) => void;
 }
 
 /**
@@ -35,6 +37,7 @@ export function MarkdownEditor({
   placeholder = 'Write a comment… Use @mentions and #references',
   minHeight,
   disabled = false,
+  onAttachmentUploaded,
 }: MarkdownEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [mode, setMode] = useState<'write' | 'preview'>('write');
@@ -125,13 +128,14 @@ export function MarkdownEditor({
         const needsNewline = pos > 0 && value[pos - 1] !== '\n' ? '\n' : '';
         const newValue = value.slice(0, pos) + needsNewline + mdLink + '\n' + value.slice(pos);
         onChange(newValue);
+        onAttachmentUploaded?.(attachment.id);
       } catch {
         // Upload failed — silently ignore (user sees no insertion)
       } finally {
         setUploadCount((c) => c - 1);
       }
     },
-    [value, onChange],
+    [value, onChange, onAttachmentUploaded],
   );
 
   const handleDragEnter = useCallback((e: DragEvent) => {
