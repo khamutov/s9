@@ -359,3 +359,19 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Tests**: 8 InlineSelect + 8 InlineText + 16 TicketDetailPage (3 new inline edit tests) + 2 new E2E tests; 52 vitest + 22 E2E all pass
 - **Issues**: Pre-existing FilterBar lint error (setState in effect) unchanged
 - **Timestamp**: 2026-03-10
+
+## Task 5.11: Markdown editor (textarea, preview, attachment drop)
+- **Implemented**: Reusable MarkdownEditor component per DD 0.7 §13:
+  - `MarkdownEditor.tsx` — controlled textarea with write/preview tabs, formatting toolbar, attachment upload
+  - Toolbar buttons: Bold, Italic, Code (inline/fence), Link, List — matching prototype §19
+  - Keyboard shortcuts: Ctrl+B (bold), Ctrl+I (italic), Ctrl+K (link)
+  - Write/Preview toggle: preview shows raw text (full markdown rendering deferred to task 5.12)
+  - Attachment upload: drag-drop and clipboard paste, calls `uploadAttachment()` API, inserts `![name](url)` for images or `[name](url)` for files
+  - Drag overlay with "Drop to upload" visual feedback
+  - Footer with upload status indicator
+  - Disabled state support
+  - Custom placeholder text
+- **Files created**: MarkdownEditor.tsx, MarkdownEditor.module.css, MarkdownEditor.test.tsx, e2e/markdown-editor.spec.ts
+- **Tests**: 23 component tests (toolbar, shortcuts, tabs, drag/drop, paste upload, disabled state) + 1 E2E smoke test; 75 vitest + 23 E2E all pass
+- **Issues**: Pre-existing FilterBar lint error unchanged
+- **Timestamp**: 2026-03-10

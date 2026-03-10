@@ -94,7 +94,7 @@ Status legend: `[ ]` pending | `[~]` in progress | `[x]` completed
 - [x] **5.8** Filter bar with autocomplete [blocked by: 5.7]
 - [x] **5.9** Ticket detail page [blocked by: 5.2, 5.4, 0.11]
 - [x] **5.10** Inline-editable metadata fields [blocked by: 5.9]
-- [ ] **5.11** Markdown editor (textarea, preview, attachment drop) [blocked by: 5.1]
+- [x] **5.11** Markdown editor (textarea, preview, attachment drop) [blocked by: 5.1]
 - [ ] **5.12** Markdown renderer (CommonMark, micro-syntax links) [blocked by: 5.1]
 - [ ] **5.13** Comment thread component [blocked by: 5.9, 5.11, 5.12]
 - [ ] **5.14** Create/edit ticket form [blocked by: 5.2, 5.4, 0.13]
