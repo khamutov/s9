@@ -34,6 +34,15 @@ Playwright is set up in `frontend/e2e/`. Config: `frontend/playwright.config.ts`
 - Use role-based and text-based locators (`getByRole`, `getByText`) over CSS selectors
 - Tests run against the Vite dev server (auto-started by Playwright config)
 
+## API mocking in E2E tests
+
+- Import `test` and `expect` from `e2e/fixtures/test-fixtures` (not `@playwright/test`) when mocking APIs
+- The `mockApi` fixture intercepts requests via `page.route()` — no backend needed
+- `mockApi.loginAs()` before `page.goto()` for authenticated pages
+- `mockApi.get(path, body, status?)` / `mockApi.post(path, body, status?)` for endpoint mocking
+- Add shared mock data constants to `e2e/fixtures/mock-data.ts`
+- Unmocked API endpoints are not intercepted — they will fail visibly if the backend is not running
+
 # Component & unit testing
 
 Vitest + Testing Library is set up in the frontend.
