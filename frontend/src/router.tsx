@@ -1,6 +1,7 @@
 import { lazy } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router';
 import RootLayout from './components/layout/RootLayout';
+import AuthGuard from './features/auth/AuthGuard';
 import Lazy from './components/Lazy';
 
 // Route-level code splitting via React.lazy() per DD §7/§19
@@ -27,88 +28,93 @@ const router = createBrowserRouter([
   },
   {
     path: '/',
-    element: <RootLayout />,
+    element: <AuthGuard />,
     children: [
-      { index: true, element: <Navigate to="/tickets" replace /> },
       {
-        path: 'tickets',
-        element: (
-          <Lazy>
-            <TicketListPage />
-          </Lazy>
-        ),
-      },
-      {
-        path: 'tickets/new',
-        element: (
-          <Lazy>
-            <CreateTicketPage />
-          </Lazy>
-        ),
-      },
-      {
-        path: 'tickets/:id',
-        element: (
-          <Lazy>
-            <TicketDetailPage />
-          </Lazy>
-        ),
-      },
-      {
-        path: 'components',
-        element: (
-          <Lazy>
-            <ComponentTreePage />
-          </Lazy>
-        ),
-      },
-      {
-        path: 'milestones',
-        element: (
-          <Lazy>
-            <MilestoneListPage />
-          </Lazy>
-        ),
-      },
-      {
-        path: 'milestones/:id',
-        element: (
-          <Lazy>
-            <MilestoneDetailPage />
-          </Lazy>
-        ),
-      },
-      {
-        path: 'admin',
-        element: (
-          <Lazy>
-            <AdminPanel />
-          </Lazy>
-        ),
-      },
-      {
-        path: 'admin/users',
-        element: (
-          <Lazy>
-            <UserManagement />
-          </Lazy>
-        ),
-      },
-      {
-        path: 'admin/components',
-        element: (
-          <Lazy>
-            <ComponentManagement />
-          </Lazy>
-        ),
-      },
-      {
-        path: 'admin/settings',
-        element: (
-          <Lazy>
-            <SystemSettings />
-          </Lazy>
-        ),
+        element: <RootLayout />,
+        children: [
+          { index: true, element: <Navigate to="/tickets" replace /> },
+          {
+            path: 'tickets',
+            element: (
+              <Lazy>
+                <TicketListPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: 'tickets/new',
+            element: (
+              <Lazy>
+                <CreateTicketPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: 'tickets/:id',
+            element: (
+              <Lazy>
+                <TicketDetailPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: 'components',
+            element: (
+              <Lazy>
+                <ComponentTreePage />
+              </Lazy>
+            ),
+          },
+          {
+            path: 'milestones',
+            element: (
+              <Lazy>
+                <MilestoneListPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: 'milestones/:id',
+            element: (
+              <Lazy>
+                <MilestoneDetailPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: 'admin',
+            element: (
+              <Lazy>
+                <AdminPanel />
+              </Lazy>
+            ),
+          },
+          {
+            path: 'admin/users',
+            element: (
+              <Lazy>
+                <UserManagement />
+              </Lazy>
+            ),
+          },
+          {
+            path: 'admin/components',
+            element: (
+              <Lazy>
+                <ComponentManagement />
+              </Lazy>
+            ),
+          },
+          {
+            path: 'admin/settings',
+            element: (
+              <Lazy>
+                <SystemSettings />
+              </Lazy>
+            ),
+          },
+        ],
       },
     ],
   },

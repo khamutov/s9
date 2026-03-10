@@ -1,15 +1,16 @@
 import { test, expect } from '@playwright/test';
 
-test('app loads and redirects to /tickets', async ({ page }) => {
+test('unauthenticated user is redirected to login', async ({ page }) => {
   await page.goto('/');
-  await expect(page).toHaveURL(/\/tickets/);
-  await expect(page.locator('aside').getByText('S9')).toBeVisible();
-  await expect(page.getByText('Tickets', { exact: true })).toBeVisible();
+  await expect(page).toHaveURL(/\/login/);
+  await expect(page.getByText('S9')).toBeVisible();
+  await expect(page.getByText('Sign in to your account')).toBeVisible();
 });
 
-test('sidebar navigation works', async ({ page }) => {
-  await page.goto('/');
-  await page.getByRole('link', { name: 'Components' }).click();
-  await expect(page).toHaveURL(/\/components/);
-  await expect(page.getByText('Components')).toBeVisible();
+test('login page renders form and OIDC button', async ({ page }) => {
+  await page.goto('/login');
+  await expect(page.getByLabel('Username')).toBeVisible();
+  await expect(page.getByLabel('Password')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Sign in' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Sign in with SSO' })).toBeVisible();
 });
