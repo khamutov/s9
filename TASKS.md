@@ -97,7 +97,7 @@ Status legend: `[ ]` pending | `[~]` in progress | `[x]` completed
 - [x] **5.11** Markdown editor (textarea, preview, attachment drop) [blocked by: 5.1]
 - [x] **5.12** Markdown renderer (CommonMark, micro-syntax links) [blocked by: 5.1]
 - [x] **5.13** Comment thread component [blocked by: 5.9, 5.11, 5.12]
-- [ ] **5.14** Create/edit ticket form [blocked by: 5.2, 5.4, 0.13]
+- [x] **5.14** Create/edit ticket form [blocked by: 5.2, 5.4, 0.13]
 - [ ] **5.15** Component tree view [blocked by: 5.2, 5.4, 0.12]
 - [ ] **5.16** Milestone view [blocked by: 5.2, 5.4, 0.15]
 - [ ] **5.17** Admin panel [blocked by: 5.2, 5.4]

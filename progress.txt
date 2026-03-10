@@ -413,3 +413,20 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Tests**: 25 component tests (10 new) + 35 E2E (7 new); 109 vitest + 35 E2E all pass
 - **Issues**: Pre-existing backend clippy warnings unchanged
 - **Timestamp**: 2026-03-10
+
+## Task 5.14: Create/edit ticket form
+- **Implemented**: Create ticket page matching prototype 04-create-ticket.html:
+  - Form card with two sections: Basic Info (title + markdown description) and Metadata (2-column grid)
+  - Title input with display font, description via MarkdownEditor component
+  - Select dropdowns for type, priority, component, owner, milestone — populated from API
+  - Client-side validation: title, component, owner required; errors clear on correction
+  - Server error handling: ApiError.details maps to inline field errors, generic fallback banner
+  - Submit calls POST /api/tickets, navigates to /tickets/:id on success
+  - Cancel navigates back to /tickets
+  - `useCreateTicket` mutation hook invalidates ticket list cache
+  - `useComponents`, `useMilestones`, `useUsers` query hooks for select options
+- **Files created**: CreateTicketPage.module.css, CreateTicketPage.test.tsx, useCreateTicket.ts, useComponents.ts, useMilestones.ts, useUsers.ts, e2e/create-ticket.spec.ts
+- **Files modified**: CreateTicketPage.tsx
+- **Tests**: 11 component tests + 6 E2E tests; 120 vitest + 41 E2E all pass
+- **Issues**: Pre-existing backend clippy warnings unchanged
+- **Timestamp**: 2026-03-10
