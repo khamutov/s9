@@ -256,3 +256,15 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Files**: frontend/src/styles/tokens.css, frontend/src/styles/typography.css (new), frontend/src/styles/globals.css (new), frontend/index.html, frontend/src/main.tsx
 - **Issues**: Pre-existing backend clippy and frontend test failures unchanged
 - **Timestamp**: 2026-03-09
+
+## Task 5.4: API client layer (fetch wrapper, TS types)
+- **Implemented**: Complete typed API client layer per DD 0.7 §8:
+  - `types.ts` — all shared TypeScript types matching backend response shapes (Ticket, Comment, Component, Milestone, User, AuthUser, Attachment, pagination types, enums, request types)
+  - Per-feature modules: tickets.ts, comments.ts, components.ts, milestones.ts, users.ts, auth.ts, attachments.ts
+  - `index.ts` — barrel re-export for all modules
+  - `isOffsetPage()` type guard for discriminating SearchResult pagination union
+  - Attachment upload uses raw fetch for multipart/form-data (not JSON apiRequest)
+- **Files created**: frontend/src/api/ (types.ts, tickets.ts, comments.ts, components.ts, milestones.ts, users.ts, auth.ts, attachments.ts, index.ts)
+- **Files modified**: frontend/src/api/client.ts
+- **Issues**: Pre-existing backend clippy and frontend prettier warnings unchanged; TypeScript compiles cleanly
+- **Timestamp**: 2026-03-10

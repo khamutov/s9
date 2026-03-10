@@ -85,7 +85,7 @@ Status legend: `[ ]` pending | `[~]` in progress | `[x]` completed
 - [x] **5.1** Design tokens + global CSS (from prototype) [blocked by: 0.7, 0.9, 1.2]
 - [x] **5.2** Layout shell component [blocked by: 5.1, 0.14]
 - [x] **5.3** Routing setup [blocked by: 0.7, 1.2]
-- [ ] **5.4** API client layer (fetch wrapper, TS types) [blocked by: 0.4, 1.2]
+- [x] **5.4** API client layer (fetch wrapper, TS types) [blocked by: 0.4, 1.2]
 - [ ] **5.5** SSE client [blocked by: 5.4]
 - [ ] **5.6** Auth pages (login, OIDC redirect) [blocked by: 5.2, 5.4]
 - [ ] **5.7** Ticket list page [blocked by: 5.2, 5.4, 0.10]
