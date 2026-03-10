@@ -286,6 +286,10 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - E2E tests: PageHeader renders an h1 with the title, so detail pages have 2 h1s — use `.first()` or `{ name: '...' }` to disambiguate
 - Shared UI components: TypeBadge (bug/feature/task/improvement) added in `src/components/TypeBadge.tsx`
 - Ticket detail: description is comment #0, activity is comments #1+; fetch separately via useComments hook
+- InlineSelect/InlineText are reusable components in `src/components/` for click-to-edit fields; use `renderValue`/`renderOption` for custom display
+- useUpdateTicket mutation hook uses optimistic updates: immediately sets cache, rolls back on error, invalidates on settle
+- E2E mockApi fixture supports .patch() method for mocking PATCH endpoints
+- Strict React linting: don't use setState in effects (use render-phase sync or startEditing callback), don't access refs during render, jsx-a11y rules not available (use `role="presentation"` for backdrop instead of eslint-disable)
 
 ## Task 4.6: Micro-syntax reference parsing (#ID, #PREFIX-ID, comment#N)
 - **Implemented**: Reference parser module per PRD §4.1 and DD 0.17 §7.5:
@@ -339,4 +343,19 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Tests**: 12 component tests + 7 E2E tests; all 33 vitest + 20 E2E pass
 - **Browser verified**: Page renders correctly with real data at localhost:5173/tickets/1
 - **Issues**: None
+- **Timestamp**: 2026-03-10
+
+## Task 5.10: Inline-editable metadata fields
+- **Implemented**: Click-to-edit behavior on ticket detail metadata panel per DD 0.7 §14:
+  - `InlineSelect.tsx` — reusable dropdown component: click to open, select to save, Escape/backdrop to cancel, keyboard navigation (ArrowUp/Down/Enter)
+  - `InlineText.tsx` — reusable text input: click to edit, Enter/blur saves, Escape cancels
+  - `useUpdateTicket.ts` — TanStack Query mutation hook with optimistic cache updates and rollback on error
+  - Status, priority, and type fields use InlineSelect with badge renderers (StatusBadge, PriorityBadge, TypeBadge)
+  - Estimation uses InlineText with mono-styled display value
+  - Owner, CC, component, milestones remain read-only (will need user/component list APIs for autocomplete)
+  - PATCH mock added to E2E test fixtures
+- **Files created**: InlineSelect.tsx + .module.css + .test.tsx, InlineText.tsx + .module.css + .test.tsx, useUpdateTicket.ts
+- **Files modified**: TicketDetailPage.tsx, TicketDetailPage.test.tsx, test-fixtures.ts, ticket-detail.spec.ts
+- **Tests**: 8 InlineSelect + 8 InlineText + 16 TicketDetailPage (3 new inline edit tests) + 2 new E2E tests; 52 vitest + 22 E2E all pass
+- **Issues**: Pre-existing FilterBar lint error (setState in effect) unchanged
 - **Timestamp**: 2026-03-10
