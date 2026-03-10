@@ -248,6 +248,24 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Issues**: Pre-existing backend clippy, vitest, and prettier warnings unchanged
 - **Timestamp**: 2026-03-10
 
+## Task 5.7: Ticket list page
+- **Implemented**: Full ticket list page per prototype 01-ticket-list.html:
+  - `TicketListPage.tsx` — page component with TanStack Query data fetching, table rendering, summary bar
+  - `useTickets.ts` — TanStack Query hook wrapping `listTickets` API
+  - `StatusBadge.tsx` — colored status badge with dot indicator (new, in_progress, verify, done)
+  - `PriorityBadge.tsx` — signal-bar priority indicator (P0–P5 with colored bars)
+  - `UserPill.tsx` — user display with colored avatar initials
+  - Table columns: slug/ID, title, status badge, priority badge, owner pill, component name, relative time
+  - Summary bar with per-status ticket counts
+  - Click-to-navigate rows to ticket detail
+  - Create Ticket link in page header
+  - Staggered row-reveal animations matching prototype
+- **Files created**: 3 shared components (StatusBadge, PriorityBadge, UserPill) with CSS Modules, TicketListPage.module.css, useTickets.ts, TicketListPage.test.tsx, e2e/ticket-list.spec.ts
+- **Files modified**: frontend/src/features/tickets/TicketListPage.tsx
+- **Tests**: 9 component tests + 5 E2E tests; all pass
+- **Issues**: None
+- **Timestamp**: 2026-03-10
+
 ## Codebase Patterns
 - Frontend CSS uses CSS Modules for components + global styles in `src/styles/` (tokens.css, reset.css, typography.css, globals.css)
 - Design token names use short form without `color-` prefix: `--bg-root`, `--accent`, `--text-primary`
@@ -261,6 +279,10 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - usePageHeader requires `breadcrumb: string[]` — use `[]` for top-level pages, `['Parent']` for sub-pages
 - Auth: AuthProvider wraps RouterProvider in main.tsx; AuthGuard wraps RootLayout in router.tsx; useAuth() for auth state anywhere
 - Login page is outside RootLayout (no sidebar/header); does NOT use usePageHeader
+- Shared UI components (StatusBadge, PriorityBadge, UserPill) live in `src/components/` with CSS Modules
+- TanStack Query hooks go in `features/<domain>/use*.ts`; queryKey convention: `['tickets', params]`
+- E2E tests: CSS Module class names are hashed, so use role/text locators not CSS selectors; use `{ exact: true }` for ambiguous text matches
+- E2E tests: "New"/"In Progress" etc. appear in both status badges and summary bar — use `.first()` or count assertions to avoid strict mode violations
 
 ## Task 4.6: Micro-syntax reference parsing (#ID, #PREFIX-ID, comment#N)
 - **Implemented**: Reference parser module per PRD §4.1 and DD 0.17 §7.5:
