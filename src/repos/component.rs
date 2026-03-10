@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use chrono::Utc;
 use sqlx::SqlitePool;
 
@@ -8,7 +10,7 @@ use super::RepoError;
 /// Validates a slug against `^[A-Z][A-Z0-9]{1,9}$` (2–10 uppercase chars, starts with letter).
 fn validate_slug(slug: &str) -> Result<(), RepoError> {
     let len = slug.len();
-    if len < 2 || len > 10 {
+    if !(2..=10).contains(&len) {
         return Err(RepoError::Conflict(format!(
             "slug must be 2–10 characters, got {len}"
         )));

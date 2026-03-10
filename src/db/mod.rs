@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use sqlx::SqlitePool;
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use std::path::Path;

@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 //! SQL query builder: [`ParsedQuery`] → dynamic SQL with FTS5 MATCH.
 //!
 //! Translates structured search queries into parameterized SQL. Supports

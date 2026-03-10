@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 //! FTS5 index maintenance for the `tickets_fts` virtual table.
 //!
 //! Provides functions to keep the full-text search index in sync with

@@ -68,8 +68,9 @@ test.describe('Component Tree Page', () => {
 
   test('shows detail panel for selected component', async ({ page }) => {
     await page.goto('/components');
-    await expect(page.getByText('Alex Kim')).toBeVisible();
+    // Wait for tree to load and auto-select first component
     await expect(page.getByText('View Tickets')).toBeVisible();
+    await expect(page.getByText('Alex Kim').first()).toBeVisible();
   });
 
   test('clicking a tree node shows its details', async ({ page }) => {

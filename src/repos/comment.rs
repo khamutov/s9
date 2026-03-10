@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use std::collections::HashMap;
 
 use chrono::Utc;
@@ -191,7 +193,7 @@ pub async fn enrich(
     row: &CommentRow,
     include_edits: bool,
 ) -> Result<CommentResponse, RepoError> {
-    let results = enrich_many(pool, &[row.clone()], include_edits).await?;
+    let results = enrich_many(pool, std::slice::from_ref(row), include_edits).await?;
     Ok(results.into_iter().next().unwrap())
 }
 

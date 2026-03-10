@@ -297,11 +297,12 @@ pub fn parse(input: &str) -> ParsedQuery {
             let key = &body[..colon_pos];
             let raw_value = &body[colon_pos + 1..];
 
-            if is_known_key(key) && !raw_value.is_empty() {
-                if let Some(filter) = try_parse_filter(key, raw_value, negated) {
-                    items.push(ParsedItem::Filter(filter));
-                    continue;
-                }
+            if is_known_key(key)
+                && !raw_value.is_empty()
+                && let Some(filter) = try_parse_filter(key, raw_value, negated)
+            {
+                items.push(ParsedItem::Filter(filter));
+                continue;
             }
         }
 

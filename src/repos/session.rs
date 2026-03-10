@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use chrono::{Duration, Utc};
 use rand_core::{OsRng, RngCore};
 use sqlx::SqlitePool;

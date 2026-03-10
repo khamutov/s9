@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use chrono::Utc;
 use sqlx::SqlitePool;
 
@@ -96,7 +98,7 @@ pub async fn create(
     let priority = req.priority.unwrap_or(crate::models::Priority::P3);
 
     let estimation_hours = match &req.estimation {
-        Some(est) => Some(parse_estimation(est).map_err(|e| RepoError::Conflict(e))?),
+        Some(est) => Some(parse_estimation(est).map_err(RepoError::Conflict)?),
         None => None,
     };
 
@@ -107,7 +109,7 @@ pub async fn create(
          VALUES (?, ?, 'new', ?, ?, ?, ?, ?, ?, ?)
          RETURNING id",
     )
-    .bind(&req.ticket_type)
+    .bind(req.ticket_type)
     .bind(&req.title)
     .bind(priority)
     .bind(req.owner_id)
@@ -172,7 +174,7 @@ pub async fn update(
     let estimation_hours = match &req.estimation {
         None => existing.estimation_hours,
         Some(None) => None,
-        Some(Some(est)) => Some(parse_estimation(est).map_err(|e| RepoError::Conflict(e))?),
+        Some(Some(est)) => Some(parse_estimation(est).map_err(RepoError::Conflict)?),
     };
 
     let now = Utc::now();
@@ -264,7 +266,7 @@ pub async fn get_milestone_ids(pool: &SqlitePool, ticket_id: i64) -> Result<Vec<
 ///
 /// Loads owner, creator, component, CC users, milestones, and comment count.
 pub async fn enrich(pool: &SqlitePool, row: &TicketRow) -> Result<TicketResponse, RepoError> {
-    let results = enrich_many(pool, &[row.clone()]).await?;
+    let results = enrich_many(pool, std::slice::from_ref(row)).await?;
     Ok(results.into_iter().next().unwrap())
 }
 

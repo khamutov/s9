@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 //! Micro-syntax reference parser for ticket/comment cross-references.
 //!
 //! Extracts `#ID`, `#PREFIX-ID`, `comment#N`, and `#ID/comment#N` references
@@ -70,73 +72,72 @@ pub fn parse_references(text: &str) -> Vec<Reference> {
     let mut result = Vec::new();
 
     for cap in REFERENCE_RE.captures_iter(text) {
-        let reference = if let (Some(prefix), Some(id), Some(comment)) =
-            (cap.get(1), cap.get(2), cap.get(3))
-        {
-            // #PREFIX-ID/comment#N
-            let Ok(ticket_id) = id.as_str().parse::<i64>() else {
+        let reference =
+            if let (Some(prefix), Some(id), Some(comment)) = (cap.get(1), cap.get(2), cap.get(3)) {
+                // #PREFIX-ID/comment#N
+                let Ok(ticket_id) = id.as_str().parse::<i64>() else {
+                    continue;
+                };
+                let Ok(comment_number) = comment.as_str().parse::<i64>() else {
+                    continue;
+                };
+                if ticket_id == 0 || comment_number == 0 {
+                    continue;
+                }
+                Reference::TicketComment {
+                    prefix: Some(prefix.as_str().to_string()),
+                    ticket_id,
+                    comment_number,
+                }
+            } else if let (Some(id), Some(comment)) = (cap.get(4), cap.get(5)) {
+                // #ID/comment#N
+                let Ok(ticket_id) = id.as_str().parse::<i64>() else {
+                    continue;
+                };
+                let Ok(comment_number) = comment.as_str().parse::<i64>() else {
+                    continue;
+                };
+                if ticket_id == 0 || comment_number == 0 {
+                    continue;
+                }
+                Reference::TicketComment {
+                    prefix: None,
+                    ticket_id,
+                    comment_number,
+                }
+            } else if let (Some(prefix), Some(id)) = (cap.get(6), cap.get(7)) {
+                // #PREFIX-ID
+                let Ok(id) = id.as_str().parse::<i64>() else {
+                    continue;
+                };
+                if id == 0 {
+                    continue;
+                }
+                Reference::SlugTicket {
+                    prefix: prefix.as_str().to_string(),
+                    id,
+                }
+            } else if let Some(id) = cap.get(8) {
+                // #ID
+                let Ok(id) = id.as_str().parse::<i64>() else {
+                    continue;
+                };
+                if id == 0 {
+                    continue;
+                }
+                Reference::Ticket { id }
+            } else if let Some(num) = cap.get(9) {
+                // comment#N
+                let Ok(number) = num.as_str().parse::<i64>() else {
+                    continue;
+                };
+                if number == 0 {
+                    continue;
+                }
+                Reference::Comment { number }
+            } else {
                 continue;
             };
-            let Ok(comment_number) = comment.as_str().parse::<i64>() else {
-                continue;
-            };
-            if ticket_id == 0 || comment_number == 0 {
-                continue;
-            }
-            Reference::TicketComment {
-                prefix: Some(prefix.as_str().to_string()),
-                ticket_id,
-                comment_number,
-            }
-        } else if let (Some(id), Some(comment)) = (cap.get(4), cap.get(5)) {
-            // #ID/comment#N
-            let Ok(ticket_id) = id.as_str().parse::<i64>() else {
-                continue;
-            };
-            let Ok(comment_number) = comment.as_str().parse::<i64>() else {
-                continue;
-            };
-            if ticket_id == 0 || comment_number == 0 {
-                continue;
-            }
-            Reference::TicketComment {
-                prefix: None,
-                ticket_id,
-                comment_number,
-            }
-        } else if let (Some(prefix), Some(id)) = (cap.get(6), cap.get(7)) {
-            // #PREFIX-ID
-            let Ok(id) = id.as_str().parse::<i64>() else {
-                continue;
-            };
-            if id == 0 {
-                continue;
-            }
-            Reference::SlugTicket {
-                prefix: prefix.as_str().to_string(),
-                id,
-            }
-        } else if let Some(id) = cap.get(8) {
-            // #ID
-            let Ok(id) = id.as_str().parse::<i64>() else {
-                continue;
-            };
-            if id == 0 {
-                continue;
-            }
-            Reference::Ticket { id }
-        } else if let Some(num) = cap.get(9) {
-            // comment#N
-            let Ok(number) = num.as_str().parse::<i64>() else {
-                continue;
-            };
-            if number == 0 {
-                continue;
-            }
-            Reference::Comment { number }
-        } else {
-            continue;
-        };
 
         if seen.insert(reference.clone()) {
             result.push(reference);

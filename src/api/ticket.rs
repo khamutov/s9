@@ -217,7 +217,7 @@ pub async fn create_ticket(
         return internal_error();
     }
 
-    let enriched = match enrich_with_slugs(&state, &[row.clone()]).await {
+    let enriched = match enrich_with_slugs(&state, std::slice::from_ref(&row)).await {
         Ok(mut v) => v.remove(0),
         Err(_) => return internal_error(),
     };
@@ -293,7 +293,7 @@ pub async fn update_ticket(
         Err(_) => return internal_error(),
     };
 
-    let enriched = match enrich_with_slugs(&state, &[row.clone()]).await {
+    let enriched = match enrich_with_slugs(&state, std::slice::from_ref(&row)).await {
         Ok(mut v) => v.remove(0),
         Err(_) => return internal_error(),
     };
