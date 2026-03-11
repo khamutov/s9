@@ -74,25 +74,6 @@ export const NAV_SECTIONS: NavSection[] = [
           </svg>
         ),
       },
-      {
-        label: 'Recently Viewed',
-        path: '/recent',
-        icon: (
-          <svg {...iconProps}>
-            <circle cx="8" cy="8" r="6" />
-            <path d="M8 4.5V8l2.5 1.5" />
-          </svg>
-        ),
-      },
-      {
-        label: 'Starred',
-        path: '/starred',
-        icon: (
-          <svg {...iconProps}>
-            <path d="M8 1.5l2 4.5 4.5.5-3.3 3 1 4.5L8 11.5l-4.2 2.5 1-4.5-3.3-3L6 6z" />
-          </svg>
-        ),
-      },
     ],
   },
   {
@@ -105,18 +86,6 @@ export const NAV_SECTIONS: NavSection[] = [
           <svg {...iconProps}>
             <circle cx="8" cy="8" r="2.5" />
             <path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4" />
-          </svg>
-        ),
-      },
-      {
-        label: 'Preferences',
-        path: '/preferences',
-        icon: (
-          <svg {...iconProps}>
-            <path d="M2 4h4M10 4h4M2 8h8M13 8h1M2 12h2M7 12h7" />
-            <circle cx="8" cy="4" r="1.5" />
-            <circle cx="12" cy="8" r="1.5" />
-            <circle cx="5.5" cy="12" r="1.5" />
           </svg>
         ),
       },
