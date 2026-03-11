@@ -617,3 +617,17 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Tests**: 26 unit tests (14 existing + 12 new CRUD tests), 14 E2E tests (7 existing + 7 new)
 - **Issues**: None
 - **Timestamp**: 2026-03-11
+
+## Task 7.7: Make CommandBar functional (quick-jump ticket search)
+- **Implemented**: Functional ticket search in the global CommandBar component
+  - Debounced search (250ms) using the ticket list API with free-text query
+  - Results dropdown with ticket slug/ID, title, and status
+  - Keyboard navigation: ArrowUp/Down to select, Enter to jump, Escape to close
+  - Click-to-navigate with mousedown handler
+  - Input clears and dropdown closes after navigation
+  - Combobox ARIA pattern (role=combobox, aria-expanded, aria-activedescendant)
+  - z-index management for dropdown above page content
+- **Files**: CommandBar.tsx, CommandBar.module.css, CommandBar.test.tsx (new), command-bar.spec.ts (new)
+- **Tests**: 10 unit tests, 5 E2E tests
+- **Issues**: Page header animations create stacking contexts that overlap the dropdown; resolved with z-index on commandBar wrapper and using mousedown dispatch in E2E tests
+- **Timestamp**: 2026-03-11
