@@ -573,3 +573,12 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Browser verified**: Sidebar shows real user name ("admin") with link to /account
 - **Issues**: None; all 195 vitest + 73 E2E tests pass
 - **Timestamp**: 2026-03-11
+
+## Task 7.3: Fix duplicate page headers
+- **Problem**: Every page called `usePageHeader()` to set a layout-level `PageHeader` component, but also rendered its own richer inline header with counts, action buttons, and breadcrumb links — resulting in two headers per page.
+- **Solution**: Removed the layout-level `PageHeader` from `RootLayout.tsx` since each page already renders its own complete header. Deleted the entire PageHeader infrastructure (context, hook, CSS module, state file) and removed `usePageHeader()` calls from all 10 page components.
+- **Files deleted**: PageHeader.tsx, PageHeader.module.css, PageHeaderContext.tsx, pageHeaderState.ts, usePageHeader.ts
+- **Pages cleaned**: TicketListPage, MilestoneListPage, TicketDetailPage, CreateTicketPage, MilestoneDetailPage, ComponentTreePage, AdminPanel, UserManagement, SystemSettings, ComponentManagement + all their test files
+- **Browser verified**: Ticket list, admin panel, and ticket detail pages show single headers with correct content
+- **Issues**: None; all 195 vitest tests pass, lint clean
+- **Timestamp**: 2026-03-11
