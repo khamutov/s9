@@ -3,7 +3,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { vi } from 'vitest';
 import type { Ticket, Comment, ListResponse } from '../../api/types';
-import { PageHeaderContext } from '../../components/layout/pageHeaderState';
 
 vi.mock('../../api/tickets', () => ({
   getTicket: vi.fn(),
@@ -91,18 +90,14 @@ function renderPage(ticketId = '42') {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
-  const setConfig = vi.fn();
-
   return render(
     <QueryClientProvider client={queryClient}>
-      <PageHeaderContext.Provider value={{ config: null, setConfig }}>
-        <MemoryRouter initialEntries={[`/tickets/${ticketId}`]}>
-          <Routes>
-            <Route path="/tickets/:id" element={<TicketDetailPage />} />
-            <Route path="/tickets" element={<div>Ticket list</div>} />
-          </Routes>
-        </MemoryRouter>
-      </PageHeaderContext.Provider>
+      <MemoryRouter initialEntries={[`/tickets/${ticketId}`]}>
+        <Routes>
+          <Route path="/tickets/:id" element={<TicketDetailPage />} />
+          <Route path="/tickets" element={<div>Ticket list</div>} />
+        </Routes>
+      </MemoryRouter>
     </QueryClientProvider>,
   );
 }

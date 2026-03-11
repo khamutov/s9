@@ -1,5 +1,4 @@
 import { Link } from 'react-router';
-import { usePageHeader } from '../../components/layout/usePageHeader';
 import { useAuth } from '../auth/useAuth';
 import styles from './AdminPanel.module.css';
 
@@ -72,7 +71,6 @@ const SECTIONS = [
 
 /** Admin dashboard landing page with navigation cards to sub-pages. */
 export default function AdminPanel() {
-  usePageHeader({ title: 'Admin', breadcrumb: [] });
   const { user } = useAuth();
 
   if (user?.role !== 'admin') {

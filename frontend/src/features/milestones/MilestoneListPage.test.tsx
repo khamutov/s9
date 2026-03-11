@@ -6,10 +6,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import MilestoneListPage from './MilestoneListPage';
 import type { Milestone, ListResponse } from '../../api/types';
 
-vi.mock('../../components/layout/usePageHeader', () => ({
-  usePageHeader: vi.fn(),
-}));
-
 vi.mock('../../api/milestones', () => ({
   listMilestones: vi.fn(),
 }));

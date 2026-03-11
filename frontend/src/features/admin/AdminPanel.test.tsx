@@ -4,10 +4,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, it, expect, vi } from 'vitest';
 import AdminPanel from './AdminPanel';
 
-vi.mock('../../components/layout/usePageHeader', () => ({
-  usePageHeader: vi.fn(),
-}));
-
 const mockUseAuth = vi.fn();
 vi.mock('../auth/useAuth', () => ({
   useAuth: () => mockUseAuth(),

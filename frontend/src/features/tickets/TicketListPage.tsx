@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router';
-import { usePageHeader } from '../../components/layout/usePageHeader';
 import StatusBadge from '../../components/StatusBadge';
 import PriorityBadge from '../../components/PriorityBadge';
 import UserPill from '../../components/UserPill';
@@ -58,7 +57,6 @@ const STATUS_LABELS: Record<TicketStatus, string> = {
 const DEBOUNCE_MS = 300;
 
 export default function TicketListPage() {
-  usePageHeader({ title: 'Tickets', breadcrumb: [] });
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 

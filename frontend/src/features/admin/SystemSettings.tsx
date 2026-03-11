@@ -1,10 +1,8 @@
-import { usePageHeader } from '../../components/layout/usePageHeader';
 import { useAuth } from '../auth/useAuth';
 import styles from './SystemSettings.module.css';
 
 /** System settings and configuration panel. Read-only for now. */
 export default function SystemSettings() {
-  usePageHeader({ title: 'System Settings', breadcrumb: ['Admin'] });
   const { user } = useAuth();
 
   if (user?.role !== 'admin') {

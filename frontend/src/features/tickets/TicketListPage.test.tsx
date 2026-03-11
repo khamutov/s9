@@ -4,7 +4,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { vi } from 'vitest';
 import type { Ticket, CursorPage } from '../../api/types';
-import { PageHeaderContext } from '../../components/layout/pageHeaderState';
 
 // Mock the API module
 vi.mock('../../api/tickets', () => ({
@@ -38,19 +37,15 @@ function renderPage() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
-  const setConfig = vi.fn();
-
   return render(
     <QueryClientProvider client={queryClient}>
-      <PageHeaderContext.Provider value={{ config: null, setConfig }}>
-        <MemoryRouter initialEntries={['/tickets']}>
-          <Routes>
-            <Route path="/tickets" element={<TicketListPage />} />
-            <Route path="/tickets/:id" element={<div>Detail page</div>} />
-            <Route path="/tickets/new" element={<div>Create page</div>} />
-          </Routes>
-        </MemoryRouter>
-      </PageHeaderContext.Provider>
+      <MemoryRouter initialEntries={['/tickets']}>
+        <Routes>
+          <Route path="/tickets" element={<TicketListPage />} />
+          <Route path="/tickets/:id" element={<div>Detail page</div>} />
+          <Route path="/tickets/new" element={<div>Create page</div>} />
+        </Routes>
+      </MemoryRouter>
     </QueryClientProvider>,
   );
 }

@@ -1,6 +1,5 @@
 import { useState, useMemo, type FormEvent } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { usePageHeader } from '../../components/layout/usePageHeader';
 import { useAuth } from '../auth/useAuth';
 import { useComponents } from '../components/useComponents';
 import { useUsers } from './useUsers';
@@ -20,7 +19,6 @@ interface FormErrors {
 
 /** Admin component management with create, edit, reparent, and delete. */
 export default function ComponentManagement() {
-  usePageHeader({ title: 'Component Management', breadcrumb: ['Admin'] });
   const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
 

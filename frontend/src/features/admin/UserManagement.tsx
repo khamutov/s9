@@ -1,6 +1,5 @@
 import { useState, useMemo, type FormEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { usePageHeader } from '../../components/layout/usePageHeader';
 import { useAuth } from '../auth/useAuth';
 import { listUsers, createUser, updateUser, setPassword } from '../../api/users';
 import { ApiError } from '../../api/client';
@@ -20,7 +19,6 @@ interface FormErrors {
 
 /** Admin user management with create, edit, and deactivate. */
 export default function UserManagement() {
-  usePageHeader({ title: 'User Management', breadcrumb: ['Admin'] });
   const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
 

@@ -1,6 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
 import { Link } from 'react-router';
-import { usePageHeader } from '../../components/layout/usePageHeader';
 import UserPill from '../../components/UserPill';
 import { useComponents } from './useComponents';
 import type { Component } from '../../api/types';
@@ -55,8 +54,6 @@ function countNodes(nodes: TreeNode[]): number {
 
 /** Hierarchical component tree view with ticket counts. */
 export default function ComponentTreePage() {
-  usePageHeader({ title: 'Components', breadcrumb: [] });
-
   const { data, isLoading, error } = useComponents();
   const [userSelectedId, setUserSelectedId] = useState<number | null>(null);
   const [userExpanded, setUserExpanded] = useState<Set<number> | null>(null);

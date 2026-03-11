@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router';
-import { usePageHeader } from '../../components/layout/usePageHeader';
 import { useMilestones } from './useMilestones';
 import type { Milestone, MilestoneStatus } from '../../api/types';
 import styles from './MilestoneListPage.module.css';
@@ -48,7 +47,6 @@ const STATUS_COLORS = {
 
 /** Milestone list page with progress cards, filter, and status stats. */
 export default function MilestoneListPage() {
-  usePageHeader({ title: 'Milestones', breadcrumb: [] });
   const { data, isLoading, error } = useMilestones();
   const [filter, setFilter] = useState('');
 

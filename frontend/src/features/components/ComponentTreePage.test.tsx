@@ -6,10 +6,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import ComponentTreePage from './ComponentTreePage';
 import type { Component, ListResponse } from '../../api/types';
 
-vi.mock('../../components/layout/usePageHeader', () => ({
-  usePageHeader: vi.fn(),
-}));
-
 const MOCK_COMPONENTS: ListResponse<Component> = {
   items: [
     {

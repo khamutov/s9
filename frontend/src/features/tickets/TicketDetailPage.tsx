@@ -1,6 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router';
-import { usePageHeader } from '../../components/layout/usePageHeader';
 import StatusBadge from '../../components/StatusBadge';
 import PriorityBadge from '../../components/PriorityBadge';
 import TypeBadge from '../../components/TypeBadge';
@@ -375,10 +374,6 @@ export default function TicketDetailPage() {
   const isAdmin = user?.role === 'admin';
 
   const displaySlug = ticket?.slug ?? `#${id}`;
-  usePageHeader({
-    title: ticket?.title ?? `Ticket ${displaySlug}`,
-    breadcrumb: ['Tickets'],
-  });
 
   if (isLoading) {
     return <div className={styles.loading}>Loading ticket…</div>;

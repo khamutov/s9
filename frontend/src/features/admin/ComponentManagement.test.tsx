@@ -6,10 +6,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import ComponentManagement from './ComponentManagement';
 import type { Component, User, ListResponse } from '../../api/types';
 
-vi.mock('../../components/layout/usePageHeader', () => ({
-  usePageHeader: vi.fn(),
-}));
-
 const mockUseAuth = vi.fn();
 vi.mock('../auth/useAuth', () => ({
   useAuth: () => mockUseAuth(),

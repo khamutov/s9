@@ -1,6 +1,5 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
-import { usePageHeader } from '../../components/layout/usePageHeader';
 import { MarkdownEditor } from '../../components/MarkdownEditor';
 import { useCreateTicket } from './useCreateTicket';
 import { useComponents } from '../components/useComponents';
@@ -35,8 +34,6 @@ interface FormErrors {
 
 /** Create ticket form with title, description, type, priority, component, owner, milestone. */
 export default function CreateTicketPage() {
-  usePageHeader({ title: 'Create Ticket', breadcrumb: ['Tickets'] });
-
   const navigate = useNavigate();
   const mutation = useCreateTicket();
   const { data: componentsData } = useComponents();
