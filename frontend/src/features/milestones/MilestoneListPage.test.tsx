@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router';
@@ -8,9 +8,22 @@ import type { Milestone, ListResponse } from '../../api/types';
 
 vi.mock('../../api/milestones', () => ({
   listMilestones: vi.fn(),
+  createMilestone: vi.fn(),
+  updateMilestone: vi.fn(),
+  deleteMilestone: vi.fn(),
 }));
 
-import { listMilestones } from '../../api/milestones';
+vi.mock('../auth/useAuth', () => ({
+  useAuth: vi.fn(),
+}));
+
+import {
+  listMilestones,
+  createMilestone,
+  updateMilestone,
+  deleteMilestone,
+} from '../../api/milestones';
+import { useAuth } from '../auth/useAuth';
 
 const MILESTONES: Milestone[] = [
   {
@@ -38,9 +51,9 @@ const MILESTONES: Milestone[] = [
     due_date: null,
     status: 'open',
     stats: {
-      total: 4,
-      new: 3,
-      in_progress: 1,
+      total: 0,
+      new: 0,
+      in_progress: 0,
       verify: 0,
       done: 0,
       estimated_hours: 0,
@@ -67,6 +80,13 @@ describe('MilestoneListPage', () => {
     vi.clearAllMocks();
     const response: ListResponse<Milestone> = { items: MILESTONES };
     vi.mocked(listMilestones).mockResolvedValue(response);
+    vi.mocked(useAuth).mockReturnValue({
+      user: { id: 1, login: 'admin', display_name: 'Admin', email: 'a@b.c', role: 'admin' },
+      isLoading: false,
+      login: vi.fn(),
+      logout: vi.fn(),
+      refresh: vi.fn(),
+    });
   });
 
   it('renders milestone cards with names', async () => {
@@ -93,7 +113,6 @@ describe('MilestoneListPage', () => {
 
   it('shows stats row with ticket counts', async () => {
     renderPage();
-    // v1.0 Launch has 5 Done, 1 Verify, 3 In Progress, 1 New
     const cards = await screen.findAllByText('Done');
     expect(cards.length).toBeGreaterThanOrEqual(2);
   });
@@ -160,5 +179,161 @@ describe('MilestoneListPage', () => {
     const links = await screen.findAllByRole('link', { name: 'View Tickets' });
     expect(links).toHaveLength(2);
     expect(links[0]).toHaveAttribute('href', '/tickets?q=milestone:v1.0%20Launch');
+  });
+
+  describe('admin CRUD', () => {
+    it('shows Create Milestone button for admin', async () => {
+      renderPage();
+      expect(await screen.findByRole('button', { name: /Create Milestone/ })).toBeInTheDocument();
+    });
+
+    it('hides Create Milestone button for non-admin', async () => {
+      vi.mocked(useAuth).mockReturnValue({
+        user: { id: 2, login: 'user', display_name: 'User', email: 'u@b.c', role: 'user' },
+        isLoading: false,
+        login: vi.fn(),
+        logout: vi.fn(),
+        refresh: vi.fn(),
+      });
+      renderPage();
+      await screen.findByText('v1.0 Launch');
+      expect(screen.queryByRole('button', { name: /Create Milestone/ })).not.toBeInTheDocument();
+    });
+
+    it('shows Edit and Delete buttons for admin', async () => {
+      renderPage();
+      const editBtns = await screen.findAllByRole('button', { name: 'Edit' });
+      const deleteBtns = screen.getAllByRole('button', { name: 'Delete' });
+      expect(editBtns).toHaveLength(2);
+      expect(deleteBtns).toHaveLength(2);
+    });
+
+    it('hides Edit and Delete buttons for non-admin', async () => {
+      vi.mocked(useAuth).mockReturnValue({
+        user: { id: 2, login: 'user', display_name: 'User', email: 'u@b.c', role: 'user' },
+        isLoading: false,
+        login: vi.fn(),
+        logout: vi.fn(),
+        refresh: vi.fn(),
+      });
+      renderPage();
+      await screen.findByText('v1.0 Launch');
+      expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
+    });
+
+    it('opens create modal and submits', async () => {
+      const user = userEvent.setup();
+      vi.mocked(createMilestone).mockResolvedValue({ ...MILESTONES[0], id: 3, name: 'v2.0' });
+      renderPage();
+      await screen.findByText('v1.0 Launch');
+
+      await user.click(screen.getByRole('button', { name: /Create Milestone/ }));
+      const dialog = screen.getByRole('dialog', { name: 'Create Milestone' });
+      expect(dialog).toBeInTheDocument();
+
+      await user.type(within(dialog).getByLabelText(/Name/), 'v2.0');
+      await user.type(within(dialog).getByLabelText(/Description/), 'Next release');
+      await user.click(within(dialog).getByRole('button', { name: /Create Milestone/ }));
+
+      expect(createMilestone).toHaveBeenCalledWith({
+        name: 'v2.0',
+        description: 'Next release',
+      });
+    });
+
+    it('validates name is required on create', async () => {
+      const user = userEvent.setup();
+      renderPage();
+      await screen.findByText('v1.0 Launch');
+
+      await user.click(screen.getByRole('button', { name: /Create Milestone/ }));
+      const dialog = screen.getByRole('dialog', { name: 'Create Milestone' });
+      await user.click(within(dialog).getByRole('button', { name: /Create Milestone/ }));
+
+      expect(within(dialog).getByText('Name is required')).toBeInTheDocument();
+      expect(createMilestone).not.toHaveBeenCalled();
+    });
+
+    it('opens edit modal with pre-filled data', async () => {
+      const user = userEvent.setup();
+      renderPage();
+      const editBtns = await screen.findAllByRole('button', { name: 'Edit' });
+
+      await user.click(editBtns[0]);
+      const dialog = screen.getByRole('dialog', { name: 'Edit Milestone' });
+      expect(dialog).toBeInTheDocument();
+
+      expect(within(dialog).getByLabelText(/Name/)).toHaveValue('v1.0 Launch');
+      expect(within(dialog).getByLabelText(/Description/)).toHaveValue('Core platform release.');
+      expect(within(dialog).getByLabelText(/Due date/)).toHaveValue('2026-04-01');
+    });
+
+    it('submits edit form', async () => {
+      const user = userEvent.setup();
+      vi.mocked(updateMilestone).mockResolvedValue({ ...MILESTONES[0], name: 'v1.0 GA' });
+      renderPage();
+      const editBtns = await screen.findAllByRole('button', { name: 'Edit' });
+
+      await user.click(editBtns[0]);
+      const dialog = screen.getByRole('dialog', { name: 'Edit Milestone' });
+      const nameInput = within(dialog).getByLabelText(/Name/);
+      await user.clear(nameInput);
+      await user.type(nameInput, 'v1.0 GA');
+      await user.click(within(dialog).getByRole('button', { name: /Save Changes/ }));
+
+      expect(updateMilestone).toHaveBeenCalledWith(1, {
+        name: 'v1.0 GA',
+        description: 'Core platform release.',
+        due_date: '2026-04-01',
+        status: 'open',
+      });
+    });
+
+    it('opens delete modal with milestone name', async () => {
+      const user = userEvent.setup();
+      renderPage();
+      const deleteBtns = await screen.findAllByRole('button', { name: 'Delete' });
+
+      await user.click(deleteBtns[1]); // Backlog (0 tickets)
+      const dialog = screen.getByRole('dialog', { name: 'Delete Milestone' });
+      expect(within(dialog).getByText('Backlog')).toBeInTheDocument();
+    });
+
+    it('disables delete button when milestone has tickets', async () => {
+      const user = userEvent.setup();
+      renderPage();
+      const deleteBtns = await screen.findAllByRole('button', { name: 'Delete' });
+
+      await user.click(deleteBtns[0]); // v1.0 Launch (10 tickets)
+      const dialog = screen.getByRole('dialog', { name: 'Delete Milestone' });
+      expect(within(dialog).getByText(/10 assigned tickets/)).toBeInTheDocument();
+      expect(within(dialog).getByRole('button', { name: 'Delete' })).toBeDisabled();
+    });
+
+    it('submits delete when no tickets assigned', async () => {
+      const user = userEvent.setup();
+      vi.mocked(deleteMilestone).mockResolvedValue(undefined);
+      renderPage();
+      const deleteBtns = await screen.findAllByRole('button', { name: 'Delete' });
+
+      await user.click(deleteBtns[1]); // Backlog (0 tickets)
+      const dialog = screen.getByRole('dialog', { name: 'Delete Milestone' });
+      await user.click(within(dialog).getByRole('button', { name: 'Delete' }));
+
+      expect(deleteMilestone).toHaveBeenCalledWith(2);
+    });
+
+    it('closes modal on cancel', async () => {
+      const user = userEvent.setup();
+      renderPage();
+      await screen.findByText('v1.0 Launch');
+
+      await user.click(screen.getByRole('button', { name: /Create Milestone/ }));
+      expect(screen.getByRole('dialog', { name: 'Create Milestone' })).toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Cancel' }));
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
   });
 });
