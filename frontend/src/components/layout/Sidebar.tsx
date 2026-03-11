@@ -1,10 +1,20 @@
-import { NavLink, useLocation } from 'react-router';
+import { Link, NavLink, useLocation } from 'react-router';
+import { useAuth } from '../../features/auth/useAuth';
 import { NAV_SECTIONS } from './navConfig';
 import styles from './Sidebar.module.css';
+
+const AVATAR_COLORS = ['#a78bfa', '#2dd4bf', '#e8b43a', '#fb7185', '#60a5fa', '#34d399'];
+
+function getInitials(name: string): string {
+  const parts = name.split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  return name.slice(0, 2).toUpperCase();
+}
 
 /** Main sidebar navigation. */
 export default function Sidebar() {
   const location = useLocation();
+  const { user } = useAuth();
 
   return (
     <aside className={styles.sidebar}>
@@ -59,13 +69,20 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* User pill (hardcoded until AuthContext) */}
-      <div className={styles.footer}>
-        <div className={styles.userPill}>
-          <span className={styles.userAvatar}>AK</span>
-          <span>Alex Kim</span>
+      {/* User pill */}
+      {user && (
+        <div className={styles.footer}>
+          <Link to="/account" className={styles.userPill}>
+            <span
+              className={styles.userAvatar}
+              style={{ background: AVATAR_COLORS[user.id % AVATAR_COLORS.length] }}
+            >
+              {getInitials(user.display_name)}
+            </span>
+            <span>{user.display_name}</span>
+          </Link>
         </div>
-      </div>
+      )}
     </aside>
   );
 }

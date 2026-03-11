@@ -179,6 +179,16 @@
   gap: 8px;
   font-size: var(--text-sm);
   color: var(--text-secondary);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  padding: 4px 6px;
+  margin: -4px -6px;
+  transition: all var(--transition-fast);
+}
+
+.userPill:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .userAvatar {
