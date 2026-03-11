@@ -560,3 +560,16 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Browser verified**: Sidebar shows only Tickets, Components, Milestones, My Tickets, Admin
 - **Issues**: None; all tests pass
 - **Timestamp**: 2026-03-11
+
+## Task 7.2: Fix hardcoded sidebar user pill with auth context + link to account
+- **Implemented**: Replaced hardcoded "Alex Kim" user pill in Sidebar with dynamic auth context:
+  - Reads authenticated user from `useAuth()` hook
+  - Computes initials from `display_name` (same logic as UserPill component)
+  - Color-coded avatar based on `user.id % AVATAR_COLORS.length`
+  - Wrapped in `<Link to="/account">` for upcoming profile page (task 7.5)
+  - Hover state with subtle background highlight
+  - Pill hidden when no user is authenticated
+- **Files modified**: frontend/src/components/layout/Sidebar.tsx, Sidebar.module.css
+- **Browser verified**: Sidebar shows real user name ("admin") with link to /account
+- **Issues**: None; all 195 vitest + 73 E2E tests pass
+- **Timestamp**: 2026-03-11
