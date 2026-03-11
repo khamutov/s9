@@ -116,7 +116,7 @@ Status legend: `[ ]` pending | `[~]` in progress | `[x]` completed
 - [x] **7.2** Fix hardcoded sidebar user pill with auth context + link to account → `frontend/src/components/layout/Sidebar.tsx`
 - [x] **7.3** Fix duplicate page headers → `frontend/src/components/layout/usePageHeader.ts` + 7 page files
 - [x] **7.4** Add inline editing for ticket title, description, and owner (includes backend compact user endpoint) → `frontend/src/features/tickets/TicketDetailPage.tsx`, `src/api/user.rs`
-- [ ] **7.5** Create account/profile page (edit name, email, password) → `frontend/src/features/account/AccountPage.tsx` [blocked by: 7.2]
+- [x] **7.5** Create account/profile page (edit name, email, password) → `frontend/src/features/account/AccountPage.tsx` [blocked by: 7.2]
 - [ ] **7.6** Milestone CRUD on list page (admin-only create/edit/delete modals) → `frontend/src/features/milestones/MilestoneListPage.tsx`
 - [ ] **7.7** Make CommandBar functional (quick-jump ticket search) → `frontend/src/components/layout/CommandBar.tsx`
 

@@ -594,3 +594,14 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Tests**: 4 new unit tests + 3 new E2E tests; 199 vitest, 442 backend, 74/76 E2E pass (2 pre-existing keyboard-nav failures)
 - **Issues**: None
 - **Timestamp**: 2026-03-11
+
+## Task 7.5: Create account/profile page
+- **Implemented**: Account page at /account with two sections:
+  - Profile editing (display name, email) with validation and server error handling
+  - Password change (current password, new password, confirm) with client-side validation
+- **Auth refresh**: Added `refreshUser` to AuthState/AuthProvider so sidebar display name updates after profile save
+- **Route**: Added lazy-loaded /account route to router.tsx
+- **Files**: frontend/src/features/account/AccountPage.tsx, AccountPage.module.css, AccountPage.test.tsx, frontend/e2e/account.spec.ts, authState.ts, AuthContext.tsx, AuthProvider.tsx, router.tsx
+- **Tests**: 10 unit tests (rendering, validation, submit flows), 6 E2E tests (display, validation, submit, sidebar link)
+- **Issues**: Pre-existing keyboard-navigation E2E test failures (2 tests) unrelated to this change
+- **Timestamp**: 2026-03-11
