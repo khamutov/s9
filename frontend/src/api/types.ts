@@ -51,7 +51,7 @@ export function isOffsetPage<T>(r: SearchResult<T>): r is OffsetPage<T> {
 
 // --- Enums ---
 
-export type TicketType = 'bug' | 'feature' | 'task' | 'improvement';
+export type TicketType = 'bug' | 'feature';
 export type TicketStatus = 'new' | 'in_progress' | 'verify' | 'done';
 export type Priority = 'P0' | 'P1' | 'P2' | 'P3' | 'P4' | 'P5';
 export type UserRole = 'admin' | 'user';

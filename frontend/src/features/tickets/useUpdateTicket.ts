@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { updateTicket } from '../../api/tickets';
-import type { Ticket, UpdateTicketRequest } from '../../api/types';
+import type { CompactMilestone, Ticket, UpdateTicketRequest } from '../../api/types';
 
 /** Mutation hook for PATCH /api/tickets/:id with optimistic cache update. */
 export function useUpdateTicket(ticketId: number) {
@@ -14,6 +14,19 @@ export function useUpdateTicket(ticketId: number) {
       const previous = queryClient.getQueryData<Ticket>(['tickets', ticketId]);
 
       if (previous) {
+        // Resolve milestone IDs to CompactMilestone using cached data
+        let milestones = previous.milestones;
+        if (req.milestones !== undefined) {
+          const cached = queryClient.getQueryData<{ items: Array<{ id: number; name: string }> }>(['milestones', 'open']);
+          if (cached) {
+            milestones = req.milestones
+              .map((id) => cached.items.find((m) => m.id === id))
+              .filter((m): m is CompactMilestone => m != null);
+          } else {
+            milestones = [];
+          }
+        }
+
         queryClient.setQueryData<Ticket>(['tickets', ticketId], {
           ...previous,
           ...req,
@@ -21,7 +34,7 @@ export function useUpdateTicket(ticketId: number) {
           owner: previous.owner,
           component: previous.component,
           cc: previous.cc,
-          milestones: previous.milestones,
+          milestones,
           created_by: previous.created_by,
         });
       }

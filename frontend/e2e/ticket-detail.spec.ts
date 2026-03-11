@@ -54,6 +54,9 @@ test.describe('Ticket Detail Page', () => {
     await mockApi.loginAs(TEST_USER);
     await mockApi.get('/api/tickets/42', MOCK_TICKET);
     await mockApi.get('/api/tickets/42/comments', MOCK_COMMENTS);
+    await mockApi.get('/api/milestones?status=open', {
+      items: [{ id: 1, name: 'v2.4', status: 'open', stats: { total: 5, new: 2, in_progress: 1, verify: 1, done: 1, estimated_hours: 20, remaining_hours: 10 }, created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z' }],
+    });
   });
 
   test('displays ticket title and slug', async ({ page }) => {

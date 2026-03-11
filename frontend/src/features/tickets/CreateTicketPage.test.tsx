@@ -287,7 +287,7 @@ describe('CreateTicketPage', () => {
     await waitFor(() => {
       expect(createTicket).toHaveBeenCalledWith({
         title: 'New feature',
-        type: 'task',
+        type: 'bug',
         priority: 'P2',
         component_id: 1,
         owner_id: 2,
@@ -325,12 +325,12 @@ describe('CreateTicketPage', () => {
     });
   });
 
-  it('defaults type to task and priority to P2', () => {
+  it('defaults type to bug and priority to P2', () => {
     renderPage();
 
     const typeSelect = screen.getByLabelText(/type/i) as HTMLSelectElement;
     const prioritySelect = screen.getByLabelText(/priority/i) as HTMLSelectElement;
-    expect(typeSelect.value).toBe('task');
+    expect(typeSelect.value).toBe('bug');
     expect(prioritySelect.value).toBe('P2');
   });
 });

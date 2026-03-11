@@ -37,20 +37,3 @@
   background: var(--accent);
 }
 
-.task {
-  background: rgba(124, 184, 247, 0.12);
-  color: #7cb8f7;
-}
-
-.task::before {
-  background: #7cb8f7;
-}
-
-.improvement {
-  background: rgba(94, 202, 126, 0.12);
-  color: #5eca7e;
-}
-
-.improvement::before {
-  background: #5eca7e;
-}

@@ -12,8 +12,6 @@ import styles from './CreateTicketPage.module.css';
 const TYPE_OPTIONS: { value: TicketType; label: string }[] = [
   { value: 'bug', label: 'Bug' },
   { value: 'feature', label: 'Feature' },
-  { value: 'task', label: 'Task' },
-  { value: 'improvement', label: 'Improvement' },
 ];
 
 const PRIORITY_OPTIONS: { value: Priority; label: string }[] = [
@@ -42,7 +40,7 @@ export default function CreateTicketPage() {
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [type, setType] = useState<TicketType>('task');
+  const [type, setType] = useState<TicketType>('bug');
   const [priority, setPriority] = useState<Priority>('P2');
   const [componentId, setComponentId] = useState('');
   const [ownerId, setOwnerId] = useState('');

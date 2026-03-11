@@ -16,6 +16,7 @@ import { useUpdateTicket } from './useUpdateTicket';
 import { useCreateComment } from './useCreateComment';
 import { useEditComment, useDeleteComment } from './useEditComment';
 import { useCompactUsers } from './useCompactUsers';
+import { useMilestones } from '../milestones/useMilestones';
 import type {
   Comment,
   CompactUser,
@@ -45,8 +46,6 @@ const PRIORITY_OPTIONS: SelectOption<Priority>[] = [
 const TYPE_OPTIONS: SelectOption<TicketType>[] = [
   { value: 'bug', label: 'Bug' },
   { value: 'feature', label: 'Feature' },
-  { value: 'task', label: 'Task' },
-  { value: 'improvement', label: 'Improvement' },
 ];
 
 /** Formats a UTC ISO date string as a human-readable relative time. */
@@ -78,11 +77,13 @@ function MetadataPanel({
   onUpdate,
   users,
   onOwnerChange,
+  milestoneOptions,
 }: {
   ticket: Ticket;
   onUpdate: (field: string, value: unknown) => void;
   users: CompactUser[];
   onOwnerChange: (userId: number) => void;
+  milestoneOptions: SelectOption<string>[];
 }) {
   const ownerOptions: SelectOption<string>[] = useMemo(
     () => users.map((u) => ({ value: String(u.id), label: u.display_name })),
@@ -184,18 +185,17 @@ function MetadataPanel({
         </span>
       </div>
 
-      {ticket.milestones.length > 0 && (
-        <div className={styles.metaField}>
-          <span className={styles.metaFieldLabel}>Milestone</span>
-          <span className={styles.metaFieldValue}>
-            {ticket.milestones.map((m) => (
-              <span key={m.id} className={styles.milestoneChip}>
-                {m.name}
-              </span>
-            ))}
-          </span>
-        </div>
-      )}
+      <div className={styles.metaField}>
+        <span className={styles.metaFieldLabel}>Milestone</span>
+        <span className={styles.metaFieldValue}>
+          <InlineSelect
+            value={ticket.milestones.length > 0 ? String(ticket.milestones[0].id) : ''}
+            options={milestoneOptions}
+            onChange={(v) => onUpdate('milestones', v ? [Number(v)] : [])}
+            aria-label="Milestone"
+          />
+        </span>
+      </div>
 
       <div className={styles.metaField}>
         <span className={styles.metaFieldLabel}>Estimate</span>
@@ -498,6 +498,7 @@ export default function TicketDetailPage() {
   const { data: commentsData, isLoading: commentsLoading } = useComments(ticketId);
   const mutation = useUpdateTicket(ticketId);
   const { data: usersData } = useCompactUsers();
+  const { data: milestonesData } = useMilestones('open');
   const isAdmin = user?.role === 'admin';
 
   const displaySlug = ticket?.slug ?? `#${id}`;
@@ -514,6 +515,12 @@ export default function TicketDetailPage() {
   // Comment #0 is the description; remaining are activity
   const description = comments.find((c) => c.number === 0);
   const activityComments = comments.filter((c) => c.number > 0);
+
+  const milestones = milestonesData?.items ?? [];
+  const milestoneOptions: SelectOption<string>[] = [
+    { value: '', label: 'None' },
+    ...milestones.map((m) => ({ value: String(m.id), label: m.name })),
+  ];
 
   const handleUpdate = (field: string, value: unknown) => {
     mutation.mutate({ [field]: value });
@@ -597,6 +604,7 @@ export default function TicketDetailPage() {
           onUpdate={handleUpdate}
           users={usersData?.items ?? []}
           onOwnerChange={(userId) => handleUpdate('owner_id', userId)}
+          milestoneOptions={milestoneOptions}
         />
       </div>
     </div>

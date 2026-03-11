@@ -20,6 +20,10 @@ vi.mock('../../api/users', () => ({
   listCompactUsers: vi.fn(),
 }));
 
+vi.mock('../../api/milestones', () => ({
+  listMilestones: vi.fn(),
+}));
+
 vi.mock('../auth/useAuth', () => ({
   useAuth: vi.fn(() => ({
     user: { id: 1, login: 'alex', display_name: 'Alex Kim', role: 'user' },
@@ -54,6 +58,7 @@ vi.mock('../../components/MarkdownEditor', () => ({
 import { getTicket, updateTicket } from '../../api/tickets';
 import { listComments, createComment, editComment, deleteComment } from '../../api/comments';
 import { listCompactUsers } from '../../api/users';
+import { listMilestones } from '../../api/milestones';
 import { useAuth } from '../auth/useAuth';
 import TicketDetailPage from './TicketDetailPage';
 
@@ -62,6 +67,19 @@ const MOCK_COMPACT_USERS = {
     { id: 1, login: 'alex', display_name: 'Alex Kim' },
     { id: 2, login: 'maria', display_name: 'Maria Chen' },
     { id: 3, login: 'bob', display_name: 'Bob Lee' },
+  ],
+};
+
+const MOCK_MILESTONES = {
+  items: [
+    {
+      id: 1,
+      name: 'v2.4',
+      status: 'open' as const,
+      stats: { total: 5, new: 2, in_progress: 1, verify: 1, done: 1, estimated_hours: 20, remaining_hours: 10 },
+      created_at: '2026-01-01T00:00:00Z',
+      updated_at: '2026-01-01T00:00:00Z',
+    },
   ],
 };
 
@@ -125,6 +143,7 @@ describe('TicketDetailPage', () => {
       logout: vi.fn(),
     });
     vi.mocked(listCompactUsers).mockResolvedValue(MOCK_COMPACT_USERS);
+    vi.mocked(listMilestones).mockResolvedValue(MOCK_MILESTONES);
   });
 
   it('shows loading state while fetching', () => {

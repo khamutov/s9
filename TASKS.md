@@ -119,6 +119,8 @@ Status legend: `[ ]` pending | `[~]` in progress | `[x]` completed
 - [x] **7.5** Create account/profile page (edit name, email, password) → `frontend/src/features/account/AccountPage.tsx` [blocked by: 7.2]
 - [x] **7.6** Milestone CRUD on list page (admin-only create/edit/delete modals) → `frontend/src/features/milestones/MilestoneListPage.tsx`
 - [x] **7.7** Make CommandBar functional (quick-jump ticket search) → `frontend/src/components/layout/CommandBar.tsx`
+- [x] **7.8** Remove unsupported ticket types (task, improvement) → `frontend/src/api/types.ts`, `CreateTicketPage.tsx`, `TicketDetailPage.tsx`, `TypeBadge.tsx`
+- [x] **7.9** Add milestone inline editing on ticket detail page → `frontend/src/features/tickets/TicketDetailPage.tsx`, `useUpdateTicket.ts`
 
 ## Critical Path
 
