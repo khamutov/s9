@@ -582,3 +582,15 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Browser verified**: Ticket list, admin panel, and ticket detail pages show single headers with correct content
 - **Issues**: None; all 195 vitest tests pass, lint clean
 - **Timestamp**: 2026-03-11
+
+## Task 7.4: Inline editing for ticket title, description, and owner
+- **Implemented**:
+  - Backend: `GET /api/users/compact` endpoint returning `CompactUser[]` for all active users (any authenticated user)
+  - Frontend: `useCompactUsers` hook with React Query caching (5-min stale time)
+  - Title: Wrapped in `InlineText` for click-to-edit (Enter saves, Escape cancels, blur saves)
+  - Owner: Replaced static `UserPill` with `InlineSelect` dropdown populated from compact users, renders `UserPill` in options
+  - Description: Extracted `DescriptionCard` component with edit toggle using `MarkdownEditor` to edit comment #0 via `editComment` API
+- **Files**: `src/api/user.rs`, `src/api/mod.rs`, `frontend/src/api/users.ts`, `frontend/src/features/tickets/useCompactUsers.ts` (new), `frontend/src/features/tickets/TicketDetailPage.tsx`, `frontend/src/features/tickets/TicketDetailPage.module.css`
+- **Tests**: 4 new unit tests + 3 new E2E tests; 199 vitest, 442 backend, 74/76 E2E pass (2 pre-existing keyboard-nav failures)
+- **Issues**: None
+- **Timestamp**: 2026-03-11
