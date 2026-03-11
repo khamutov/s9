@@ -53,7 +53,7 @@ test.describe('MarkdownEditor context', () => {
   }) => {
     await page.goto('/tickets/42');
     await expect(
-      page.getByRole('heading', { name: 'Editor integration test' }).first(),
+      page.getByText('Editor integration test ticket').first(),
     ).toBeVisible();
     // Markdown is now rendered: **markdown** becomes <strong>
     await expect(page.getByText('Description with')).toBeVisible();

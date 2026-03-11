@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures/test-fixtures';
-import { TEST_USER } from './fixtures/mock-data';
+import { TEST_USER, TEST_ADMIN } from './fixtures/mock-data';
 
 const MOCK_TICKET = {
   id: 42,
@@ -59,8 +59,9 @@ test.describe('Ticket Detail Page', () => {
   test('displays ticket title and slug', async ({ page }) => {
     await page.goto('/tickets/42');
     await expect(
-      page.getByRole('heading', { name: 'Crash on startup when config' }).first(),
+      page.getByRole('heading', { level: 1 }).first(),
     ).toBeVisible();
+    await expect(page.getByText('Crash on startup when config is missing').first()).toBeVisible();
     await expect(page.getByText('S9-42').first()).toBeVisible();
   });
 
@@ -120,6 +121,73 @@ test.describe('Ticket Detail Page', () => {
 
     // Dropdown should close
     await expect(page.getByRole('listbox')).not.toBeVisible();
+  });
+
+  test('inline-edit title via text input', async ({ page, mockApi }) => {
+    const updatedTicket = { ...MOCK_TICKET, title: 'Updated title' };
+    await mockApi.patch('/api/tickets/42', updatedTicket);
+    await page.goto('/tickets/42');
+
+    // Click the title to enter edit mode
+    await page.getByRole('button', { name: 'Edit Title' }).click();
+
+    const input = page.getByRole('textbox', { name: 'Title' });
+    await input.fill('Updated title');
+    await input.press('Enter');
+
+    // Should return to display mode
+    await expect(page.getByRole('textbox', { name: 'Title' })).not.toBeVisible();
+  });
+
+  test('inline-edit owner via dropdown', async ({ page, mockApi }) => {
+    const updatedTicket = {
+      ...MOCK_TICKET,
+      owner: { id: 2, login: 'maria', display_name: 'Maria Chen' },
+    };
+    await mockApi.get('/api/users/compact', {
+      items: [
+        { id: 1, login: 'alex', display_name: 'Alex Kim' },
+        { id: 2, login: 'maria', display_name: 'Maria Chen' },
+        { id: 3, login: 'bob', display_name: 'Bob Lee' },
+      ],
+    });
+    await mockApi.patch('/api/tickets/42', updatedTicket);
+    await page.goto('/tickets/42');
+
+    // Click the owner trigger
+    await page.getByRole('button', { name: 'Owner' }).click();
+
+    // Select Maria Chen from dropdown
+    await page.getByRole('option', { name: /Maria Chen/ }).click();
+
+    // Dropdown should close
+    await expect(page.getByRole('listbox')).not.toBeVisible();
+  });
+
+  test('inline-edit description', async ({ page, mockApi }) => {
+    // Login as admin to have edit permission on any comment
+    await mockApi.loginAs(TEST_ADMIN);
+    await mockApi.patch('/api/tickets/42/comments/0', {
+      ...MOCK_COMMENTS.items[0],
+      body: 'Updated description',
+      edit_count: 1,
+    });
+    await page.goto('/tickets/42');
+
+    // Hover over description card to reveal the Edit button
+    await page.getByText('The application panics on startup').hover();
+    // Click Edit on description
+    await page.getByRole('button', { name: 'Edit description' }).click();
+
+    // Editor should appear
+    const editor = page.locator('textarea').first();
+    await editor.fill('Updated description');
+
+    // Click Save
+    await page.getByRole('button', { name: 'Save' }).click();
+
+    // Editor should close
+    await expect(page.getByRole('button', { name: 'Save' })).not.toBeVisible();
   });
 
   test('inline-edit estimation via text input', async ({ page, mockApi }) => {

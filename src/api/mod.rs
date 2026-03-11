@@ -75,6 +75,7 @@ pub struct AppState {
         attachment::upload_attachment,
         attachment::download_attachment,
         // Users
+        user::list_compact_users,
         user::list_users,
         user::create_user,
         user::update_user,
@@ -231,6 +232,7 @@ pub fn build_router_with_state(state: AppState) -> Router {
             "/attachments/{id}/{filename}",
             get(attachment::download_attachment),
         )
+        .route("/users/compact", get(user::list_compact_users))
         .route("/users/{id}", patch(user::update_user))
         .route("/users/{id}/password", post(user::set_password))
         .route(

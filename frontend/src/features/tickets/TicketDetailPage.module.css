@@ -93,6 +93,15 @@
   border-bottom: 1px solid var(--border-subtle);
 }
 
+.descriptionHeader > button {
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.descriptionCard:hover .descriptionHeader > button {
+  opacity: 1;
+}
+
 .commentTime {
   color: var(--text-label);
   font-family: var(--font-mono);

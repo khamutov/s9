@@ -1,11 +1,17 @@
 import { apiRequest } from './client';
 import type {
+  CompactUser,
   User,
   CreateUserRequest,
   UpdateUserRequest,
   SetPasswordRequest,
   ListResponse,
 } from './types';
+
+/** List all active users as compact objects (any authenticated user). */
+export function listCompactUsers(): Promise<ListResponse<CompactUser>> {
+  return apiRequest<ListResponse<CompactUser>>('GET', '/api/users/compact');
+}
 
 /** List users (admin only). */
 export function listUsers(includeInactive = false): Promise<ListResponse<User>> {

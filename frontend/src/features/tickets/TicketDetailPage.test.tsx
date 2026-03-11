@@ -16,6 +16,10 @@ vi.mock('../../api/comments', () => ({
   deleteComment: vi.fn(),
 }));
 
+vi.mock('../../api/users', () => ({
+  listCompactUsers: vi.fn(),
+}));
+
 vi.mock('../auth/useAuth', () => ({
   useAuth: vi.fn(() => ({
     user: { id: 1, login: 'alex', display_name: 'Alex Kim', role: 'user' },
@@ -49,8 +53,17 @@ vi.mock('../../components/MarkdownEditor', () => ({
 
 import { getTicket, updateTicket } from '../../api/tickets';
 import { listComments, createComment, editComment, deleteComment } from '../../api/comments';
+import { listCompactUsers } from '../../api/users';
 import { useAuth } from '../auth/useAuth';
 import TicketDetailPage from './TicketDetailPage';
+
+const MOCK_COMPACT_USERS = {
+  items: [
+    { id: 1, login: 'alex', display_name: 'Alex Kim' },
+    { id: 2, login: 'maria', display_name: 'Maria Chen' },
+    { id: 3, login: 'bob', display_name: 'Bob Lee' },
+  ],
+};
 
 const mockTicket = (overrides: Partial<Ticket> = {}): Ticket => ({
   id: 42,
@@ -111,6 +124,7 @@ describe('TicketDetailPage', () => {
       login: vi.fn(),
       logout: vi.fn(),
     });
+    vi.mocked(listCompactUsers).mockResolvedValue(MOCK_COMPACT_USERS);
   });
 
   it('shows loading state while fetching', () => {
@@ -603,6 +617,111 @@ describe('TicketDetailPage', () => {
 
     await waitFor(() => {
       expect(deleteComment).toHaveBeenCalledWith(42, 1);
+    });
+  });
+
+  // --- Inline title editing ---
+
+  it('edits ticket title via inline text', async () => {
+    const ticket = mockTicket();
+    vi.mocked(getTicket).mockResolvedValue(ticket);
+    vi.mocked(listComments).mockResolvedValue({ items: [] });
+    vi.mocked(updateTicket).mockResolvedValue({ ...ticket, title: 'Updated title' });
+    renderPage();
+
+    await screen.findByText('Crash on startup when config is missing');
+
+    // Click the title to enter edit mode
+    const titleBtn = screen.getByRole('button', { name: 'Edit Title' });
+    fireEvent.click(titleBtn);
+
+    const input = screen.getByRole('textbox', { name: 'Title' });
+    fireEvent.change(input, { target: { value: 'Updated title' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    await waitFor(() => {
+      expect(updateTicket).toHaveBeenCalledWith(42, { title: 'Updated title' });
+    });
+  });
+
+  // --- Inline owner editing ---
+
+  it('changes owner via inline select dropdown', async () => {
+    const ticket = mockTicket();
+    vi.mocked(getTicket).mockResolvedValue(ticket);
+    vi.mocked(listComments).mockResolvedValue({ items: [] });
+    vi.mocked(updateTicket).mockResolvedValue({
+      ...ticket,
+      owner: { id: 2, login: 'maria', display_name: 'Maria Chen' },
+    });
+    renderPage();
+
+    await screen.findByText('Crash on startup when config is missing');
+
+    // Click the owner trigger
+    const ownerBtn = screen.getByRole('button', { name: 'Owner' });
+    fireEvent.click(ownerBtn);
+
+    // Select Maria Chen
+    const mariaOption = screen
+      .getAllByRole('option')
+      .find((el) => el.textContent?.includes('Maria Chen'));
+    fireEvent.click(mariaOption!);
+
+    await waitFor(() => {
+      expect(updateTicket).toHaveBeenCalledWith(42, { owner_id: 2 });
+    });
+  });
+
+  // --- Description editing ---
+
+  it('shows edit button on description for author', async () => {
+    vi.mocked(getTicket).mockResolvedValue(mockTicket());
+    vi.mocked(listComments).mockResolvedValue({
+      items: [
+        mockComment({
+          number: 0,
+          author: { id: 1, login: 'alex', display_name: 'Alex Kim' },
+          body: 'My description',
+        }),
+      ],
+    });
+    renderPage();
+
+    await screen.findByText('My description');
+    expect(screen.getByRole('button', { name: 'Edit description' })).toBeInTheDocument();
+  });
+
+  it('edits description (comment #0) and saves', async () => {
+    vi.mocked(getTicket).mockResolvedValue(mockTicket());
+    vi.mocked(listComments).mockResolvedValue({
+      items: [
+        mockComment({
+          number: 0,
+          author: { id: 1, login: 'alex', display_name: 'Alex Kim' },
+          body: 'Original description',
+        }),
+      ],
+    });
+    vi.mocked(editComment).mockResolvedValue(
+      mockComment({ number: 0, body: 'Updated description', edit_count: 1 }),
+    );
+    renderPage();
+
+    await screen.findByText('Original description');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit description' }));
+
+    const editors = screen.getAllByTestId('markdown-editor');
+    const descEditor = editors.find(
+      (e) => (e as HTMLTextAreaElement).value === 'Original description',
+    )!;
+    fireEvent.change(descEditor, { target: { value: 'Updated description' } });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => {
+      expect(editComment).toHaveBeenCalledWith(42, 0, { body: 'Updated description' });
     });
   });
 });

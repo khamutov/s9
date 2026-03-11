@@ -9,7 +9,9 @@ use serde_json::json;
 
 use crate::auth::middleware::{AuthUser, RequireAdmin};
 use crate::auth::password;
-use crate::models::{CreateUserRequest, FullUser, Role, SetPasswordRequest, UpdateUserRequest};
+use crate::models::{
+    CompactUser, CreateUserRequest, FullUser, Role, SetPasswordRequest, UpdateUserRequest,
+};
 use crate::repos::{self, RepoError};
 
 use super::AppState;
@@ -20,6 +22,24 @@ use super::error::{conflict, forbidden, internal_error, not_found, validation_er
 pub struct ListQuery {
     #[serde(default)]
     pub include_inactive: bool,
+}
+
+/// `GET /api/users/compact` — list all active users as compact objects (any authenticated user).
+#[utoipa::path(
+    get, path = "/api/users/compact", tag = "Users",
+    responses(
+        (status = 200, description = "Compact list of active users", body = Vec<CompactUser>),
+    ),
+    security(("session_cookie" = []))
+)]
+pub async fn list_compact_users(State(state): State<AppState>, _user: AuthUser) -> Response {
+    let rows = match repos::user::list(&state.pool, false).await {
+        Ok(r) => r,
+        Err(_) => return internal_error(),
+    };
+
+    let items: Vec<CompactUser> = rows.iter().map(CompactUser::from).collect();
+    (StatusCode::OK, Json(json!({ "items": items }))).into_response()
 }
 
 /// `GET /api/users` — list all users (admin only).

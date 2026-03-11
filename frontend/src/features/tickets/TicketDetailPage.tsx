@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router';
 import StatusBadge from '../../components/StatusBadge';
 import PriorityBadge from '../../components/PriorityBadge';
@@ -15,7 +15,15 @@ import { useComments } from './useComments';
 import { useUpdateTicket } from './useUpdateTicket';
 import { useCreateComment } from './useCreateComment';
 import { useEditComment, useDeleteComment } from './useEditComment';
-import type { Comment, Ticket, TicketStatus, Priority, TicketType } from '../../api/types';
+import { useCompactUsers } from './useCompactUsers';
+import type {
+  Comment,
+  CompactUser,
+  Ticket,
+  TicketStatus,
+  Priority,
+  TicketType,
+} from '../../api/types';
 import styles from './TicketDetailPage.module.css';
 
 const STATUS_OPTIONS: SelectOption<TicketStatus>[] = [
@@ -68,10 +76,24 @@ function formatDate(iso: string): string {
 function MetadataPanel({
   ticket,
   onUpdate,
+  users,
+  onOwnerChange,
 }: {
   ticket: Ticket;
   onUpdate: (field: string, value: unknown) => void;
+  users: CompactUser[];
+  onOwnerChange: (userId: number) => void;
 }) {
+  const ownerOptions: SelectOption<string>[] = useMemo(
+    () => users.map((u) => ({ value: String(u.id), label: u.display_name })),
+    [users],
+  );
+
+  const usersById = useMemo(() => {
+    const map = new Map<number, CompactUser>();
+    for (const u of users) map.set(u.id, u);
+    return map;
+  }, [users]);
   return (
     <div className={styles.metaPanel}>
       <div className={styles.metaPanelHeader}>Details</div>
@@ -121,7 +143,17 @@ function MetadataPanel({
       <div className={styles.metaField}>
         <span className={styles.metaFieldLabel}>Owner</span>
         <span className={styles.metaFieldValue}>
-          <UserPill user={ticket.owner} small />
+          <InlineSelect
+            value={String(ticket.owner.id)}
+            options={ownerOptions}
+            onChange={(v) => onOwnerChange(Number(v))}
+            renderValue={() => <UserPill user={ticket.owner} small />}
+            renderOption={(v) => {
+              const u = usersById.get(Number(v));
+              return u ? <UserPill user={u} small /> : v;
+            }}
+            aria-label="Owner"
+          />
         </span>
       </div>
 
@@ -363,6 +395,100 @@ function CommentForm({ ticketId }: { ticketId: number }) {
   );
 }
 
+/** Editable description card for comment #0. */
+function DescriptionCard({
+  description,
+  ticketId,
+  canEdit,
+}: {
+  description: Comment;
+  ticketId: number;
+  canEdit: boolean;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [editBody, setEditBody] = useState(description.body);
+  const editMutation = useEditComment(ticketId);
+
+  const handleSave = () => {
+    const trimmed = editBody.trim();
+    if (!trimmed || trimmed === description.body) {
+      setEditing(false);
+      setEditBody(description.body);
+      return;
+    }
+    editMutation.mutate(
+      { commentNum: 0, req: { body: trimmed } },
+      { onSuccess: () => setEditing(false) },
+    );
+  };
+
+  const handleCancel = () => {
+    setEditing(false);
+    setEditBody(description.body);
+  };
+
+  return (
+    <div className={styles.descriptionSection}>
+      <div className={styles.descriptionCard}>
+        <div className={styles.descriptionHeader}>
+          <UserPill user={description.author} small />
+          <span className={styles.commentTime}>
+            opened {formatRelativeTime(description.created_at)}
+          </span>
+          {description.edit_count > 0 && <span className={styles.editedTag}>edited</span>}
+          {canEdit && !editing && (
+            <button
+              className={styles.commentActionBtn}
+              onClick={() => {
+                setEditBody(description.body);
+                setEditing(true);
+              }}
+              aria-label="Edit description"
+            >
+              Edit
+            </button>
+          )}
+        </div>
+        {editing ? (
+          <div className={styles.editForm}>
+            <MarkdownEditor
+              value={editBody}
+              onChange={setEditBody}
+              placeholder="Edit description…"
+              minHeight={120}
+              disabled={editMutation.isPending}
+            />
+            <div className={styles.editFormActions}>
+              <button
+                className={styles.cancelBtn}
+                onClick={handleCancel}
+                disabled={editMutation.isPending}
+              >
+                Cancel
+              </button>
+              <button
+                className={styles.submitBtn}
+                onClick={handleSave}
+                disabled={editMutation.isPending || !editBody.trim()}
+              >
+                {editMutation.isPending ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+            {editMutation.isError && (
+              <p className={styles.formError}>Failed to save. Please try again.</p>
+            )}
+          </div>
+        ) : (
+          <>
+            <MarkdownRenderer>{description.body}</MarkdownRenderer>
+            <AttachmentList attachments={description.attachments} />
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /** Ticket detail view with metadata sidebar, description, and comment thread. */
 export default function TicketDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -371,6 +497,7 @@ export default function TicketDetailPage() {
   const { data: ticket, isLoading, error } = useTicket(ticketId);
   const { data: commentsData, isLoading: commentsLoading } = useComments(ticketId);
   const mutation = useUpdateTicket(ticketId);
+  const { data: usersData } = useCompactUsers();
   const isAdmin = user?.role === 'admin';
 
   const displaySlug = ticket?.slug ?? `#${id}`;
@@ -402,7 +529,15 @@ export default function TicketDetailPage() {
           <span>{displaySlug}</span>
         </div>
         <div className={styles.headerTop}>
-          <h1>{ticket.title}</h1>
+          <h1>
+            <InlineText
+              value={ticket.title}
+              onSave={(v) => {
+                if (v.trim()) handleUpdate('title', v.trim());
+              }}
+              aria-label="Title"
+            />
+          </h1>
           <span className={styles.ticketId}>{displaySlug}</span>
         </div>
         <div className={styles.badges}>
@@ -418,18 +553,11 @@ export default function TicketDetailPage() {
         <div>
           {/* Description (Comment #0) */}
           {description && (
-            <div className={styles.descriptionSection}>
-              <div className={styles.descriptionCard}>
-                <div className={styles.descriptionHeader}>
-                  <UserPill user={description.author} small />
-                  <span className={styles.commentTime}>
-                    opened {formatRelativeTime(description.created_at)}
-                  </span>
-                </div>
-                <MarkdownRenderer>{description.body}</MarkdownRenderer>
-                <AttachmentList attachments={description.attachments} />
-              </div>
-            </div>
+            <DescriptionCard
+              description={description}
+              ticketId={ticketId}
+              canEdit={user?.id === description.author.id || isAdmin}
+            />
           )}
 
           {/* Activity section */}
@@ -464,7 +592,12 @@ export default function TicketDetailPage() {
         </div>
 
         {/* Right column: Metadata */}
-        <MetadataPanel ticket={ticket} onUpdate={handleUpdate} />
+        <MetadataPanel
+          ticket={ticket}
+          onUpdate={handleUpdate}
+          users={usersData?.items ?? []}
+          onOwnerChange={(userId) => handleUpdate('owner_id', userId)}
+        />
       </div>
     </div>
   );
