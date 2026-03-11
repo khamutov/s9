@@ -526,3 +526,17 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **.dockerignore**: excludes target/, node_modules/, dist/, data/, .git/, docs/, prototypes/, tools/, *.md
 - **Issues**: None; all 442 backend + 195 vitest + 73 E2E tests pass
 - **Timestamp**: 2026-03-11
+
+## Task 6.6: Deployment documentation
+- **Implemented**: Comprehensive deployment guide at `deploy/README.md`:
+  - Quick start for Docker and binary deployment
+  - Full configuration reference table (core, OIDC, SMTP env vars and CLI flags)
+  - CLI subcommands reference (serve, migrate, create-admin)
+  - Data directory layout documentation
+  - Docker Compose example with OIDC and SMTP
+  - nginx reverse proxy config with SSE-specific settings
+  - Backup/restore procedures (SQLite online backup + attachments rsync)
+  - Upgrade workflow documentation
+- **Files created**: deploy/README.md
+- **Issues**: None
+- **Timestamp**: 2026-03-11
