@@ -513,3 +513,16 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Tests**: 6 AttachmentList + 2 new TicketDetailPage + 5 E2E; 195 vitest + 73 E2E all pass
 - **Browser verified**: Ticket detail page renders correctly, no attachment section shown when no attachments, drop hint visible
 - **Timestamp**: 2026-03-10
+
+## Task 6.5: Dockerfile
+- **Implemented**: Multi-stage Dockerfile per DD 0.8 §12:
+  - Stage 1 (frontend): node:22-alpine, `npm ci` + `npm run build`
+  - Stage 2 (backend): rust:1.85-bookworm, dependency caching via dummy main.rs trick, copies frontend dist, builds release binary
+  - Stage 3 (runtime): debian:bookworm-slim with ca-certificates, non-root `s9` user
+  - Exposes port 8080, `/data` volume for SQLite DB and attachments
+  - `S9_DATA_DIR=/data`, `S9_LISTEN=0.0.0.0:8080` env defaults
+  - No SQLX_OFFLINE needed — project uses runtime `sqlx::query()` not compile-time macros
+- **Files created**: Dockerfile, .dockerignore
+- **.dockerignore**: excludes target/, node_modules/, dist/, data/, .git/, docs/, prototypes/, tools/, *.md
+- **Issues**: None; all 442 backend + 195 vitest + 73 E2E tests pass
+- **Timestamp**: 2026-03-11

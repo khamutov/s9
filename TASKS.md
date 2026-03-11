@@ -106,7 +106,7 @@ Status legend: `[ ]` pending | `[~]` in progress | `[x]` completed
 
 ## Phase 6: Integration & Deployment
 
-- [ ] **6.5** Dockerfile [blocked by: 0.8]
+- [x] **6.5** Dockerfile [blocked by: 0.8]
 - [ ] **6.6** Deployment documentation [blocked by: Phase 4]
 - [ ] **6.7** Initial admin user seeding [blocked by: 3.1, 2.5]
 
