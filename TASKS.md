@@ -110,6 +110,16 @@ Status legend: `[ ]` pending | `[~]` in progress | `[x]` completed
 - [ ] **6.6** Deployment documentation [blocked by: Phase 4]
 - [ ] **6.7** Initial admin user seeding [blocked by: 3.1, 2.5]
 
+## Phase 7: UI Fixes & Improvements
+
+- [ ] **7.1** Remove dead sidebar links (Recently Viewed, Starred, Preferences) → `frontend/src/components/layout/navConfig.tsx`
+- [ ] **7.2** Fix hardcoded sidebar user pill with auth context + link to account → `frontend/src/components/layout/Sidebar.tsx`
+- [ ] **7.3** Fix duplicate page headers → `frontend/src/components/layout/usePageHeader.ts` + 7 page files
+- [ ] **7.4** Add inline editing for ticket title, description, and owner (includes backend compact user endpoint) → `frontend/src/features/tickets/TicketDetailPage.tsx`, `src/api/user.rs`
+- [ ] **7.5** Create account/profile page (edit name, email, password) → `frontend/src/features/account/AccountPage.tsx` [blocked by: 7.2]
+- [ ] **7.6** Milestone CRUD on list page (admin-only create/edit/delete modals) → `frontend/src/features/milestones/MilestoneListPage.tsx`
+- [ ] **7.7** Make CommandBar functional (quick-jump ticket search) → `frontend/src/components/layout/CommandBar.tsx`
+
 ## Critical Path
 
 ```
