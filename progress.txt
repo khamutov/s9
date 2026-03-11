@@ -540,3 +540,12 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Files created**: deploy/README.md
 - **Issues**: None
 - **Timestamp**: 2026-03-11
+
+## Task 6.7: Initial admin user seeding
+- **Improved**: `create-admin` CLI subcommand (already existed from Phase 3):
+  - Added `--display-name` optional flag (defaults to login)
+  - Added `--email` optional flag (defaults to `<login>@localhost`)
+  - Added duplicate login detection with clear error message before DB constraint violation
+- **Files modified**: src/cli.rs, src/main.rs
+- **Issues**: None; all tests pass
+- **Timestamp**: 2026-03-11
