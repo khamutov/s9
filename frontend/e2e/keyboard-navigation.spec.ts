@@ -38,8 +38,9 @@ test.describe('Keyboard Navigation', () => {
 
     await expect(page.getByText('First ticket')).toBeVisible();
 
-    // Click body to ensure no input is focused
-    await page.locator('body').click();
+    // Press Escape then click heading to ensure no input is focused
+    await page.keyboard.press('Escape');
+    await page.getByRole('heading', { name: /tickets/i }).click();
 
     // Press j to select first row — verify via background color change
     await page.keyboard.press('j');
@@ -63,8 +64,9 @@ test.describe('Keyboard Navigation', () => {
 
     await expect(page.getByText('First ticket')).toBeVisible();
 
-    // Click body to ensure no input is focused
-    await page.locator('body').click();
+    // Press Escape then click heading to ensure no input is focused
+    await page.keyboard.press('Escape');
+    await page.getByRole('heading', { name: /tickets/i }).click();
 
     // Select first row and press Enter
     await page.keyboard.press('j');
