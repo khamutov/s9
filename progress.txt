@@ -605,3 +605,15 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Tests**: 10 unit tests (rendering, validation, submit flows), 6 E2E tests (display, validation, submit, sidebar link)
 - **Issues**: Pre-existing keyboard-navigation E2E test failures (2 tests) unrelated to this change
 - **Timestamp**: 2026-03-11
+
+## Task 7.6: Milestone CRUD on list page
+- **Implemented**: Admin-only create, edit, and delete modals for milestones on MilestoneListPage
+  - Create modal: name (required), description, due date fields
+  - Edit modal: pre-fills all fields, adds status dropdown (open/closed)
+  - Delete modal: confirmation with warning, blocks deletion when milestone has assigned tickets
+  - All modals follow ComponentManagement pattern (overlay, form validation, React Query mutations)
+  - CRUD buttons (Create Milestone, Edit, Delete) only visible to admin users
+- **Files**: MilestoneListPage.tsx, MilestoneListPage.module.css, MilestoneListPage.test.tsx, milestone-list.spec.ts
+- **Tests**: 26 unit tests (14 existing + 12 new CRUD tests), 14 E2E tests (7 existing + 7 new)
+- **Issues**: None
+- **Timestamp**: 2026-03-11
