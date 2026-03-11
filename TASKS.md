@@ -112,7 +112,7 @@ Status legend: `[ ]` pending | `[~]` in progress | `[x]` completed
 
 ## Phase 7: UI Fixes & Improvements
 
-- [ ] **7.1** Remove dead sidebar links (Recently Viewed, Starred, Preferences) → `frontend/src/components/layout/navConfig.tsx`
+- [x] **7.1** Remove dead sidebar links (Recently Viewed, Starred, Preferences) → `frontend/src/components/layout/navConfig.tsx`
 - [ ] **7.2** Fix hardcoded sidebar user pill with auth context + link to account → `frontend/src/components/layout/Sidebar.tsx`
 - [ ] **7.3** Fix duplicate page headers → `frontend/src/components/layout/usePageHeader.ts` + 7 page files
 - [ ] **7.4** Add inline editing for ticket title, description, and owner (includes backend compact user endpoint) → `frontend/src/features/tickets/TicketDetailPage.tsx`, `src/api/user.rs`

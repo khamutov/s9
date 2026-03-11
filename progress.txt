@@ -549,3 +549,14 @@ Started: 2026-03-09T13:59:35.085477+00:00
 - **Files modified**: src/cli.rs, src/main.rs
 - **Issues**: None; all tests pass
 - **Timestamp**: 2026-03-11
+
+## Task 7.1: Remove dead sidebar links
+- **Removed**: Three non-functional sidebar navigation items from `navConfig.tsx`:
+  - "Recently Viewed" (`/recent`) — route doesn't exist
+  - "Starred" (`/starred`) — route doesn't exist
+  - "Preferences" (`/preferences`) — route doesn't exist
+- **Kept**: My Tickets, Admin (functional links)
+- **Files modified**: frontend/src/components/layout/navConfig.tsx
+- **Browser verified**: Sidebar shows only Tickets, Components, Milestones, My Tickets, Admin
+- **Issues**: None; all tests pass
+- **Timestamp**: 2026-03-11
