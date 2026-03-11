@@ -83,5 +83,13 @@ pub enum Command {
         /// Password for the admin user.
         #[arg(long)]
         password: String,
+
+        /// Display name (defaults to login).
+        #[arg(long)]
+        display_name: Option<String>,
+
+        /// Email address (defaults to `<login>@localhost`).
+        #[arg(long)]
+        email: Option<String>,
     },
 }

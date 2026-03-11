@@ -36,7 +36,12 @@ async fn main() -> anyhow::Result<()> {
     match cli.command.unwrap_or(Command::Serve) {
         Command::Serve => serve(config).await,
         Command::Migrate => migrate(config).await,
-        Command::CreateAdmin { login, password } => create_admin(config, login, password).await,
+        Command::CreateAdmin {
+            login,
+            password,
+            display_name,
+            email,
+        } => create_admin(config, login, password, display_name, email).await,
     }
 }
 
@@ -134,15 +139,25 @@ async fn migrate(config: Config) -> anyhow::Result<()> {
     Ok(())
 }
 
-async fn create_admin(config: Config, login: String, password: String) -> anyhow::Result<()> {
+async fn create_admin(
+    config: Config,
+    login: String,
+    password: String,
+    display_name: Option<String>,
+    email: Option<String>,
+) -> anyhow::Result<()> {
     let pool = db::init_pool(&config.db_path).await?;
     db::run_migrations(&pool).await?;
+
+    if repos::user::get_by_login(&pool, &login).await?.is_some() {
+        anyhow::bail!("user with login '{}' already exists", login);
+    }
 
     let password_hash = auth::password::hash_password(&password)?;
     let req = models::CreateUserRequest {
         login: login.clone(),
-        display_name: login.clone(),
-        email: format!("{login}@localhost"),
+        display_name: display_name.unwrap_or_else(|| login.clone()),
+        email: email.unwrap_or_else(|| format!("{login}@localhost")),
         password: Some(password.clone()),
         role: Some(models::Role::Admin),
     };
