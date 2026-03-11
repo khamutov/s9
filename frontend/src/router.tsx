@@ -12,6 +12,7 @@ const TicketDetailPage = lazy(() => import('./features/tickets/TicketDetailPage'
 const ComponentTreePage = lazy(() => import('./features/components/ComponentTreePage'));
 const MilestoneListPage = lazy(() => import('./features/milestones/MilestoneListPage'));
 const MilestoneDetailPage = lazy(() => import('./features/milestones/MilestoneDetailPage'));
+const AccountPage = lazy(() => import('./features/account/AccountPage'));
 const AdminPanel = lazy(() => import('./features/admin/AdminPanel'));
 const UserManagement = lazy(() => import('./features/admin/UserManagement'));
 const ComponentManagement = lazy(() => import('./features/admin/ComponentManagement'));
@@ -79,6 +80,14 @@ const router = createBrowserRouter([
             element: (
               <Lazy>
                 <MilestoneDetailPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: 'account',
+            element: (
+              <Lazy>
+                <AccountPage />
               </Lazy>
             ),
           },
